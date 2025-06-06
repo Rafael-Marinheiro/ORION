@@ -89,10 +89,10 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 
 1. Configure o banco de dados:
    ```bash
-   flask db init
-   flask db migrate
-   flask db upgrade
+   python manage.py migrate
+   python manage.py createsuperuser
    ```
 2. Inicie o servidor:
    ```bash
-   flask run
+   python manage.py runserver
+   ```

@@ -2,9 +2,11 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 class UserManager(BaseUserManager):
-    def create_user(self, email_usuario, nome_usuario, senha_usuario=None, **extra_fields):
+    def create_user(self, email_usuario, nome_usuario, senha_usuario, **extra_fields):
         if not email_usuario:
             raise ValueError('O e-mail é obrigatório')
+        if not senha_usuario:
+            raise ValueError('Usuário deve ter uma senha')
         email_usuario = self.normalize_email(email_usuario)
         user = self.model(
             email_usuario=email_usuario,
@@ -15,7 +17,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email_usuario, nome_usuario, senha_usuario=None, **extra_fields):
+    def create_superuser(self, email_usuario, nome_usuario, senha_usuario, **extra_fields):
         extra_fields.setdefault('tipo_usuario', 'aluno_admin')
         extra_fields.setdefault('status_usuario', True)
         
@@ -39,7 +41,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     id_usuario = models.AutoField(primary_key=True)
     nome_usuario = models.CharField(max_length=150)
     email_usuario = models.EmailField(max_length=100, unique=True)
-    senha_usuario = models.CharField(max_length=255)
     tipo_usuario = models.CharField(max_length=20, choices=TIPO_USUARIO_CHOICES)
     status_usuario = models.BooleanField(default=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
