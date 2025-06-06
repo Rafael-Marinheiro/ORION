@@ -1,0 +1,53 @@
+7. Considerações Matéria-prima para Produção
+As matérias-primas (MP) são insumos essenciais no processo produtivo do Simulador Operacional, impactando os custos de fabricação, decisões estratégicas de suprimento e os resultados financeiros das equipes. A simulação envolve aspectos logísticos reais, como distância entre cidades e custos de transporte, promovendo o desenvolvimento de habilidades de planejamento integrado.
+
+7.1 Tipos, Custos Iniciais e Localização dos Fornecedores
+O jogo contempla quatro tipos de matérias-primas, com preços iniciais por quilograma e fornecedores distribuídos em diferentes cidades:
+
+Matéria-primaPreço Inicial (R$/kg)Cidades FornecedorasMP1R$ 3,00Fortaleza, MaceióMP2R$ 5,50Recife, Porto AlegreMP3R$ 8,00Rio de Janeiro, Aracaju, BelémMP4R$ 15,00São Paulo, João Pessoa, Goiânia
+A escolha do fornecedor (cidade) será realizada no momento da compra, influenciando diretamente o custo logístico da operação.
+
+7.2 Aquisição, Logística e Recebimento
+* A compra de MPs é feita por meio do Painel do Grupo, com seleção do tipo de MP, quantidade desejada e cidade fornecedora.
+* O recebimento ocorrerá na rodada seguinte à emissão da ordem de compra.
+* O custo da compra será composto por:
+o Valor da matéria-prima (quantidade × preço unitário);
+o Custo logístico, calculado conforme a distância entre a cidade fornecedora e a sede do grupo:
+* R$ 1,50 por quilômetro rodado, multiplicado pela quantidade adquirida (em kg).
+* O custo total será imediatamente debitado do saldo do grupo na rodada da compra.
+
+7.2.1 Desconto Logístico por Remessa de Produtos
+Para estimular estratégias logísticas otimizadas, o simulador aplicará um desconto de R$ 0,50 por quilômetro, limitado à quantidade de produtos prontos enviados para a mesma cidade fornecedora, caso o grupo realize remessa comercial para essa localidade.
+Exemplo:
+* Compra de 500 kg de MP3 em Belém ? distância até a sede do grupo: 1000 km.
+* Custo logístico: 500 kg × 1000 km × R$ 1,50 = R$ 750.000
+* Se forem enviados 300 produtos prontos para Belém na mesma rodada:
+o Desconto aplicado: 300 unidades × 1000 km × R$ 0,50 = R$ 150.000
+o Custo logístico líquido: R$ 600.000
+Essa dinâmica incentiva o alinhamento entre decisões de suprimento e estratégias de distribuição.
+
+7.3 Utilização na Produção
+* As MPs recebidas ficam disponíveis para uso a partir da rodada seguinte ao pedido.
+* A produção só poderá ser executada com base na disponibilidade real de matérias-primas no estoque.
+* O consumo é automático e proporcional ao plano de produção e à ficha técnica de cada produto.
+
+7.4 Armazenagem e Custo de Estoque
+* Matérias-primas não utilizadas permanecem estocadas no sistema.
+* Ao final de cada rodada, será aplicado um custo de armazenagem de 2% sobre o valor de compra das MPs estocadas.
+* Esse custo será automaticamente debitado do caixa do grupo e registrado no relatório financeiro da rodada.
+
+7.5 Integração com os Módulos do Simulador
+As decisões envolvendo matérias-primas impactam e são impactadas por múltiplos módulos do jogo:
+* Controle de Estoques e Produção: saldo, consumo e bloqueio de produção.
+* Financeiro: saída de caixa por compras, armazenagem e logística.
+* Distribuição e Comercialização: impacto do desconto logístico por remessa cruzada.
+* Painel do Grupo: interface de tomada de decisão integrada.
+
+7.6 Estratégias e Considerações
+A gestão de matérias-primas exigirá dos grupos:
+* Planejamento antecipado: devido ao prazo de recebimento (D+1);
+* Cálculo de custos logísticos: considerando a localização da sede, distâncias entre cidades e volume de compras;
+* Aproveitamento do desconto logístico: organizando a distribuição de produtos de forma estratégica;
+* Controle de estoque eficiente: para evitar custos excessivos de armazenagem;
+* Análise integrada de produção e finanças: para manter competitividade ao longo das rodadas.
+

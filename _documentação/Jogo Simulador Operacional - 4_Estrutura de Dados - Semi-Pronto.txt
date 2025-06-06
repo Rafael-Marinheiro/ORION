@@ -1,0 +1,43 @@
+4. Estrutura de Dados e Relacionamentos
+Este tópico descreve a estrutura lógica detalhada dos dados, tabelas, campos, tipos e relacionamentos do sistema Simulador Operacional, visando a clareza técnica e eficiência operacional.
+
+4.1 Tabelas e Campos
+
+Tabela: usuarios
+CampoTipoTamanhoDescriçãoid_usuariointeiro-Chave primária (auto incremento)nome_usuariovarchar150Nome completo do usuárioemail_usuariovarchar100E-mail único do usuáriosenha_usuariovarchar255Senha criptografadatipo_usuariovarchar20tipos(aluno_admin, professor, aluno)status_usuarioboolean-Status ativo/inativodata_criacaodatetime-Data/hora criação usuário
+Tabela: grupos
+CampoTipoTamanhoDescriçãoid_grupointeiro-Chave primária (auto incremento)nome_grupovarchar100Nome do grupocodigo_acessovarchar10Código único acessoid_professorinteiro-FK (usuarios - professor responsável)status_grupoboolean-Status ativo/inativodata_criacaodatetime-Data/hora criação do grupo
+Tabela: rodadas
+CampoTipoTamanhoDescriçãoid_rodadainteiro-Chave primária (auto incremento)id_grupointeiro-FK (grupos)numero_rodadainteiro-Número sequencial da rodadastatus_rodadavarchar20aberta, fechada, finalizadadata_iniciodatetime-Data/hora início rodadadata_fimdatetime-Data/hora finalização rodada
+
+Tabela: produtos
+CampoTipoTamanhoDescriçãoid_produtointeiro-Chave primária (auto incremento)nome_produtovarchar100Nome comercial do produtocusto_unitariodecimal12,2Custo unitário padrãopreco_vendadecimal12,2Preço padrão de vendaperecivelboolean-Produto perecível (sim/não)validade_diasinteiro-Prazo de validade em dias
+Tabela: estoques
+CampoTipoTamanhoDescriçãoid_estoqueinteiro-Chave primária (auto incremento)id_grupointeiro-FK (grupos)id_rodadainteiro-FK (rodadas)id_produtointeiro-FK (produtos)quantidade_inicialdecimal12,2Quantidade inicial estoquequantidade_finaldecimal12,2Quantidade final após operações
+Tabela: producao
+CampoTipoTamanhoDescriçãoid_producaointeiro-Chave primária (auto incremento)id_grupointeiro-FK (grupos)id_rodadainteiro-FK (rodadas)id_produtointeiro-FK (produtos)quantidade_produzidadecimal12,2Quantidade total produzidacusto_totaldecimal12,2Custo total produçãotempo_producaodecimal6,2Tempo total em horas
+Tabela: distribuicao
+CampoTipoTamanhoDescriçãoid_distribuicaointeiro-Chave primária (auto incremento)id_grupointeiro-FK (grupos)id_rodadainteiro-FK (rodadas)id_produtointeiro-FK (produtos)cidade_destinovarchar100Cidade destino do produtoquantidade_enviadadecimal12,2Quantidade distribuídacusto_transportedecimal12,2Custo total transportetempo_entregadecimal6,2Tempo estimado entrega em horas
+Tabela: financeiro
+CampoTipoTamanhoDescriçãoid_financeirointeiro-Chave primária (auto incremento)id_grupointeiro-FK (grupos)id_rodadainteiro-FK (rodadas)tipo_movimentovarchar20receita/despesadescricao_movimentovarchar255Descrição da movimentaçãovalor_movimentodecimal12,2Valor movimentaçãosaldo_finaldecimal15,2Saldo após movimento
+Tabela: eventos_aleatorios
+CampoTipoTamanhoDescriçãoid_eventointeiro-Chave primária (auto incremento)id_rodadainteiro-FK (rodadas)descricao_eventotext-Descrição detalhada eventoimpacto_operacionaltext-Descrição impactos operacionais
+4.2 Diagrama Entidade-Relacionamento (DER)
+DER Simplificado e atualizado:
+[usuarios] 1 — N [grupos] 1 — N [rodadas] 1 — N [decisoes_operacionais]
+                                                  |
+                                                  +— [estoques]
+                                                  +— [producao]
+                                                  +— [distribuicao]
+                                                  +— [financeiro]
+
+[produtos] 1 — N [estoques]
+[produtos] 1 — N [producao]
+[produtos] 1 — N [distribuicao]
+
+[rodadas] 1 — N [eventos_aleatorios]
+[grupos]  1 — N [ranking]
+
+Conclusão:
+A presente estrutura garante a coerência, eficiência operacional, facilidade de implementação e manutenção do sistema, assegurando também a consistência dos relacionamentos entre as entidades no projeto ORION - Simulador Operacional.
+

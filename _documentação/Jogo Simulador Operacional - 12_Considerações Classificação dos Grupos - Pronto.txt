@@ -1,0 +1,70 @@
+12. Considerações Classificação dos Grupos
+
+12.1 Objetivo
+O mecanismo de classificação dos grupos no simulador ORION visa avaliar o desempenho gerencial dos participantes em múltiplas dimensões estratégicas e operacionais, de forma integrada e pedagógica. A classificação não se limita ao lucro ou à produção, mas considera critérios de eficiência, responsabilidade ambiental, logística e atendimento ao mercado.
+
+12.2 Estrutura Multicritério
+A pontuação final de cada grupo será calculada por meio de um modelo multicritério ponderado, que considera cinco eixos estratégicos:
+1. Eficiência Operacional (EO)
+2. Desempenho Financeiro (DF)
+3. Eficiência de Estoques (EE)
+4. Satisfação da Demanda (SD)
+5. Desempenho em Sustentabilidade (DS)
+Fórmula Geral:
+ 
+Os pesos P? a P? devem somar 1 e podem ser ajustados por rodada, conforme o foco pedagógico desejado. 
+
+12.3 Componentes e Fórmulas
+
+12.3.1 Eficiência Operacional (EO)
+Avalia a gestão integrada da produção, comercialização e perdas operacionais.
+?
+Pesos internos: F? = 0,4 | F? = 0,4 | F? = 0,2
+
+12.3.2 Desempenho Financeiro (DF)
+Índice composto que avalia a saúde econômica do grupo.
+
+Subindicadores:
+* IL – Lucratividade:
+
+* IR – Rentabilidade sobre Ativos (ROA):
+
+* IE – Eficiência de Estoques (financeira):
+
+Pesos internos sugeridos: W? = 0,4 | W? = 0,3 | W? = 0,3
+
+12.3.3 Eficiência de Estoques (EE)
+Mede a eficiência logística operacional no uso de estoques:
+
+Estoque Médio = (Estoque Inicial + Estoque Final) / 2
+Este indicador incentiva uma política de estoques enxuta e ágil.
+
+12.3.4 Satisfação da Demanda (SD)
+Avalia o grau de atendimento ao mercado nas praças-alvo:
+
+Componentes sugeridos:
+* DS? – Redução de Perdas Totais (MP + Produtos):
+
+* DS? – Proximidade Logística das Compras de MP:
+
+* DS? – Otimização das Entregas (foco regional):
+
+Pesos internos sugeridos: S? = 0,5 | S? = 0,3 | S? = 0,2
+12.4 Pesos Sugeridos por Critério (Rodada Padrão)
+CritérioSiglaPeso (P)Eficiência OperacionalEO0,30Desempenho FinanceiroDF0,25Eficiência de EstoquesEE0,15Satisfação da DemandaSD0,20SustentabilidadeDS0,10
+12.5 Critérios de Desempate
+Em caso de empate na pontuação final, serão aplicados os seguintes critérios, nesta ordem:
+1. Maior Eficiência Operacional
+2. Maior Satisfação da Demanda
+3. Maior Desempenho em Sustentabilidade
+4. Maior Receita Bruta
+5. Ordem alfabética do nome do grupo
+6. 
+7. 12.6 Exemplo de Cálculo
+GrupoEO (%)DF (%)EE (%)SD (%)DS (%)Pontuação Final (%)G18440110859275,35G28143105788572,55G38639102827573,60
+12.7 Aplicações Pedagógicas
+* Estimula decisões multidimensionais, promovendo a visão sistêmica da gestão empresarial.
+* Aborda competências associadas aos ODS (Objetivos de Desenvolvimento Sustentável).
+* Permite a customização das rodadas conforme o tema da aula, alterando pesos dos critérios.
+* Reforça conceitos de trade-offs entre eficiência, lucratividade, atendimento ao mercado e responsabilidade ambiental.
+

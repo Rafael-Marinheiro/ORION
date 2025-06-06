@@ -1,0 +1,24 @@
+2. Descrição Geral
+
+2.1 Perspectiva do Produto
+O ORION – Simulador Operacional é um sistema educacional interativo e gamificado, desenvolvido com o propósito de simular a operação de empresas em ambientes de mercado dinâmicos e competitivos. O produto se propõe a ser uma plataforma de apoio ao ensino-aprendizagem em disciplinas ligadas à gestão, oferecendo aos estudantes uma vivência prática sobre os desafios de administrar uma organização.
+O simulador opera por meio de rodadas, nas quais os grupos de alunos representam empresas fictícias que precisam tomar decisões gerenciais em áreas como produção, compras, finanças, comercialização e investimentos. Após cada rodada, o sistema processa as decisões e apresenta os resultados obtidos, permitindo a análise do desempenho empresarial ao longo do tempo.
+A plataforma funcionará com interface web, com arquitetura modular e foco em usabilidade, acessibilidade e desempenho. Ela será projetada para operar em diversos dispositivos, como computadores, notebooks, tablets e smartphones, garantindo acesso multiplataforma.
+O sistema poderá ser operado em modo offline temporário, o que significa que os grupos poderão trabalhar em suas análises e decisões sem a necessidade de estarem constantemente conectados à internet. A conexão será exigida apenas nos momentos de envio das decisões e sincronização com o servidor, otimizando o uso em ambientes com conectividade intermitente.
+A perspectiva de evolução do produto prevê atualizações com novos cenários, produtos, eventos e recursos de análise, além da integração com ambientes virtuais de aprendizagem (AVA), dashboards pedagógicos e ferramentas de feedback automatizado.
+
+2.1.1 Restrições
+* O sistema deverá operar em navegadores modernos (Google Chrome, Mozilla Firefox, Microsoft Edge, Safari) atualizados.
+* O backend será centralizado em um servidor web para processamento dos dados e sincronização dos resultados.
+* A interface do usuário será responsiva, adaptando-se a diferentes tamanhos de tela.
+* O simulador não poderá ser operado inteiramente offline, pois o envio das decisões e a atualização dos dados exigem conexão com o servidor.
+* Todas as decisões tomadas por grupo devem ser submetidas dentro do tempo limite definido pelo moderador da rodada.
+
+2.1.2 Suposições e Dependências
+* O simulador será acessado por meio de navegadores web padrão, sem necessidade de instalação local de software.
+* O sistema será multiplataforma, acessível por dispositivos desktop e móveis.
+* Não será exigida conexão constante com a internet. Os usuários poderão acessar o sistema, analisar dados, registrar decisões e apenas se conectar para transmiti-las ao servidor no momento adequado.
+* O sistema dependerá de uma infraestrutura mínima para hospedagem (servidor com banco de dados, armazenamento e aplicação web), cuja disponibilidade e segurança devem ser garantidas pela instituição responsável.
+* A gestão pedagógica das rodadas (abertura, encerramento, ativação de eventos) será realizada por um administrador/moderador com perfil específico no sistema.
+* A criação de usuários e grupos poderá ser feita manualmente pelo administrador.
+

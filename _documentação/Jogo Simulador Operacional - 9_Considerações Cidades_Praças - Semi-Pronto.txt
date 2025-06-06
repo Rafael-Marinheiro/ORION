@@ -1,0 +1,27 @@
+9. Considerações Cidades/Praças
+A unidade produtiva de cada grupo participante no Simulador Operacional está localizada na cidade de Natal-RN, de onde partem todos os envios de produtos para comercialização. As vendas podem ser realizadas em diferentes cidades brasileiras, que representam mercados com características variadas, permitindo a simulação de decisões comerciais e logísticas realistas.
+
+9.1 Cidades Habilitadas para Venda
+Abaixo estão as praças disponíveis, com suas respectivas distâncias em relação à fábrica, estimativas populacionais, participação percentual na demanda e o volume máximo de produtos que o mercado da cidade pode absorver por rodada, por produto.
+
+Cidade (UF)Distância (km)População EstimadaÍndice de Demanda (%)Demanda Máxima (unid./produto)São Paulo (SP)2.896 km12.330.00027%27.000 unidadesRio de Janeiro (RJ)2.588 km6.775.00015%15.000 unidadesRecife (PE)290 km1.660.0004%4.000 unidadesJoão Pessoa (PB)181 km850.0002%2.000 unidadesAracaju (SE)782 km675.0001%1.000 unidadesFortaleza (CE)527 km2.700.0006%6.000 unidadesGoiânia (GO)1.949 km1.555.0003%3.000 unidadesBelém (PA)1.952 km1.510.0003%3.000 unidadesMaceió (AL)542 km1.035.0002%2.000 unidadesPorto Alegre (RS)4.034 km1.490.0003%3.000 unidades
+9.2 Regras Associadas às Praças Comerciais
+a) Custos Logísticos
+* O custo de envio de produtos de Natal-RN para cada cidade será proporcional à distância percorrida e ao volume transportado.
+* O tempo de entrega é igual para todas as cidades, sendo esse fator desconsiderado no jogo.
+b) Limite de Venda por Grupo
+* O limite de venda de cada grupo em uma cidade é igual à quantidade de produtos que o grupo enviou previamente para essa cidade.
+* Caso a quantidade enviada seja inferior à quantidade que seria vendida (pela lógica da curva de sensibilidade), o grupo só venderá o que enviou.
+* Produtos enviados e não vendidos permanecerão em estoque local e poderão ser vendidos em rodadas seguintes ou sofrer regras de perecibilidade, conforme definido no jogo.
+c) Curva de Sensibilidade ao Preço
+A demanda de cada cidade será distribuída entre os grupos que enviaram produtos para ela, conforme a seguinte lógica:
+
+Diferença do preço praticado vs. preço médio do produtoPeso (fator de preferência)Até -20% (grande desconto)5x-19% a -10%3x-9% a 0% (preço médio ou ligeiramente abaixo)2x0% a +10% (ligeiro ágio)1xAcima de +10%0,5x
+A demanda da cidade será alocada proporcionalmente aos pesos dos grupos, respeitando o limite enviado por cada um. Se a soma da oferta enviada for menor que a demanda máxima da cidade, a cidade absorverá apenas o que foi ofertado.
+d) Estratégia Comercial e Logística
+* Os grupos devem decidir quanto enviar para cada cidade, de forma antecipada, considerando o risco de sobras (estoque parado) ou faltas (perda de oportunidade).
+* A curva de preço influencia a ordem de preferência de compra, mas não garante a venda caso o grupo tenha enviado pouco.
+* Eventos aleatórios podem afetar a demanda total da cidade, reduzindo temporariamente a absorção de mercado.
+
+Essa modelagem força os participantes a tomarem decisões integradas entre produção, logística, comercialização e precificação, simulando um cenário competitivo real, onde antecipação de demanda, inteligência de mercado e equilíbrio entre custo e margem são fundamentais para o sucesso.
+

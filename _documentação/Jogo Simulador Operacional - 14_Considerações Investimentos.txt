@@ -1,0 +1,76 @@
+14. Considerações Investimentos
+Os investimentos no Simulador Operacional são uma das principais formas de alavancagem estratégica dos grupos participantes. As decisões de investimento afetam diretamente a atratividade dos produtos, a capacidade produtiva, os custos operacionais e o desempenho competitivo nas diferentes praças. Os investimentos permitidos no simulador são classificados em quatro categorias principais: Marketing, Aquisição de Máquinas, Contratação de Recursos Humanos e Aplicações Financeiras.
+
+14.1 Investimentos em Marketing
+Os grupos poderão realizar investimentos em marketing por cidade, com o objetivo de aumentar a atratividade dos seus produtos na respectiva localidade. Esse investimento simula a influência de campanhas de divulgação, publicidade e relacionamento com o mercado consumidor.
+
+14.1.1 Fator de Influência de Marketing
+O impacto do marketing é representado por um fator de influência de demanda (Mc), que afeta todos os produtos do grupo na cidade em que o investimento foi realizado. Esse fator é calculado da seguinte forma:
+
+Onde:
+* Ic : investimento em marketing (em R$) realizado na cidade;
+* Mc : fator de marketing aplicado à demanda base;
+* In : logaritmo natural;
+* Mc ? |1,1,20| : limite de aumento de até 20% da demanda base.
+
+Investimentos superiores a R$ 10.000,00 não geram aumento adicional no fator Mc.
+
+14.1.2 Demanda Ajustada com Marketing
+A demanda base do produto na cidade, calculada com base no preço praticado, será ajustada pela influência do marketing da seguinte forma:
+14.1.3 Exemplo de Impacto
+Investimento (R$)In(1+Ic)Fator McAumento (%)00,001,0000%1.0006,911,0383,8%2.5007,821,0434,3%5.0008,521,0515,1%10.0009,211,20020% (máx.)
+
+
+14.2 Investimentos em Máquinas
+Os grupos também podem investir na expansão da capacidade produtiva, adquirindo novas máquinas industriais. Esse investimento é essencial para ampliar o volume de produção e atender à demanda crescente por produtos.
+
+14.2.1 Limite de Expansão
+Cada grupo poderá adquirir um número de máquinas adicional de até 50% sobre a quantidade inicial instalada. Esse limite se deve a restrições físicas do espaço industrial disponível, e é fixo durante toda a simulação.
+
+14.2.2 Ativação das Novas Máquinas
+As máquinas adquiridas não entram em operação imediatamente. Elas estarão aptas para uso apenas na rodada seguinte à compra, simulando o tempo necessário para instalação e testes.
+
+14.2.3 Contratação de Funcionários
+Cada máquina adicional exige a contratação de 02 operadores para funcionar. Essa contratação deve ocorrer na mesma rodada da compra da máquina. Caso não haja contratação:
+* A máquina permanecerá inativa;
+* Não haverá reembolso do investimento;
+* A ativação dependerá da contratação posterior da equipe.
+
+14.2.4 Custos Relacionados
+* Custo por máquina: valor fixado pelo simulador (ex: R$ 8.000,00).
+* Salário por funcionário: R$ 1.800,00/mês.
+* O custo com mão de obra passa a integrar os custos fixos operacionais mensais.
+
+14.2.5 Registro no Sistema
+O sistema do simulador registrará:
+* Quantidade total de máquinas instaladas e em operação;
+* Previsão de ativação das novas máquinas;
+* Relação entre máquinas adicionais e contratação de pessoal.
+
+14.3 Investimentos em Recursos Humanos (RH)
+Os grupos podem também realizar investimentos em pessoal operacional para atender à demanda das máquinas já existentes, além das máquinas novas. A contratação de funcionários é livre, podendo o grupo contratar um número superior ao necessário, assumindo o impacto financeiro dessa decisão.
+* Cada máquina em operação exige dois funcionários.
+* O custo por funcionário é de R$ 1.800,00 mensais, sendo registrado como custo fixo operacional.
+* Caso o grupo contrate mais funcionários do que o necessário, o excedente não será alocado a nenhuma máquina, mas continuará gerando custo mensal integral.
+* Caso o grupo opere com menos funcionários do que o mínimo exigido, parte das máquinas permanecerá inativa.
+
+Essa regra simula a realidade de planejamento e gestão da força de trabalho, permitindo decisões estratégicas antecipadas (como contratar antes da compra das máquinas) e avaliando o custo-benefício da ociosidade planejada ou não planejada da mão de obra.
+O sistema controlará:
+* A quantidade total de funcionários contratados;
+* A alocação efetiva nas máquinas operacionais;
+* O custo mensal total de mão de obra;
+* A ociosidade de funcionários ou máquinas, conforme o cenário do grupo.
+
+14.4 Aplicações Financeiras
+Os grupos poderão optar por aplicar o valor disponível em caixa no mercado financeiro, como alternativa estratégica de rentabilização do capital não utilizado em operações ou investimentos diretos.
+
+14.4.1 Rentabilidade
+As aplicações financeiras terão um rendimento fixo de 1,5% por rodada, calculado sobre o valor aplicado. Esse rendimento é isento de riscos ou tributações no contexto simulado.
+
+14.4.2 Regras de Aplicação
+* A aplicação não é automática: o grupo deve decidir aplicar determinado valor na rodada desejada;
+* O valor investido permanece aplicado até nova decisão do grupo (resgate parcial ou total);
+* O rendimento será incorporado automaticamente ao valor aplicado no início da rodada seguinte (juros compostos);
+* O grupo poderá aplicar parte ou todo o saldo de caixa disponível, desde que respeite os demais compromissos financeiros.
+Essa funcionalidade permite simular a gestão estratégica de liquidez e o uso eficiente do capital de giro disponível, incentivando a tomada de decisões financeiras mais completas.
+

@@ -1,0 +1,104 @@
+10. Considerações sobre Telas, Menus e Relatórios
+
+10.1 Estrutura Geral e Acessos
+O sistema apresenta um conjunto de telas organizadas conforme o tipo de acesso do usuário (Administrador, CEO do Grupo, Membro do Grupo), com menus modulares, interface amigável e navegação lógica. A arquitetura segue uma abordagem hierárquica que parte da Tela Inicial até as funcionalidades específicas por perfil.
+
+10.2 Sugestão de Telas Principais
+Tela Inicial
+* Exibição da logomarca do sistema e frase institucional
+* Acesso ao botão de login
+Tela de Login
+* Entrada de e-mail e senha
+* Direcionamento conforme o tipo de usuário:
+o Administrador
+o CEO do Grupo
+o Membro do Grupo (modo leitura)
+
+10.3 Telas por Tipo de Usuário
+Administrador
+* Tela de Configurações
+o Cadastro de grupos
+o Definição do número de rodadas
+o Configuração de eventos aleatórios
+* Tela de Gerenciamento do Jogo
+o Abrir / Fechar rodada
+o Monitoramento da participação dos grupos
+* Relatórios:
+o Relatórios Gerais
+o Relatórios por Grupo (DRE e Fluxo de Caixa)
+o Relatórios Comparativos
+o Visualização de Ranking Geral
+
+????? CEO do Grupo
+* Tela de Painel Geral do Grupo
+o Nome do grupo, cidade, rodada atual
+o Status da rodada e notificações
+o Botões de acesso rápido para decisões pendentes
+* Tela de Decisões por Rodada
+o Decisões de Compras
+o Decisões de Produção
+o Decisões de Comercialização
+o Decisões de Investimentos
+* Tela de Relatórios Financeiros
+o Demonstrativo de Resultados (DRE)
+o Fluxo de Caixa por rodada
+o Histórico de movimentações
+* Tela de Relatórios Comparativos
+o Gráficos comparativos entre grupos
+o Análise de performance (Lucro, Market Share, Eficiência Operacional)
+* Tela de Visualização de Rankings
+o Ranking geral por indicadores
+o Destaques da rodada
+o Evolução do grupo ao longo da competição
+
+Membros do Grupo
+* Acesso ao Painel Geral do Grupo
+* Visualização das decisões tomadas (modo leitura)
+* Acesso aos relatórios e gráficos explicativos
+* Apoio nas estratégias do grupo
+
+10.4 Estrutura de Menus
+O sistema contará com um menu lateral ou superior, adaptável a cada tipo de perfil, contendo:
+
+Para CEO do Grupo:
+1. Painel Geral
+2. Decisões por Rodada
+3. Relatórios Financeiros
+4. Relatórios Comparativos
+5. Ranking
+6. Encerramento da Rodada
+7. Ajuda
+
+Para Administrador:
+1. Configuração do Jogo
+2. Gerenciamento do Jogo
+3. Relatórios (Gerais, Por Grupo, Comparativos)
+4. Ranking Geral
+5. Encerrar Rodada
+6. Painel de Controle
+7. Suporte
+
+10.5 Funcionalidades Comuns nas Telas
+* Exportação em PDF / Excel dos relatórios
+* Filtros por rodada, grupo ou indicador
+* Gráficos dinâmicos e tabelas comparativas
+* Notificações em tempo real
+* Visual limpo com foco na clareza e na experiência do usuário
+
+10.6 Observações Finais
+A inclusão das telas específicas de Painel Geral, Decisões por Rodada, Relatórios Financeiros, Comparativos entre Grupos e Ranking contribui fortemente para:
+* Maior autonomia dos grupos nas análises estratégicas;
+* Aprimoramento do processo decisório pedagógico;
+* Clareza e profundidade na visualização de desempenho, com foco na aprendizagem baseada em dados e feedback contínuo.
+
+
+
+
+
+
+
+
+
+
+
+

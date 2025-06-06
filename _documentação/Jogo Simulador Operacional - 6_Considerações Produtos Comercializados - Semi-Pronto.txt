@@ -1,0 +1,48 @@
+6. Considerações sobre os Produtos Comercializados
+Esta seção descreve as características dos produtos disponíveis para produção e comercialização no Simulador Operacional, incluindo sua composição técnica, custos de produção, perecibilidade e regras relacionadas à armazenagem e cálculo de custos operacionais. A modelagem desses produtos permite aos jogadores exercitarem decisões integradas de produção, compras, precificação, logística e finanças.
+
+6.1 Composição Técnica dos Produtos
+Cada produto é formado a partir da combinação de diferentes matérias-primas (MPs), em proporções específicas, expressas em quilogramas por unidade produzida. A produção é limitada pela menor disponibilidade proporcional de matéria-prima no estoque.
+
+Tabela 1 – Composição, Peso e Custo Estimado de Produção
+ProdutoMP1 (kg)MP2 (kg)MP3 (kg)MP4 (kg)Total (kg)Custo Estimado (R$)ObservaçãoA120406080300R$ 2.260,00Não perecívelB360160110–630R$ 2.840,00PerecívelC280280–90650R$ 3.730,00Não perecível
+Preços Unitários das Matérias-Primas (R$/kg):
+* MP1: R$ 3,00
+* MP2: R$ 5,50
+* MP3: R$ 8,00
+* MP4: R$ 15,00
+
+Os preços das matérias-primas são parametrizáveis e podem variar entre rodadas, influenciando diretamente o custo de produção. O sistema recalculará automaticamente o custo unitário dos produtos a cada nova rodada com base nos preços atualizados de entrada.
+
+6.2 Características dos Produtos
+Produto A
+* Composição complexa e peso médio.
+* Produto não perecível, podendo ser estocado por tempo indefinido.
+* Recomendado para estratégias de produção antecipada e venda futura.
+Produto B
+* Produto perecível: perde validade após 1 rodada.
+* Unidades não comercializadas até o encerramento da rodada são descartadas automaticamente.
+* Exige precisão na produção sob demanda e sincronização com a logística de vendas.
+Produto C
+* Alto consumo de MP1 e MP2 e maior custo unitário.
+* Produto não perecível, com possibilidade de armazenamento prolongado.
+* Estratégico como item de maior valor agregado no portfólio de vendas.
+
+6.3 Regras Operacionais e de Produção
+* A produção será bloqueada automaticamente se alguma matéria-prima estiver indisponível em quantidade proporcional suficiente.
+* A produção só será validada se todas as MPs necessárias estiverem disponíveis.
+* Só é possível produzir em unidades inteiras — frações não são permitidas.
+* O sistema calcula o custo total de produção com base nas quantidades utilizadas e nos preços vigentes, atualizando os módulos financeiro e comercial.
+
+6.4 Armazenagem e Custos Associados
+Ao final de cada rodada, os produtos acabados que permanecerem em estoque (exceto os perecíveis) gerarão custo de armazenagem.
+Regra de Armazenagem: Será aplicado um custo de 2% sobre o valor de produção unitário de cada unidade estocada.
+Exemplo prático:
+ProdutoCusto de Produção (R$)% de ArmazenagemCusto por Unidade Estocada (R$)AR$ 2.260,002%R$ 45,20B–––CR$ 3.730,002%R$ 74,60
+O custo total de armazenagem será lançado no Demonstrativo de Resultado da Rodada (DRR), impactando a margem de lucro do grupo e exigindo planejamento de estoques eficiente.
+
+6.5 Integrações com Outros Módulos
+* Controle de Estoques: ao aprovar uma ordem de produção, o sistema desconta automaticamente as MPs e lança os produtos acabados no estoque.
+* Financeiro: o custo total de produção é registrado como despesa de fabricação. O custo de armazenagem é debitado automaticamente ao fim da rodada.
+* Distribuição e Comercialização: os produtos finalizados são disponibilizados para alocação nas praças, cidades e canais de venda, respeitando regras de perecibilidade e estoque disponível.
+

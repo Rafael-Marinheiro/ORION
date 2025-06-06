@@ -1,0 +1,54 @@
+13. Considerações Produção – Sistema ORION
+13.1 Finalidade
+A função Produção simula o processo de transformação de matérias-primas em produtos acabados, permitindo que os grupos decidam estrategicamente o que produzir, quanto produzir e como alocar sua capacidade produtiva por tipo de produto, considerando a limitação de máquinas específicas para cada linha de produção.
+13.2 Composição Técnica dos Produtos
+ProdutoMatérias-primas Necessárias (por unidade)Produto A2 unidades de MP1 + 1 unidade de MP2Produto B3 unidades de MP2 + 1 unidade de MP3Produto C2 unidades de MP1 + 2 unidades de MP3
+13.3 Tempo de Produção por Unidade
+ProdutoTempo por Unidade (min)Produto A2 minutosProduto B4 minutosProduto C5 minutos
+13.4 Estrutura Inicial de Máquinas por Produto
+Cada grupo inicia o jogo com uma quantidade fixa de máquinas específicas por linha de produção:
+ProdutoMáquinas DedicadasCapacidade Total por RodadaProduto A15 máquinas × 400 min = 6.000 min/rodadaProduto B15 máquinas × 400 min = 6.000 min/rodadaProduto C10 máquinas × 400 min = 4.000 min/rodada
+* Cada máquina opera 400 minutos por rodada.
+* As máquinas são exclusivas por tipo de produto, ou seja, não podem ser compartilhadas entre A, B e C.
+* Cada produto só pode ser produzido nas máquinas designadas à sua linha.
+
+13.5 Cálculo da Capacidade de Produção
+A produção máxima de cada produto por rodada depende do tempo por unidade e do tempo total disponível:
+ProdutoTempo por UnidadeCapacidade Máxima Inicial Produto A2 min6.000 ÷ 2 = 3.000 unidadesProduto B4 min6.000 ÷ 4 = 1.500 unidadesProduto C5 min4.000 ÷ 5 = 800 unidades
+Esses são os limites máximos teóricos, condicionados à disponibilidade de matéria-prima.
+13.6 Expansão da Capacidade Produtiva
+* Os grupos podem adquirir novas máquinas específicas para A, B ou C.
+* Cada nova máquina adiciona +400 min de capacidade na linha correspondente.
+* A aquisição de máquinas exige investimento financeiro e passa a valer a partir da rodada seguinte.
+13.7 Lógica de Produção por Rodada
+* Recebimento da ordem de produção por produto
+* Verificação da capacidade de tempo por linha (A, B e C separadamente)
+* Cálculo da quantidade produzível por tempo disponível e insumos existentes
+* Produção parcial, se necessário, limitada pelo tempo ou insumos
+* Transferência dos produtos para o estoque de acabados
+13.8 Armazenagem e Perecibilidade
+* Todos os produtos acabados vão para o estoque de produtos prontos.
+* Cada produto possui validade de 2 rodadas.
+* Produtos vencidos são automaticamente descartados sem compensação.
+
+13.9 Custo de Produção
+* O custo corresponde ao valor das matérias-primas consumidas.
+* O tempo de máquina não gera custo operacional adicional, mas a aquisição de novas máquinas gera investimento, registrado no módulo Financeiro.
+
+13.10 Integrações com Outros Módulos
+MóduloIntegração com ProduçãoControle de EstoquesConsumo de insumos e entrada de produtos acabadosDistribuição e ComercializaçãoSó permite a venda de produtos válidos e disponíveisFinanceiroRegistra custo das matérias-primas e investimento em máquinasEncerramento da RodadaAtualiza os estoques e remove produtos vencidos
+13.11 Regras Automáticas e Exceções
+* Máquinas específicas ? cada produto só pode ser produzido em sua linha.
+* Sem insumos suficientes ? produção parcial por linha.
+* Tempo excedido em determinada linha ? produção ajustada ao tempo disponível por produto.
+* Produto vencido ? descarte automático.
+
+13.12 Indicadores Gerados
+* Quantidade produzida por tipo de produto
+* Tempo utilizado por linha de produção
+* Capacidade utilizada por linha (%)
+* Matérias-primas consumidas
+* Custo total de produção
+* Perdas por vencimento
+* Número de máquinas ativas por linha
+

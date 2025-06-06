@@ -1,0 +1,99 @@
+3. Requisitos do Sistema
+
+3.1 Requisitos Funcionais (RF)
+Os Requisitos Funcionais definem o comportamento e os serviços que o sistema deve oferecer aos usuários em diferentes perfis. Estão organizados por funcionalidades principais:
+
+RF.01 – Cadastro e Autenticação com Perfis Distintos
+O sistema deve permitir o cadastro, autenticação e gerenciamento de usuários com os seguintes perfis:
+* Aluno: acessa os dados e relatórios da empresa simulada, contribui nas decisões do grupo.
+* Aluno CEO do Grupo: eleito pelo próprio grupo, é o único autorizado a submeter as decisões finais de cada rodada. Possui todas as permissões do perfil "Aluno", acrescidas da responsabilidade pelo envio oficial.
+* Administrador/Professor (Moderador): configura jogos, gerencia grupos, controla rodadas, ativa eventos e acompanha o desempenho dos grupos.
+Cada usuário deve autenticar-se por login e senha, com controle de acesso conforme perfil. O sistema deve registrar logs de envio de decisões, com nome do CEO, data e hora do envio.
+
+RF.02 – Configuração de Jogos pelo Moderador
+O sistema deve permitir ao moderador:
+* Definir número de grupos e jogadores por grupo.
+* Estabelecer parâmetros iniciais (capital, estoque, estrutura de custos).
+* Selecionar os produtos disponíveis.
+* Determinar a duração de cada rodada.
+* Ativar ou desativar eventos aleatórios.
+* Iniciar e encerrar rodadas manualmente.
+* Distribuir os alunos nos grupos ou permitir autoformação supervisionada.
+
+RF.03 – Gestão de Grupos e Participantes
+O sistema deve permitir:
+* Criação e edição de grupos.
+* Inclusão ou exclusão de participantes.
+* Definição de um Aluno CEO do Grupo por rodada.
+* Visualização da composição e desempenho dos grupos.
+
+RF.04 – Registro e Envio de Decisões por Rodada
+Cada grupo deverá registrar suas decisões a cada rodada, incluindo:
+* Quantidade a produzir.
+* Quantidade a comprar de matéria-prima.
+* Preço de venda por praça.
+* Quantidade a distribuir por praça.
+* Investimentos diversos (marketing, melhoria de eficiência, etc.).
+Somente o Aluno CEO poderá submeter as decisões consolidadas ao sistema, dentro do prazo estabelecido.
+
+RF.05 – Processamento das Rodadas e Apuração dos Resultados
+Após o encerramento de uma rodada, o sistema deverá:
+* Processar todas as decisões submetidas.
+* Aplicar os eventos aleatórios válidos.
+* Calcular os resultados financeiros, logísticos e comerciais.
+* Atualizar estoques, saldos, pontuações e dados históricos.
+* Emitir feedback automatizado para cada grupo.
+
+RF.06 – Emissão de Relatórios e Dashboards
+O sistema deve gerar relatórios analíticos e comparativos:
+* Demonstrativo de Resultados do Exercício (DRE).
+* Indicadores de desempenho (lucro, market share, cobertura de mercado).
+* Comparativos entre grupos.
+* Evolução dos resultados por rodada.
+* Visualização gráfica e opção de exportação em PDF/Excel.
+
+RF.07 – Gerenciamento de Produtos, Cidades e Eventos
+O moderador poderá:
+* Ativar ou desativar produtos.
+* Configurar características de cada produto (matéria-prima, preço mínimo, perecibilidade).
+* Definir praças/cidades com atributos diferenciados (demanda, distância).
+* Programar eventos aleatórios e seus impactos nas variáveis do jogo.
+
+RF.08 – Histórico de Partidas e Exportação de Dados
+O sistema deve armazenar o histórico de partidas realizadas, permitindo:
+* Consulta e análise posterior pelo moderador.
+* Exportação de dados e relatórios para acompanhamento externo.
+* Visualização dos dados em painéis organizados por grupo, rodada e indicador.
+
+3.2 Requisitos Não Funcionais (RNF)
+Os Requisitos Não Funcionais descrevem as características de qualidade e restrições técnicas do sistema.
+
+RNF.01 – Segurança
+* Acesso individual por login e senha.
+* Diferenciação de perfis com controle de permissões.
+* Dados sensíveis protegidos por criptografia.
+* Transmissão segura de dados via HTTPS.
+* Logs de ações registrando acessos, envios e alterações.
+* Backup periódico dos dados e suporte a recuperação de informações.
+
+RNF.02 – Desempenho
+* Tempo de resposta inferior a 3 segundos para ações como envio de decisões e geração de relatórios.
+* Processamento de rodada concluído em até 10 segundos com até 12 grupos.
+* Arquitetura otimizada para operação em infraestrutura em nuvem.
+
+RNF.03 – Usabilidade
+* Interface intuitiva e amigável, com menus organizados.
+* Navegação simples, com uso de ícones, legendas e dicas contextuais.
+* Design responsivo e acessível, compatível com boas práticas de acessibilidade (contraste, legibilidade, navegação por teclado).
+* Suporte multilíngue previsto em versões futuras.
+
+RNF.04 – Compatibilidade
+* Suporte aos principais navegadores: Google Chrome, Mozilla Firefox, Microsoft Edge e Safari.
+* Compatibilidade com sistemas operacionais modernos (Windows, macOS, Linux, Android, iOS).
+* Interface responsiva para acesso via desktop, notebook, tablet e smartphone.
+
+RNF.05 – Escalabilidade
+* Suporte inicial para até 12 grupos simultâneos por instância de simulação.
+* Arquitetura modular e expansível, com suporte a novos cenários, regras, produtos e eventos sem comprometer a estrutura original.
+* Banco de dados relacional preparado para múltiplas partidas ativas e paralelas.
+

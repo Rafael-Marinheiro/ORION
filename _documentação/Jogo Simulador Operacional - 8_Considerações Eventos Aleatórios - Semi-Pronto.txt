@@ -1,0 +1,43 @@
+8. Considerações acerca dos Eventos Aleatórios
+Os eventos aleatórios são componentes fundamentais do Simulador Operacional, responsáveis por introduzir incertezas externas que impactam diretamente o ambiente de negócios. Com o objetivo de simular a imprevisibilidade do mundo real, os eventos afetam todos os grupos participantes de forma simultânea e uniforme, exigindo capacidade de adaptação e replanejamento estratégico.
+
+8.1 Finalidade dos Eventos Aleatórios
+A inclusão de eventos aleatórios no simulador visa:
+* Reproduzir incertezas econômicas, logísticas e ambientais do mundo empresarial;
+* Estimular a análise de cenários e a capacidade de resposta diante de mudanças inesperadas;
+* Aproximar a simulação das dinâmicas reais dos mercados;
+* Reforçar o aprendizado baseado em situações-problema.
+
+8.2 Mecanismo de Ocorrência
+* Ocorrência automática: a cada rodada, o sistema realiza um sorteio automatizado para selecionar um único evento aleatório, com base em probabilidades constantes definidas no banco de dados.
+* Aplicação uniforme: o evento sorteado afeta todos os grupos de maneira igual, independentemente de sua praça/cidade.
+* Duração: os efeitos do evento são aplicados somente na rodada corrente, com reversão automática dos impactos na rodada seguinte (salvo eventos recorrentes).
+* Probabilidades fixas: cada evento possui uma probabilidade constante de ocorrência, que somam 100%.
+
+8.3 Tipos de Eventos e Variáveis Afetadas
+Tipo do EventoVariáveis AfetadasLogísticoCusto logístico e/ou entregas de matéria-prima e produtos acabadosClimáticoCusto das matérias-primasEconômicoDemanda por produtos
+8.4 Tabela de Eventos Aleatórios com Impactos e Probabilidades
+EventoDescriçãoTipoVariáveis AfetadasImpacto (%) SugeridoFrase IndicativaProbabilidade de OcorrênciaGreve de caminhoneirosParalisação do transporte rodoviário nacionalLogísticoCusto logístico e entregas+30% no custo logístico
+30% das entregas de MP e produtos são retidas para a próxima rodada. Produtos perecíveis são perdidos."O país enfrenta uma greve geral no setor de transporte rodoviário."15%Crise de abastecimentoSeca prolongada compromete produção de insumos agrícolasClimáticoCusto das matérias-primas+30% no custo das matérias-primas"A seca afetou a produção agrícola, encarecendo os insumos."20%Boom de consumoOtimismo do mercado impulsiona as vendasEconômicoDemanda por produtos+15% na demanda por produtos"O mercado está aquecido e os consumidores estão comprando mais."20%Enchentes nas regiõesChuvas interrompem as principais rotas logísticasLogísticoEntregas20% das entregas de MP e produtos são retidas para a próxima rodada. Produtos perecíveis são perdidos."As enchentes interromperam as principais rotas logísticas."15%Estabilidade econômicaPeríodo de normalidade econômica e previsibilidadeEconômicoNenhuma0% (sem impacto)"O mercado está estável, sem grandes alterações previstas."15%Superoferta agrícolaColheita excepcional reduz custo dos insumosClimáticoCusto das matérias-primas-20% no custo das matérias-primas"A safra foi abundante, reduzindo o custo dos insumos."15%
+Importante:
+* Um evento será sorteado automaticamente por rodada, com base nas probabilidades acima.
+* A soma total das probabilidades é de 100%, assegurando que sempre haja um evento ativo.
+* O sistema aplicará os efeitos do evento sorteado automaticamente às variáveis correspondentes, e todos os grupos serão notificados via painel.
+
+8.5 Implementação no Sistema
+* O sistema contará com:
+o Um mecanismo de sorteio automático de evento por rodada;
+o Uma tabela de eventos aleatórios, contendo os seguintes campos:
+* nome, tipo, descrição, intensidade, impacto_percentual, variáveis_afetadas, frase_indicativa, probabilidade_ocorrencia;
+* O evento sorteado será aplicado integralmente aos cálculos da rodada:
+o Impactando custos, prazos, entregas ou demanda conforme parametrização;
+o Sendo registrado no log da rodada e incluído nos relatórios;
+o Aparecendo no painel de cada grupo com sua descrição e impactos.
+
+8.6 Relevância Pedagógica
+A presença de eventos aleatórios automáticos amplia a fidelidade da simulação em relação ao ambiente empresarial real, promovendo:
+* Vivência de situações-problema e incertezas de mercado;
+* Desenvolvimento de resiliência organizacional e capacidade analítica;
+* Prática da gestão de riscos e planejamento de contingência;
+* Estímulo à integração entre áreas funcionais e à tomada de decisão ágil.
+

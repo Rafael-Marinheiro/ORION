@@ -1,0 +1,47 @@
+11. Considerações sobre Fechamento da Rodada
+O fechamento da rodada é o processo sistêmico que consolida as decisões realizadas pelos grupos, aplica as regras de negócio, calcula os resultados da rodada e atualiza o ambiente da simulação para a rodada seguinte. Esse processo é automatizado e condicionado à configuração definida pelo administrador/professor no momento de abertura da rodada.
+
+11.1 Quando e Como Ocorre o Fechamento da Rodada
+* O início de cada rodada é definido manualmente pelo administrador/professor, por meio da função “Abrir Rodada” no painel de gerenciamento do jogo.
+* No momento da abertura da rodada, o professor define obrigatoriamente o prazo-limite de encerramento (data e hora exatas) para o envio das decisões pelos grupos.
+* O fechamento da rodada ocorre automaticamente no momento exato do prazo-limite definido. Não há necessidade de ação manual adicional do professor para encerramento.
+* A partir desse momento, o sistema:
+o Bloqueia o acesso à edição de decisões;
+o Inicia o processamento automático das decisões e dos resultados.
+
+11.2 Tratamento de Decisões Não Informadas
+Caso o grupo não tenha submetido suas decisões até o prazo-limite da rodada:
+* O sistema não considera nenhuma alteração de decisão para a rodada atual.
+* Todas as variáveis decisórias do grupo (produção, compras, vendas, investimentos, preços etc.) são mantidas nos mesmos valores da rodada anterior.
+* O grupo assumirá todos os custos da rodada normalmente, incluindo:
+o Custos fixos operacionais e administrativos;
+o Despesas com armazenagem, perecibilidade e depreciação.
+* Além disso, o grupo será multado em 10% sobre o valor disponível em caixa ao final da rodada anterior. Esta penalidade será debitada automaticamente durante o processamento da rodada.
+
+11.3 Etapas do Processamento no Fechamento da Rodada
+Uma vez encerrada a rodada, o sistema executa automaticamente as seguintes operações:
+a) Validação e Interpretação das Decisões
+* Verificação de completude e consistência lógica.
+* Aplicação de decisões padrão nos casos de omissão.
+b) Execução das Ações e Cálculos
+* Produção, vendas, compras, distribuição, logística e investimentos.
+* Apuração de custos fixos, variáveis e despesas financeiras.
+* Processamento dos efeitos de eventos aleatórios, quando existentes.
+c) Atualização de Estoques
+* Entradas e saídas de matérias-primas e produtos acabados.
+* Perdas por perecibilidade e falhas operacionais.
+d) Consolidação Financeira
+* Cálculo do Demonstrativo de Resultados da Rodada (DRR).
+* Atualização do fluxo de caixa e saldo de caixa do grupo.
+* Pagamentos e recebimentos relacionados a financiamentos, aplicações e investimentos.
+e) Cálculo do Desempenho e Geração do Ranking
+* Cálculo dos principais indicadores operacionais e financeiros.
+* Atualização do ranking geral e dos rankings parciais (lucro, rentabilidade, market share etc.).
+* Armazenamento dos dados e resultados da rodada no histórico do grupo.
+f) Transição para a Próxima Rodada
+* Avanço do contador de rodadas.
+* Liberação da interface para entrada de novas decisões.
+* Exibição de notícias e cenários atualizados com base na configuração do jogo.
+
+Quadro-Resumo – Processo de Fechamento da Rodada
+EtapaAção RealizadaResponsávelObservações Importantes1. Abertura da RodadaDefinição do prazo-limite para envio de decisõesAdministrador/ProfessorRodada é aberta manualmente via painel. Prazo é obrigatório.2. Submissão de DecisõesGrupos registram decisões nos módulos do sistemaGrupos (Aluno CEO)Somente o CEO pode submeter as decisões consolidadas por rodada.3. Encerramento AutomáticoBloqueio das edições e início do processamento automáticoSistemaOcorre automaticamente no horário-limite da rodada.4. Verificação de CompletudeValidações de campos obrigatórios e coerência entre decisõesSistemaDecisões inconsistentes ou ausentes mantêm valores da rodada anterior.5. Penalidades por OmissãoAplicação de penalidade de 10% sobre o capital em caixaSistemaGrupo assume todos os custos da rodada mesmo sem tomar decisões.6. Processamento das DecisõesExecução de produção, vendas, compras, logística, investimentos e efeitos dos eventosSistemaBaseia-se nas regras operacionais e comerciais definidas nos módulos.7. Atualização de EstoquesControle de entradas, saídas, perdas e perecibilidadeSistemaEstoques atualizados por produto, por praça.8. Consolidação FinanceiraCálculo do DRR, fluxo de caixa e saldo finalSistemaInclui despesas operacionais, investimentos e movimentações financeiras.9. Geração de Indicadores e RankingCálculo de desempenho e classificação dos gruposSistemaExibe ranking geral e rankings por critério (lucro, rentabilidade, market share etc.).10. Registro Histórico da RodadaArmazenamento dos dados da rodada e bloqueio de edições retroativasSistemaGarante rastreabilidade e transparência.11. Preparação da Nova RodadaLiberação para envio de novas decisões, exibição de notícias e atualização do cenárioSistemaSistema avança automaticamente para a próxima rodada.

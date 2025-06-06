@@ -1,0 +1,89 @@
+5. Regras de Negócio
+As regras de negócio definem os princípios e restrições que orientam o comportamento interno do simulador, estabelecendo os limites, condições e interpretações aplicáveis às decisões dos grupos e à dinâmica da simulação.
+
+RN-01: Autenticação e Acesso
+* Cada usuário deve possuir um login único associado ao seu e-mail institucional.
+* A senha de acesso deve ter no mínimo 8 caracteres, incluindo letras e números.
+* Apenas usuários cadastrados pelo administrador podem acessar o sistema.
+
+RN-02: Configuração do Jogo
+* O administrador do jogo determina o número de rodadas (mínimo de 3 e máximo de 12).
+* O período máximo para conclusão de cada rodada será determinado previamente pelo administrador.
+* Cada grupo deve possuir no mínimo 3 e no máximo 6 participantes.
+* Cada grupo inicia o jogo com um capital em caixa de R$ 1.000.000,00.
+* Cada grupo inicia o jogo com 40 máquinas de produção: 15 para o produto A, 15 para o produto B e 10 para o produto C.
+* Cada grupo inicia o jogo com uma força de trabalho formada por 80 funcionários (2 trabalhadores por máquina).
+
+RN-03: Submissão de Decisões
+* Cada grupo deverá submeter suas decisões de forma consolidada por meio do Aluno CEO até o horário-limite definido para o encerramento da rodada.
+* O sistema só aceitará uma submissão por rodada, e o envio será bloqueado automaticamente após o encerramento da rodada.
+* Decisões não enviadas dentro do prazo serão consideradas decisões nulas para a rodada, mantendo os valores da rodada anterior, com penalizações.
+
+RN-04: Penalidades por Decisões Inválidas ou Atrasadas
+* Decisões não enviadas no prazo resultarão em:
+o Redução automática de 10% no capital da empresa simulada.
+o Perda de oportunidade de venda na rodada, com perecimento dos produtos produzidos.
+* Decisões incompletas ou com inconsistências (ex: vender sem estoque disponível) serão invalidadas parcialmente, e o grupo será penalizado com a perda da receita esperada e geração de custo logístico ou tributário simulado.
+
+
+
+
+
+RN-05: Limites Operacionais
+Para garantir equilíbrio e realismo na simulação, são definidos os seguintes limites:
+OperaçãoMínimo por rodadaMáximo por rodadaProdução (por produto)0 unidadesCapacidade da planta × número de turnosCompra de MP0 kg150% do consumo estimado da produçãoVenda (por praça)0 unidadesEstoque disponível + capacidade de distribuição
+* A capacidade de produção está limitada à planta e ao número de turnos operados, podendo ser ampliada mediante investimentos futuros.
+* Quantidades acima do limite serão automaticamente ajustadas pelo sistema, com alerta ao CEO do grupo.
+
+RN-06: Capacidade de Produção
+* Cada rodada representa uma semana de produção com um único turno de 87 horas (equivalente a 5220 minutos).
+* A capacidade produtiva de cada grupo é calculada pela fórmula:
+* Cada máquina exige 2 trabalhadores para funcionar. Máquinas sem operadores não produzem.
+* A produção só ocorre com disponibilidade de matéria-prima.
+
+RN-07: Controle de Estoques
+* Não existem limites mínimos ou máximos de estoque predefinidos.
+* Os produtos não vendidos ao final de cada rodada incorrem em custos adicionais de armazenagem.
+
+RN-08: Distribuição e Comercialização
+* As vendas são influenciadas diretamente pelo preço praticado, qualidade percebida e investimentos em marketing.
+* A demanda não atendida gera perda de receita e redução na participação de mercado.
+
+RN-09: Gestão Financeira
+* O sistema calcula automaticamente receitas e despesas ao fim de cada rodada.
+* Saldo negativo (fluxo de caixa negativo) por duas rodadas consecutivas implica na restrição de investimento.
+
+RN-10: Eventos Aleatórios
+* Os eventos aleatórios fazem parte da dinâmica de incerteza do jogo e seguem os seguintes parâmetros:
+o A cada rodada, o sistema pode ativar até 2 eventos aleatórios simultâneos.
+o A ativação é definida pelo moderador ou aleatoriamente, conforme configuração.
+o Cada evento possui:
+* Frequência configurável (ex: 20%, 40% de chance).
+* Impacto pré-definido em variáveis como:
+* Redução de demanda por cidade (ex: -30%).
+* Aumento do preço da matéria-prima (ex: +25%).
+* Perda de estoque (ex: quebra ou furto).
+* Greve (paralisa produção por 1 rodada).
+* Os eventos aleatórios são informados na abertura da rodada e afetam aquela rodada específica.
+
+RN-11: Demanda por Cidade/Praça
+* Cada cidade tem uma demanda potencial de mercado, definida no início da simulação e ajustável por evento.
+* A demanda é influenciada por:
+o Preço praticado pelo grupo (quanto menor, maior chance de captação).
+o Disponibilidade de produto entregue (logística de distribuição).
+o Ações de investimento em marketing (caso habilitadas).
+* A alocação da demanda é feita por algoritmo que considera:
+o Ordem de competitividade por preço e disponibilidade.
+o Participação proporcional por grupo, caso haja empate.
+* A demanda pode ser total ou parcialmente atendida. O excesso de oferta não gera venda além da demanda potencial.
+
+RN-12: Encerramento das Rodadas e Ranking
+* Ao fim de cada rodada, o sistema gera um ranking provisório com base no resultado financeiro, participação de mercado e eficiência operacional.
+* Ao término do jogo, é apresentado um ranking final, destacando o grupo vencedor e os principais indicadores de desempenho.
+* Caso dois ou mais grupos obtenham a mesma pontuação final, será aplicado o seguinte critério de desempate, em ordem de prioridade:
+1. Maior lucro acumulado.
+2. Maior market share médio entre as praças.
+3. Maior saldo de caixa ao final do jogo.
+4. Menor número de penalidades aplicadas.
+5. Ordem alfabética do nome do grupo (como critério técnico final).
+

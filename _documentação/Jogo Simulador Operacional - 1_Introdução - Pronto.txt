@@ -1,0 +1,47 @@
+ORION - SIMULADOR OPERACIONAL
+
+1. Introdução
+
+Versão: 1.0
+Responsável: Dr. Pio Marinheiro de Souza Neto
+
+Esta seção apresenta uma visão geral da Especificação de Requisitos do Software (ERS/DRS), cujo objetivo é orientar o desenvolvimento e implementação do projeto Orion – Simulador Operacional, concebido como uma ferramenta inovadora de apoio ao ensino superior nas áreas de Administração e Engenharia de Produção, com forte integração às metodologias ativas de aprendizagem.
+
+1.1 Finalidade
+O presente documento tem como objetivo definir, de forma clara, precisa e estruturada, os requisitos do software ORION – Simulador Operacional, um sistema educacional gamificado que visa apoiar o processo de ensino-aprendizagem no campo da gestão empresarial. O documento apresenta a visão geral do sistema, suas funcionalidades, regras de negócio, estrutura de dados, e requisitos técnicos e pedagógicos, servindo como base de entendimento comum entre desenvolvedores, equipe pedagógica e demais partes interessadas.
+Além disso, esta Especificação de Requisitos do Software (ERS/DRS) busca assegurar que o sistema esteja alinhado às diretrizes pedagógicas contemporâneas, especialmente no que se refere à integração com metodologias ativas de aprendizagem, promovendo um ambiente de simulação que favoreça o protagonismo estudantil, a aprendizagem por meio da prática e o desenvolvimento de competências profissionais essenciais.
+
+1.2 Escopo
+O ORION – Simulador Operacional será um ambiente digital interativo voltado a estudantes de graduação e pós-graduação em áreas como Administração, Engenharia de Produção, Ciências Contábeis e áreas afins. O sistema permitirá que grupos de alunos assumam o controle de empresas simuladas e tomem decisões empresariais em um mercado competitivo e dinâmico.
+Os participantes deverão gerenciar empresas fictícias que atuam na produção e comercialização de bens, tomando decisões nas áreas de:
+* Gestão da produção e estoques;
+* Logística e distribuição;
+* Finanças empresariais;
+* Comercialização e marketing;
+* Planejamento estratégico e tático;
+* Tomada de decisão sob incerteza.
+Cada decisão gerencial terá efeitos imediatos e cumulativos no desempenho das empresas simuladas, afetando indicadores como lucratividade, participação de mercado, eficiência operacional e sustentabilidade financeira. O sistema proporcionará, assim, uma experiência rica, dinâmica, imersiva e alinhada com os desafios do mundo empresarial real.
+O simulador contará com:
+* Interface amigável e interativa;
+* Módulos integrados e parametrizáveis;
+* Relatórios gerenciais e dashboards;
+* Geração de eventos aleatórios;
+* Sistema de classificação e desempenho entre equipes;
+* Flexibilidade para aplicação em diferentes contextos e níveis de ensino.
+
+1.3 Objetivos do Jogo
+O objetivo central do ORION – Simulador Operacional é proporcionar aos participantes uma experiência prática e integrada de gestão empresarial, possibilitando o desenvolvimento de competências analíticas, estratégicas e operacionais por meio da simulação de decisões gerenciais em ambiente competitivo e incerto.
+
+1.3.1 Objetivos Específicos
+* Desenvolver a capacidade de análise crítica e tomada de decisão com base em indicadores empresariais;
+* Estimular a colaboração em grupo na formulação de estratégias empresariais;
+* Promover o entendimento sistêmico das áreas funcionais de uma organização;
+* Aplicar conhecimentos teóricos em contextos práticos simulados;
+* Introduzir os alunos à dinâmica de mercado, à competitividade e à gestão por resultados.
+
+Integração com Metodologias Ativas
+
+O ORION – Simulador Operacional foi concebido para se alinhar com as premissas das metodologias ativas de aprendizagem, como a aprendizagem baseada em problemas (PBL – Problem-Based Learning), aprendizagem baseada em jogos (GBL – Game-Based Learning) e aprendizagem por projetos. Sua estrutura permite que os estudantes sejam protagonistas de seu próprio processo de aprendizagem, assumindo papéis gerenciais e enfrentando desafios realistas que exigem o uso de raciocínio lógico, análise de dados e habilidades interpessoais.
+O simulador permite a imersão em um ambiente competitivo e dinâmico, no qual os alunos tomam decisões em equipe, aprendem com os resultados, refletem sobre erros e acertos, e constroem soluções por tentativa, erro e adaptação – características fundamentais do aprender fazendo. O professor atua como facilitador, mediando o processo e promovendo reflexões sobre as decisões e seus impactos, alinhando-se às práticas da docência ativa.
+Além disso, o ORION possibilita a customização de cenários e variáveis, o que permite a aplicação em diversos contextos educacionais e níveis de complexidade. Isso favorece a personalização da aprendizagem e o desenvolvimento de trilhas formativas adaptadas aos objetivos pedagógicos de cada disciplina ou curso.
+
