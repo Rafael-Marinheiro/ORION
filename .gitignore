@@ -1,6 +1,11 @@
+
+
 # Python virtual environments
 .venv/
 venv/
+__pycache__/
+*.pyc
+*.sqlite3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -92,3 +97,4 @@ venv.bak/
 
 # PyCharm
 .idea/
+

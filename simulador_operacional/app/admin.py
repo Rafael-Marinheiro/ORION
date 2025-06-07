@@ -1,11 +1,13 @@
-from django.contrib import admin
+from django.contrib import
 from django.contrib.auth.admin import UserAdmin
+from .models import User
 from .models import (
     User,
-    Produto,
-    MovimentoEstoque,
-    Maquina,
-    Producao,
+    Rodada,
+    ResultadoFinanceiro,
+    Grupo,
+    EventoAleatorio,
+    RegistroEvento,
 )
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
@@ -36,30 +38,37 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ("email_usuario", "nome_usuario")
     ordering = ("email_usuario",)
+    ordering = ("email_usuario",)
 
 
-@admin.register(Produto)
-class ProdutoAdmin(admin.ModelAdmin):
+@admin.register(Rodada)
+class RodadaAdmin(admin.ModelAdmin):
+    list_display = ("numero", "data_inicio", "data_fim", "encerrada")
+
+
+@admin.register(Grupo)
+class GrupoAdmin(admin.ModelAdmin):
+    list_display = ("nome",)
+
+
+@admin.register(ResultadoFinanceiro)
+class ResultadoFinanceiroAdmin(admin.ModelAdmin):
     list_display = (
-        "nome",
-        "estoque_atual",
-        "estoque_minimo",
-        "estoque_maximo",
-        "alerta_estoque",
+        "grupo",
+        "rodada",
+        "receita",
+        "custos",
+        "despesas",
+        "lucro_liquido",
+        "fluxo_caixa_liquido",
     )
 
 
-@admin.register(MovimentoEstoque)
-class MovimentoEstoqueAdmin(admin.ModelAdmin):
-    list_display = ("produto", "quantidade", "tipo", "data")
+@admin.register(EventoAleatorio)
+class EventoAleatorioAdmin(admin.ModelAdmin):
+    list_display = ("nome", "probabilidade")
 
 
-@admin.register(Maquina)
-class MaquinaAdmin(admin.ModelAdmin):
-    list_display = ("nome", "capacidade_por_hora")
-
-
-@admin.register(Producao)
-class ProducaoAdmin(admin.ModelAdmin):
-    list_display = ("produto", "maquina", "quantidade", "data")
-
+@admin.register(RegistroEvento)
+class RegistroEventoAdmin(admin.ModelAdmin):
+    list_display = ("evento", "rodada", "data_aplicacao")

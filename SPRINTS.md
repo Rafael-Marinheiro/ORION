@@ -1,5 +1,3 @@
-# Plano de Sprints
-
 Este documento resume as funcionalidades previstas para cada sprint de desenvolvimento. Ele se baseia no arquivo de documentação `Sprints de programação.docx` localizado em `_documentação/DOC/`.
 
 ## Sprint 0 – Preparação
@@ -67,3 +65,4 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Aplicar criptografia e controle de permissões.
 - Manter compatibilidade com navegadores e dispositivos.
 - Escrever código modular preparado para futuras integrações.
+

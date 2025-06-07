@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Evento Aleatório</h2>
+{% if evento %}
+<p><strong>{{ evento.nome }}</strong>: {{ evento.descricao }}</p>
+{% else %}
+<p>Nenhum evento foi sorteado.</p>
+{% endif %}
+{% endblock %}
