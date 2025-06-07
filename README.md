@@ -96,3 +96,10 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    ```bash
    python manage.py runserver
    ```
+3. Acesse os relatórios financeiros em `http://localhost:8000/financeiro/`
+4. Veja o ranking atualizado em `http://localhost:8000/ranking/`
+5. Sorteie um evento aleatório em `http://localhost:8000/eventos/`
+6. Consulte o resumo de encerramento em `http://localhost:8000/encerramento/`
+
+## Documentação de Sprints
+O planejamento completo dos sprints encontra-se em [SPRINTS.md](SPRINTS.md), incluindo a divisão do Sprint 6 em etapas menores (6A, 6B e 6C).
