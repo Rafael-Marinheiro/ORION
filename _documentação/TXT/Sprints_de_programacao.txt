@@ -1,0 +1,86 @@
+  -----------------------------------------------------------------------
+  Sprint              Tarefas Principais                     RF/RNF
+                                                             Envolvidos
+  ------------------- -------------------------------------- ------------
+  0 – Preparação      - Revisar documentação e criar backlog —
+                      inicial.                               
+                      - Configurar ambiente de               
+                      desenvolvimento e versionamento.       
+
+  1 – Autenticação    - Implementar cadastro e edição de     RF‑03
+  Completa            usuários pelo administrador.           
+                      - Criar fluxo de redefinição de senha. 
+                      - Ajustar permissões e papéis (aluno,  
+                      professor, administrador).             
+
+  2 – Configuração do - Modelar parâmetros iniciais          RF‑04,
+  Jogo                (capital, estoque, produtos            RF‑05, RF‑06
+                      habilitados).                          
+                      - Tela para ativar ou desativar        
+                      módulos do jogo.                       
+                      - Definir regras para eventos          
+                      aleatórios por rodada.                 
+
+  3 – Painel do Grupo - Desenvolver painel com indicadores   RF‑07,
+                      em tempo real.                         RF‑08, RF‑09
+                      - Histórico das decisões e suas        
+                      consequências.                         
+                      - Formulário para envio de decisões    
+                      antes do fechamento de rodada.         
+
+  4 – Produção e      - Implementar cálculo automático de    RF‑10,
+  Estoques            estoque.                               RF‑11, RF‑12
+                      - Alertas de risco de ruptura ou       
+                      desperdício.                           
+                      - Definir parâmetros de produção       
+                      (máquinas, capacidade etc.).           
+
+  5 – Distribuição e  - Cálculo de custos de transporte e    RF‑13,
+  Comercialização     prazos.                                RF‑14, RF‑15
+                      - Definição de preços/promos por       
+                      praça.                                 
+                      - Relatórios de vendas e demanda.      
+
+  6 – Financeiro e    - Cálculo de resultados financeiros    RF‑16,
+  Ranking             por rodada (DRE, fluxo de caixa).      RF‑17, RF‑18
+                      - Relatórios e gráficos comparativos.  
+                      - Implementação do ranking dinâmico    
+                      dos grupos.                            
+
+  7 – Eventos         - Sorteio e aplicação automática de    RF‑19, RF‑20
+  Aleatórios          eventos com probabilidades.            
+                      - Notificação imediata do impacto aos  
+                      grupos.                                
+
+  8 – Encerramento da - Encerramento automático da rodada no RF‑21, RF‑22
+  Rodada              horário definido.                      
+                      - Processamento das decisões e         
+                      consolidação dos resultados.           
+                      - Apresentação de relatórios finais.   
+
+  Ações Transversais  - Garantir desempenho (<2 s) e suporte 
+                      a até 100 usuários.                    
+                      - Implementar documentação de ajuda    
+                      online.                                
+                      - Configurar backup automático e       
+                      monitoramento da disponibilidade.      
+                      - Aplicar criptografia, controle de    
+                      permissões e compatibilidade com       
+                      navegadores/dispositivos.              
+                      - Manter código modular e preparado    
+                      para integrações futuras.              
+  -----------------------------------------------------------------------
+
+Status de Implementação:
+- Sprints 0 a 8: concluídos nas primeiras versões.
+- Sprints 9 a 16: implementados na versão atual do sistema.
+
+Novos Sprints:
+- Sprint9 - Configuração Inicial e Usuários
+- Sprint10 - Painel do Grupo e Decisões
+- Sprint11 - Estoques e Produção
+- Sprint12 - Distribuição e Comercialização
+- Sprint13 - Financeiro e Ranking
+- Sprint14 - Eventos Aleatórios e Encerramento
+- Sprint15 - Requisitos Não Funcionais
+- Sprint16 - Revisão e Evolução
