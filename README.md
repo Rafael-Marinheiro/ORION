@@ -26,6 +26,10 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - RF-10 – Cálculo automático de estoque disponível.
 - RF-11 – Geração de alertas automáticos para risco de ruptura ou desperdício.
 - RF-12 – Definição de parâmetros de produção.
+  Este módulo conta com modelos de **Produto**, **MovimentoEstoque**,
+  **Máquina** e **Produção**. A partir dos registros de produção e
+  movimentações de estoque, o sistema calcula o estoque atual e indica
+  automaticamente situações de risco de ruptura ou excesso.
 
 #### Módulo 5 – Distribuição e Comercialização
 - RF-13 – Cálculo automático de custos e prazos de transporte.
