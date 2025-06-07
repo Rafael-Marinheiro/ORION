@@ -26,6 +26,10 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - RF-10 – Cálculo automático de estoque disponível.
 - RF-11 – Geração de alertas automáticos para risco de ruptura ou desperdício.
 - RF-12 – Definição de parâmetros de produção.
+  Este módulo conta com modelos de **Produto**, **MovimentoEstoque**,
+  **Máquina** e **Produção**. A partir dos registros de produção e
+  movimentações de estoque, o sistema calcula o estoque atual e indica
+  automaticamente situações de risco de ruptura ou excesso.
 
 #### Módulo 5 – Distribuição e Comercialização
 - RF-13 – Cálculo automático de custos e prazos de transporte.
@@ -76,10 +80,11 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 1. Clone este repositório
 2. Crie um ambiente virtual Python:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate  # Windows
+   python -m venv .venv
+   source .venv/bin/activate  # Linux/Mac
+   .venv\Scripts\activate  # Windows
    ```
+   A pasta `.venv` já está listada no `.gitignore` e não será versionada.
 3. Instale as dependências:
    ```bash
    pip install -r requirements.txt
@@ -87,12 +92,15 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 
 ## Uso
 
+Certifique-se de que o ambiente virtual está ativado e de que as dependências
+foram instaladas conforme a seção anterior.
+
 1. Configure o banco de dados:
    ```bash
-   python manage.py migrate
-   python manage.py createsuperuser
+   python simulador_operacional/manage.py migrate
+   python simulador_operacional/manage.py createsuperuser
    ```
 2. Inicie o servidor:
    ```bash
-   python manage.py runserver
+   python simulador_operacional/manage.py runserver
    ```

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from .models import User
 from .models import (
     User,
     TransportRoute,
@@ -38,6 +39,7 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
     search_fields = ("email_usuario", "nome_usuario")
+    ordering = ("email_usuario",)
     ordering = ("email_usuario",)
 
 

@@ -32,7 +32,7 @@ class UserManager(BaseUserManager):
         )
 
 class User(AbstractBaseUser, PermissionsMixin):
-    TIPO_USUARIO_CHOICES = [
+        TIPO_USUARIO_CHOICES = [
         ('aluno_admin', 'Administrador'),
         ('professor', 'Professor'),
         ('aluno', 'Aluno'),
