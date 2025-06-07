@@ -76,10 +76,11 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 1. Clone este repositório
 2. Crie um ambiente virtual Python:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate  # Windows
+   python -m venv .venv
+   source .venv/bin/activate  # Linux/Mac
+   .venv\Scripts\activate  # Windows
    ```
+   A pasta `.venv` já está listada no `.gitignore` e não será versionada.
 3. Instale as dependências:
    ```bash
    pip install -r requirements.txt
