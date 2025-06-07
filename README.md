@@ -87,12 +87,15 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 
 ## Uso
 
+Certifique-se de que o ambiente virtual está ativado e de que as dependências
+foram instaladas conforme a seção anterior.
+
 1. Configure o banco de dados:
    ```bash
-   python manage.py migrate
-   python manage.py createsuperuser
+   python simulador_operacional/manage.py migrate
+   python simulador_operacional/manage.py createsuperuser
    ```
 2. Inicie o servidor:
    ```bash
-   python manage.py runserver
+   python simulador_operacional/manage.py runserver
    ```
