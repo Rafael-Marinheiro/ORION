@@ -1,6 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import (
+    User,
+    Produto,
+    MovimentoEstoque,
+    Maquina,
+    Producao,
+)
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 
@@ -30,3 +36,30 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ("email_usuario", "nome_usuario")
     ordering = ("email_usuario",)
+
+
+@admin.register(Produto)
+class ProdutoAdmin(admin.ModelAdmin):
+    list_display = (
+        "nome",
+        "estoque_atual",
+        "estoque_minimo",
+        "estoque_maximo",
+        "alerta_estoque",
+    )
+
+
+@admin.register(MovimentoEstoque)
+class MovimentoEstoqueAdmin(admin.ModelAdmin):
+    list_display = ("produto", "quantidade", "tipo", "data")
+
+
+@admin.register(Maquina)
+class MaquinaAdmin(admin.ModelAdmin):
+    list_display = ("nome", "capacidade_por_hora")
+
+
+@admin.register(Producao)
+class ProducaoAdmin(admin.ModelAdmin):
+    list_display = ("produto", "maquina", "quantidade", "data")
+
