@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Grupos</h2>
+<a href="{% url 'criar_grupo' %}" class="btn">Novo Grupo</a>
+<ul>
+    {% for g in grupos %}
+    <li>{{ g.nome }} - <a href="{% url 'editar_grupo' g.pk %}">Editar</a></li>
+    {% empty %}
+    <li>Nenhum grupo cadastrado.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

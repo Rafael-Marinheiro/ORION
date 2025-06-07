@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Painel do Grupo {{ grupo.nome }}</h2>
+<p>Capital: {{ grupo.capital }}</p>
+<p>Estoque: {{ grupo.estoque }}</p>
+<p>Máquinas: {{ grupo.maquinas }} | Capacidade por máquina: {{ grupo.capacidade_maquina }}</p>
+{% if evento %}
+<p><strong>Evento da rodada: {{ evento.nome }} - {{ evento.descricao }} ({{ evento.impacto_percentual }}%)</strong></p>
+{% endif %}
+{% if alerta %}
+<p><strong>{{ alerta }}</strong></p>
+{% endif %}
+
+<h3>Enviar Decisão</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" name="enviar_decisao" class="btn">Enviar</button>
+</form>
+
+<h3>Distribuir Produtos</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ envio_form.as_p }}
+    <button type="submit" name="enviar_envio" class="btn">Distribuir</button>
+</form>
+
+<h3>Histórico de Decisões</h3>
+<ul>
+    {% for d in decisoes %}
+    <li>Rodada {{ d.rodada }} - {{ d.descricao }} ({{ d.data_criacao|date:'d/m H:i' }})</li>
+    {% empty %}
+    <li>Nenhuma decisão registrada.</li>
+    {% endfor %}
+</ul>
+
+<h3>Envios Realizados</h3>
+<ul>
+    {% for e in envios %}
+    <li>{{ e.cidade.nome }} - {{ e.quantidade }} un - custo {{ e.custo_transporte }} - preço {{ e.preco_unitario }}</li>
+    {% empty %}
+    <li>Nenhum envio registrado.</li>
+    {% endfor %}
+</ul>
+
+<h3>Resultados Financeiros</h3>
+<ul>
+    {% for r in resultados %}
+    <li>Rodada {{ r.rodada }} - Receita {{ r.receita }} - Custos {{ r.custos }} - Lucro {{ r.lucro }} - Caixa {{ r.saldo_caixa }}</li>
+    {% empty %}
+    <li>Nenhum resultado registrado.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

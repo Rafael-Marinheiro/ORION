@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>ORION - Simulador Operacional</title>
-</head>
-<body>
-    <h1>Bem-vindo ao ORION</h1>
-    <p>Simulador Operacional Educacional</p>
-    <a href="{% url 'login' %}">Entrar</a>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Bem-vindo ao ORION</h1>
+<p>Simulador Operacional Educacional</p>
+{% if user.is_authenticated %}
+<p>Você está logado como {{ user.nome_usuario }}.</p>
+<p><a href="{% url 'painel_grupo' %}">Ir para o Painel do Grupo</a></p>
+{% else %}
+<p><a href="{% url 'login' %}">Entrar</a></p>
+{% endif %}
+{% endblock %}
