@@ -1,35 +1,88 @@
-Sprint 1 - Configuração Inicial e Usuários
-- Implementar modelos Django para Grupos e Rodadas.
-- Adicionar telas de cadastro de grupos e gestão de rodadas pelo administrador.
-- Configurar formulários de criação e edição destes elementos.
-- Criar migrações correspondentes.
 
-Sprint 2 - Painel do Grupo e Decisões
-- Desenvolver painel de grupo com indicadores básicos (RF-07 a RF-09).
-- Permitir envio de decisões de produção e distribuição por rodada.
-- Armazenar submissões no banco.
+  -----------------------------------------------------------------------
+  Sprint              Tarefas Principais                     RF/RNF
+                                                             Envolvidos
+  ------------------- -------------------------------------- ------------
+  0 – Preparação      - Revisar documentação e criar backlog —
+                      inicial.                               
+                      - Configurar ambiente de               
+                      desenvolvimento e versionamento.       
 
-Sprint 3 - Estoques e Produção
-- Implementar modelos e lógica de cálculo de estoque (RF-10 a RF-12).
-- Gerar alertas automáticos em caso de risco de ruptura ou excesso.
+  1 – Autenticação    - Implementar cadastro e edição de     RF‑03
+  Completa            usuários pelo administrador.           
+                      - Criar fluxo de redefinição de senha. 
+                      - Ajustar permissões e papéis (aluno,  
+                      professor, administrador).             
 
-Sprint 4 - Distribuição e Comercialização
-- Criar modelos de logística e vendas.
-- Implementar cálculo de custos de transporte e definição de preços (RF-13 a RF-15).
-- Relatórios de vendas por praça.
+  2 – Configuração do - Modelar parâmetros iniciais          RF‑04,
+  Jogo                (capital, estoque, produtos            RF‑05, RF‑06
+                      habilitados).                          
+                      - Tela para ativar ou desativar        
+                      módulos do jogo.                       
+                      - Definir regras para eventos          
+                      aleatórios por rodada.                 
 
-Sprint 5 - Financeiro e Ranking
-- Implementar módulo financeiro consolidando dados das rodadas (RF-16 e RF-17).
-- Gerar ranking dinâmico entre grupos (RF-18).
+  3 – Painel do Grupo - Desenvolver painel com indicadores   RF‑07,
+                      em tempo real.                         RF‑08, RF‑09
+                      - Histórico das decisões e suas        
+                      consequências.                         
+                      - Formulário para envio de decisões    
+                      antes do fechamento de rodada.         
 
-Sprint 6 - Eventos Aleatórios e Encerramento
-- Adicionar sistema de eventos aleatórios configurável (RF-19 e RF-20).
-- Automatizar encerramento de rodada e consolidação de relatórios (RF-21 e RF-22).
+  4 – Produção e      - Implementar cálculo automático de    RF‑10,
+  Estoques            estoque.                               RF‑11, RF‑12
+                      - Alertas de risco de ruptura ou       
+                      desperdício.                           
+                      - Definir parâmetros de produção       
+                      (máquinas, capacidade etc.).           
 
-Sprint 7 - Requisitos Não Funcionais
-- Implementar HTTPS e controle de permissões (RNF-07 e RNF-08).
-- Configurar backups automáticos e ajustes de performance (RNF-01, RNF-02, RNF-06).
+  5 – Distribuição e  - Cálculo de custos de transporte e    RF‑13,
+  Comercialização     prazos.                                RF‑14, RF‑15
+                      - Definição de preços/promos por       
+                      praça.                                 
+                      - Relatórios de vendas e demanda.      
 
-Sprint 8 - Revisão e Evolução
-- Melhorar documentação e API para integrações futuras (RNF-03, RNF-11, RNF-12).
-- Garantir compatibilidade entre navegadores e dispositivos (RNF-09 e RNF-10).
+  6 – Financeiro e    - Cálculo de resultados financeiros    RF‑16,
+  Ranking             por rodada (DRE, fluxo de caixa).      RF‑17, RF‑18
+                      - Relatórios e gráficos comparativos.  
+                      - Implementação do ranking dinâmico    
+                      dos grupos.                            
+
+  7 – Eventos         - Sorteio e aplicação automática de    RF‑19, RF‑20
+  Aleatórios          eventos com probabilidades.            
+                      - Notificação imediata do impacto aos  
+                      grupos.                                
+
+  8 – Encerramento da - Encerramento automático da rodada no RF‑21, RF‑22
+  Rodada              horário definido.                      
+                      - Processamento das decisões e         
+                      consolidação dos resultados.           
+                      - Apresentação de relatórios finais.   
+
+  Ações Transversais  - Garantir desempenho (<2 s) e suporte 
+                      a até 100 usuários.                    
+                      - Implementar documentação de ajuda    
+                      online.                                
+                      - Configurar backup automático e       
+                      monitoramento da disponibilidade.      
+                      - Aplicar criptografia, controle de    
+                      permissões e compatibilidade com       
+                      navegadores/dispositivos.              
+                      - Manter código modular e preparado    
+                      para integrações futuras.              
+  -----------------------------------------------------------------------
+
+Status de Implementação:
+- Sprints 0 a 8: concluídos nas primeiras versões.
+- Sprints 9 a 16: implementados na versão atual do sistema.
+
+Novos Sprints:
+- Sprint9 - Configuração Inicial e Usuários
+- Sprint10 - Painel do Grupo e Decisões
+- Sprint11 - Estoques e Produção
+- Sprint12 - Distribuição e Comercialização
+- Sprint13 - Financeiro e Ranking
+- Sprint14 - Eventos Aleatórios e Encerramento
+- Sprint15 - Requisitos Não Funcionais
+- Sprint16 - Revisão e Evolução
+

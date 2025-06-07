@@ -1,5 +1,3 @@
-
-
 # Python virtual environments
 .venv/
 venv/
@@ -97,4 +95,5 @@ venv.bak/
 
 # PyCharm
 .idea/
+
 

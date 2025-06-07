@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<h2>Abrir Rodada</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Alterar senha</button>
+    <button type="submit" class="btn">Abrir</button>
 </form>
 {% endblock %}

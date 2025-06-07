@@ -54,9 +54,45 @@ class UserManager(BaseUserManager):
     def __str__(self):
         return self.nome_usuario
 
+    @property
+    def is_staff(self):
+        return self.tipo_usuario == 'aluno_admin' or self.is_superuser
+
+    @property
+    def is_active(self):
+        return self.status_usuario
+
+
+class GameConfig(models.Model):
+    capital_inicial = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    estoque_inicial = models.PositiveIntegerField(default=0)
+    produtos_habilitados = models.TextField(blank=True)
+
+    modulo_producao = models.BooleanField(default=True)
+    modulo_distribuicao = models.BooleanField(default=True)
+    modulo_financeiro = models.BooleanField(default=True)
+
+    regra_eventos = models.JSONField(default=dict, blank=True)
+
+    maquinas_iniciais = models.PositiveIntegerField(default=1)
+    capacidade_maquina = models.PositiveIntegerField(default=100)
+
+    class Meta:
+        db_table = 'CONFIG'
+        verbose_name = 'Configuração do Jogo'
+        verbose_name_plural = 'Configurações do Jogo'
+
+    def __str__(self):
+        return 'Configuração'
+
 
 class Grupo(models.Model):
-    nome = models.CharField(max_length=100, unique=True)
+    nome = models.CharField(max_length=100)
+    membros = models.ManyToManyField(User, related_name="grupos")
+    capital = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    estoque = models.PositiveIntegerField(default=0)
+    maquinas = models.PositiveIntegerField(default=1)
+    capacidade_maquina = models.PositiveIntegerField(default=100)
 
     class Meta:
         db_table = 'GRUPOS'
@@ -67,82 +103,124 @@ class Grupo(models.Model):
         return self.nome
 
 
-class Rodada(models.Model):
-    numero = models.PositiveIntegerField(unique=True)
-    data_inicio = models.DateTimeField(default=timezone.now)
-    data_fim = models.DateTimeField()
-    encerrada = models.BooleanField(default=False)
-
-    class Meta:
-        db_table = 'RODADAS'
-        verbose_name = 'Rodada'
-        verbose_name_plural = 'Rodadas'
-
-    def encerrar(self):
-        self.encerrada = True
-        self.save(update_fields=["encerrada"])
-
-    def __str__(self):
-        return f"Rodada {self.numero}"
-
-
-class ResultadoFinanceiro(models.Model):
-    grupo = models.ForeignKey(
-        Grupo,
-        on_delete=models.CASCADE,
-        related_name='resultados',
-        null=True,
-        blank=True,
-    )
-    rodada = models.OneToOneField(Rodada, on_delete=models.CASCADE, related_name='resultado_financeiro')
-    receita = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    custos = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    despesas = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    fluxo_caixa_entrada = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    fluxo_caixa_saida = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    lucro_liquido = models.DecimalField(max_digits=10, decimal_places=2, editable=False, default=0)
-    fluxo_caixa_liquido = models.DecimalField(max_digits=10, decimal_places=2, editable=False, default=0)
-
-    class Meta:
-        db_table = 'RESULTADOS_FINANCEIROS'
-        verbose_name = 'Resultado Financeiro'
-        verbose_name_plural = 'Resultados Financeiros'
-
-    def calcular_resultados(self):
-        self.lucro_liquido = self.receita - self.custos - self.despesas
-        self.fluxo_caixa_liquido = self.fluxo_caixa_entrada - self.fluxo_caixa_saida
-
-    def save(self, *args, **kwargs):
-        self.calcular_resultados()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Resultado {self.rodada}"
-
-
-class EventoAleatorio(models.Model):
-    nome = models.CharField(max_length=100)
+class Decisao(models.Model):
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='decisoes')
+    rodada = models.PositiveIntegerField()
     descricao = models.TextField()
-    probabilidade = models.FloatField(help_text="Probabilidade de 0 a 1")
+    quantidade = models.IntegerField(default=0)
+    resultado = models.TextField(blank=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'EVENTOS_ALEATORIOS'
-        verbose_name = 'Evento Aleatório'
-        verbose_name_plural = 'Eventos Aleatórios'
+        db_table = 'DECISOES'
+        ordering = ['-data_criacao']
+        verbose_name = 'Decisão'
+        verbose_name_plural = 'Decisões'
+
+    def __str__(self):
+        return f"Decisão {self.rodada} - {self.grupo.nome}"
+
+
+class Cidade(models.Model):
+    nome = models.CharField(max_length=100)
+    distancia_km = models.PositiveIntegerField()
+    demanda = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'CIDADES'
+        verbose_name = 'Cidade'
+        verbose_name_plural = 'Cidades'
 
     def __str__(self):
         return self.nome
 
 
-class RegistroEvento(models.Model):
-    evento = models.ForeignKey(EventoAleatorio, on_delete=models.CASCADE)
-    rodada = models.ForeignKey(Rodada, on_delete=models.CASCADE)
-    data_aplicacao = models.DateTimeField(auto_now_add=True)
+class Distribuicao(models.Model):
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='envios')
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE)
+    rodada = models.PositiveIntegerField(default=1)
+    quantidade = models.PositiveIntegerField()
+    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    custo_transporte = models.DecimalField(max_digits=10, decimal_places=2)
+    data_envio = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'REGISTRO_EVENTOS'
-        verbose_name = 'Registro de Evento'
-        verbose_name_plural = 'Registros de Eventos'
+        db_table = 'DISTRIBUICOES'
+        ordering = ['-data_envio']
+        verbose_name = 'Distribuição'
+        verbose_name_plural = 'Distribuições'
 
     def __str__(self):
-        return f"{self.evento} - {self.rodada}"
+        return f"{self.cidade.nome} - {self.quantidade}"
+
+
+class ResultadoFinanceiro(models.Model):
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="resultados")
+    rodada = models.PositiveIntegerField()
+    receita = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    custos = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    lucro = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    saldo_caixa = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "FINANCEIRO"
+        verbose_name = "Resultado Financeiro"
+        verbose_name_plural = "Resultados Financeiros"
+        ordering = ["rodada"]
+
+    def __str__(self):
+        return f"{self.grupo.nome} - Rodada {self.rodada}"
+
+
+class Evento(models.Model):
+    TIPO_CHOICES = [
+        ("custo_producao", "Custo de Produção"),
+        ("custo_transporte", "Custo de Transporte"),
+        ("demanda", "Demanda"),
+    ]
+
+    nome = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    impacto_percentual = models.IntegerField()
+    probabilidade = models.FloatField(default=0)
+    descricao = models.TextField(blank=True)
+
+    class Meta:
+        db_table = "EVENTOS"
+        verbose_name = "Evento"
+        verbose_name_plural = "Eventos"
+
+    def __str__(self):
+        return self.nome
+
+
+class EventoRodada(models.Model):
+    rodada = models.PositiveIntegerField(unique=True)
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name="rodadas")
+    data = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "EVENTOS_RODADA"
+        verbose_name = "Evento da Rodada"
+        verbose_name_plural = "Eventos da Rodada"
+        ordering = ["rodada"]
+
+    def __str__(self):
+        return f"Rodada {self.rodada} - {self.evento.nome}"
+
+
+class Rodada(models.Model):
+    numero = models.PositiveIntegerField(unique=True)
+    inicio = models.DateTimeField(auto_now_add=True)
+    fim = models.DateTimeField()
+    fechada = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "RODADAS"
+        verbose_name = "Rodada"
+        verbose_name_plural = "Rodadas"
+        ordering = ["numero"]
+
+    def __str__(self):
+        return f"Rodada {self.numero}"
