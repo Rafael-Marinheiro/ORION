@@ -1,12 +1,11 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>ORION - Simulador Operacional</title>
-</head>
-<body>
-    <h1>Bem-vindo ao ORION</h1>
-    <p>Simulador Operacional Educacional</p>
-    <a href="{% url 'login' %}">Entrar</a>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+<h1>Bem-vindo ao ORION</h1>
+<p>Simulador Operacional Educacional</p>
+<ul>
+    <li><a href="{% url 'distribution' %}">Distribuição</a></li>
+    <li><a href="{% url 'financial' %}">Financeiro</a></li>
+    <li><a href="{% url 'events' %}">Eventos</a></li>
+</ul>
+{% endblock %}
+

@@ -57,3 +57,118 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.nome_usuario
+
+
+class TransportRoute(models.Model):
+    """Rota de transporte com custo e prazo estimado."""
+
+    origem = models.CharField(max_length=100)
+    destino = models.CharField(max_length=100)
+    distancia_km = models.PositiveIntegerField()
+    custo_por_km = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Rota de Transporte"
+        verbose_name_plural = "Rotas de Transporte"
+
+    @property
+    def custo_total(self):
+        return self.distancia_km * self.custo_por_km
+
+    @property
+    def prazo_estimado(self):
+        return int(self.distancia_km / 50) + 1
+
+
+class PriceList(models.Model):
+    """Tabela de preços por praça."""
+
+    produto = models.CharField(max_length=100)
+    praca = models.CharField(max_length=100)
+    preco = models.DecimalField(max_digits=10, decimal_places=2)
+    promocao = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+
+    class Meta:
+        verbose_name = "Preço"
+        verbose_name_plural = "Preços"
+
+    def preco_vigente(self):
+        return self.promocao if self.promocao is not None else self.preco
+
+
+class Sale(models.Model):
+    """Registro de vendas realizadas."""
+
+    data = models.DateField()
+    produto = models.CharField(max_length=100)
+    quantidade = models.PositiveIntegerField()
+    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    praca = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = "Venda"
+        verbose_name_plural = "Vendas"
+
+    @property
+    def total(self):
+        return self.quantidade * self.valor_unitario
+
+
+class FinancialResult(models.Model):
+    """Resultados financeiros por rodada."""
+
+    rodada = models.PositiveIntegerField()
+    receita = models.DecimalField(max_digits=12, decimal_places=2)
+    despesas = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Resultado Financeiro"
+        verbose_name_plural = "Resultados Financeiros"
+
+    @property
+    def lucro(self):
+        return self.receita - self.despesas
+
+
+class Ranking(models.Model):
+    """Ranking dos grupos baseado no lucro."""
+
+    grupo = models.CharField(max_length=100)
+    resultado = models.ForeignKey(FinancialResult, on_delete=models.CASCADE)
+    pontuacao = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Ranking"
+        verbose_name_plural = "Rankings"
+
+
+class RandomEvent(models.Model):
+    """Evento aleatório com probabilidade de ocorrência."""
+
+    descricao = models.CharField(max_length=255)
+    probabilidade = models.DecimalField(max_digits=5, decimal_places=2)
+    impacto = models.TextField()
+
+    class Meta:
+        verbose_name = "Evento Aleatório"
+        verbose_name_plural = "Eventos Aleatórios"
+
+    def __str__(self):
+        return self.descricao
+
+
+class EventHistory(models.Model):
+    """Registro de eventos aplicados em uma rodada."""
+
+    evento = models.ForeignKey(RandomEvent, on_delete=models.CASCADE)
+    rodada = models.PositiveIntegerField()
+    data_ocorrencia = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Histórico de Evento"
+        verbose_name_plural = "Históricos de Eventos"
+
+    def __str__(self):
+        return f"Rodada {self.rodada} - {self.evento.descricao}"

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Rotas de Transporte</h2>
+<table>
+  <tr>
+    <th>Origem</th>
+    <th>Destino</th>
+    <th>Distância (km)</th>
+    <th>Custo Total</th>
+    <th>Prazo (dias)</th>
+  </tr>
+  {% for rota in rotas %}
+  <tr>
+    <td>{{ rota.origem }}</td>
+    <td>{{ rota.destino }}</td>
+    <td>{{ rota.distancia_km }}</td>
+    <td>{{ rota.custo_total }}</td>
+    <td>{{ rota.prazo_estimado }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="5">Nenhuma rota cadastrada.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
+

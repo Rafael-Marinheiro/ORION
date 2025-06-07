@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Ranking Financeiro</h2>
+<table>
+  <tr>
+    <th>Grupo</th>
+    <th>Rodada</th>
+    <th>Pontuação</th>
+    <th>Lucro</th>
+  </tr>
+  {% for item in rankings %}
+  <tr>
+    <td>{{ item.grupo }}</td>
+    <td>{{ item.resultado.rodada }}</td>
+    <td>{{ item.pontuacao }}</td>
+    <td>{{ item.resultado.lucro }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="4">Nenhum resultado financeiro.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
+
