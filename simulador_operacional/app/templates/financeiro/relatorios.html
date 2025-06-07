@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Resultados Financeiros</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Rodada</th>
+            <th>Receita</th>
+            <th>Custos</th>
+            <th>Despesas</th>
+            <th>Lucro Líquido</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in resultados %}
+        <tr>
+            <td>{{ r.rodada.numero }}</td>
+            <td>{{ r.receita }}</td>
+            <td>{{ r.custos }}</td>
+            <td>{{ r.despesas }}</td>
+            <td>{{ r.lucro_liquido }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<canvas id="graficoLucro"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const data = {
+        labels: [{% for r in resultados %}'Rodada {{ r.rodada.numero }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Lucro Líquido',
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            data: [{% for r in resultados %}{{ r.lucro_liquido }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+        }]
+    };
+
+    new Chart(
+        document.getElementById('graficoLucro'),
+        {
+            type: 'bar',
+            data: data,
+        }
+    );
+</script>
+{% endblock %}

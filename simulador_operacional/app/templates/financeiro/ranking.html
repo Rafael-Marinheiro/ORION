@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Ranking de Grupos</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Posição</th>
+            <th>Grupo</th>
+            <th>Lucro Acumulado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for grupo in ranking %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ grupo.nome }}</td>
+            <td>{{ grupo.total_lucro|default:"0" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

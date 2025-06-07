@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Resumo do Encerramento</h2>
+{% if rodada %}
+<p>Rodada encerrada: {{ rodada.numero }} - {{ rodada.data_fim }}</p>
+{% if resultado %}
+<ul>
+  <li>Receita: {{ resultado.receita }}</li>
+  <li>Custos: {{ resultado.custos }}</li>
+  <li>Despesas: {{ resultado.despesas }}</li>
+  <li>Lucro Líquido: {{ resultado.lucro_liquido }}</li>
+  <li>Fluxo de Caixa Líquido: {{ resultado.fluxo_caixa_liquido }}</li>
+</ul>
+{% else %}
+<p>Sem resultado registrado para a rodada.</p>
+{% endif %}
+{% else %}
+<p>Nenhuma rodada encerrada.</p>
+{% endif %}
+{% endblock %}

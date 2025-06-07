@@ -1,3 +1,5 @@
+from django.urls import path
+from .views import HomeView, CustomLoginView
 from django.urls import path, include
 from django.contrib.auth.views import LogoutView
 from .views import (
@@ -27,6 +29,7 @@ router.register('grupos', GrupoViewSet)
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     path('login/', CustomLoginView.as_view(), name='login'),
+]
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('register/', RegisterView.as_view(), name='register'),
     path('password_reset/', CustomPasswordResetView.as_view(), name='password_reset'),

@@ -1,3 +1,4 @@
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
@@ -7,8 +8,10 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView,
 )
 from django.urls import reverse_lazy
+from django.views.generic import TemplateView
 from django.views.generic import TemplateView, CreateView, ListView
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 from rest_framework import viewsets, generics
 from .serializers import GrupoSerializer, ResultadoFinanceiroSerializer
 from django.shortcuts import render, redirect
@@ -65,6 +68,7 @@ class HomeView(TemplateView):
 
 @login_required
 def home(request):
+    return render(request, 'home.html')
     return render(request, 'home.html')
 
 
@@ -303,4 +307,3 @@ class GrupoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 
     def has_permission(self):
         return self.request.user.is_staff or super().has_permission()
-
