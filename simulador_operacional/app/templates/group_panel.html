@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Painel do Grupo - {{ group.nome }}</h2>
+<p><a href="{% url 'production_config' %}">Configurar Produção</a></p>
+
+<h3>Enviar Decisão</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Enviar</button>
+</form>
+
+<h3>Indicadores</h3>
+<p>Estoque atual: {{ estoque.quantidade }}</p>
+<p>Capacidade total: {{ capacidade_total }}</p>
+{% if alerta %}
+<p style="color:red;">{{ alerta }}</p>
+{% endif %}
+
+<h3>Histórico de Decisões</h3>
+<ul>
+{% for d in decisions %}
+    <li><strong>Rodada {{ d.rodada }}:</strong> {{ d.descricao }} ({{ d.data_criacao|date:'d/m/Y H:i' }})</li>
+{% empty %}
+    <li>Nenhuma decisão enviada ainda.</li>
+{% endfor %}
+</ul>
+{% endblock %}
