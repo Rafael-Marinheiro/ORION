@@ -120,7 +120,23 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    Utilize o comando `python manage.py fechar_rodadas` para processar rodadas cujo prazo terminou e aplicar penalidades aos grupos que não enviaram decisões.
    Os comandos `fechar_rodadas` e `enviar_lembretes` são executados automaticamente via `django-crontab`, gerando logs em `agendamentos.log`.
    Gere backups do banco periodicamente executando `python manage.py backupdb`.
-   Utilize a API REST em `/api/` para integrar outras aplicações. O ranking financeiro pode ser obtido em `/api/ranking/`.
+  Utilize a API REST em `/api/` para integrar outras aplicações. O ranking financeiro pode ser obtido em `/api/ranking/`.
+
+## Docker
+
+1. Copie o arquivo `.env.example` para `.env` e ajuste as variáveis.
+2. Construa a imagem:
+   ```bash
+   docker build -t simulador-operacional .
+   ```
+3. Inicie o container:
+   ```bash
+   docker run --env-file .env -p 8000:8000 simulador-operacional
+   ```
+   Ou utilize o `docker-compose`:
+   ```bash
+   docker compose up --build
+   ```
 
 ## Historico de Sprints
 
@@ -148,7 +164,7 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates com Bootstrap e pagina de ajuda.
 
 - **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.
+- **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
 
 ### Nao Implementados
-- **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
 - **Sprint 23 – Funcionalidades Avancadas:** investimentos e multiplos jogos.

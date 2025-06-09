@@ -79,6 +79,7 @@ env/
 ENV/
 env.bak/
 venv.bak/
+agendamentos.log
 
 # Spyder project settings
 .spyderproject
