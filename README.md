@@ -136,9 +136,9 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - **Sprint 15 – Requisitos Nao Funcionais:** HTTPS e backups automaticos.
 - **Sprint 16 – Revisao e Evolucao:** documentacao e API REST, layout responsivo.
 - **Sprint 17 – Expansao da API:** expor todos os recursos via REST e autenticacao segura.
+- **Sprint 18 – Relatorios e Dashboards Avancados:** graficos, exportacao e notificacoes.
 
 ### Nao Implementados
-- **Sprint 18 – Relatorios e Dashboards Avancados:** graficos, exportacao e notificacoes.
 - **Sprint 19 – Automacao de Rodadas:** agendamentos e lembretes automaticos.
 - **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates e paginas de ajuda.
 - **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.

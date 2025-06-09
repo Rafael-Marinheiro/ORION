@@ -30,7 +30,8 @@
             {% if user.is_authenticated %}
                 <a href="{% url 'home' %}">Início</a> |
                 <a href="{% url 'painel_grupo' %}">Painel</a> |
-                <a href="{% url 'ranking' %}">Ranking</a>
+                <a href="{% url 'ranking' %}">Ranking</a> |
+                <a href="{% url 'relatorios' %}">Relatórios</a>
                 {% if user.is_staff %}|
                 <a href="{% url 'game_config' %}">Configuração</a> |
                 <a href="{% url 'abrir_rodada' %}">Abrir Rodada</a> |

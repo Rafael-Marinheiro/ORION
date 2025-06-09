@@ -75,6 +75,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Visualizações gráficas: incorporar gráficos (Chart.js ou similar) para exibir comparativos de receita, custos e ranking em tempo real.
 - Exportação e filtros: implementar exportação em PDF e Excel e permitir filtros por rodada ou grupo, conforme descrito no documento de telas{line_range_start=82 line_range_end=88 path=_documentação/TXT/Jogo Simulador Operacional - 10_Telas Menus e Relatórios - Semi-Pronto.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 10_Telas Menus e Relatórios - Semi-Pronto.txt#L82-L88"}.
 - Notificações: exibir alertas no painel sobre novidades ou resultados da rodada.
+*Status: implementado.*
 
 ## Sprint 19 – Automação de Rodadas
 - Agendamento do encerramento: automatizar o comando fechar_rodadas com tarefas periódicas (Celery ou tarefas do Django) para execução no horário pré-definido.

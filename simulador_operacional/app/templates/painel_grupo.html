@@ -8,6 +8,9 @@
 {% if evento %}
 <p><strong>Evento da rodada: {{ evento.nome }} - {{ evento.descricao }} ({{ evento.impacto_percentual }}%)</strong></p>
 {% endif %}
+{% if notificacao %}
+<p><strong>{{ notificacao }}</strong></p>
+{% endif %}
 {% if alerta %}
 <p><strong>{{ alerta }}</strong></p>
 {% endif %}

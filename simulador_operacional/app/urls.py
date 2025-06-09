@@ -31,6 +31,9 @@ from .views import (
     GrupoCreateView,
     GrupoUpdateView,
     RankingAPIView,
+    RelatoriosView,
+    export_resultados_pdf,
+    export_resultados_excel,
 )
 
 router = DefaultRouter()
@@ -66,6 +69,9 @@ urlpatterns = [
     path("grupos/", GrupoListView.as_view(), name="lista_grupos"),
     path("grupos/novo/", GrupoCreateView.as_view(), name="criar_grupo"),
     path("grupos/<int:pk>/editar/", GrupoUpdateView.as_view(), name="editar_grupo"),
+    path("relatorios/", RelatoriosView.as_view(), name="relatorios"),
+    path("export/pdf/", export_resultados_pdf, name="export_resultados_pdf"),
+    path("export/excel/", export_resultados_excel, name="export_resultados_excel"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/ranking/", RankingAPIView.as_view(), name="api_ranking"),

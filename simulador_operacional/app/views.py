@@ -31,6 +31,7 @@ from .forms import (
     DistribuicaoForm,
     RodadaForm,
     GrupoForm,
+    ResultadoFilterForm,
 )
 from .models import (
     GameConfig,
@@ -43,6 +44,9 @@ from .models import (
     EventoRodada,
     Rodada,
 )
+from django.http import HttpResponse
+from openpyxl import Workbook
+from reportlab.pdfgen import canvas
 import random
 
 
@@ -170,6 +174,12 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         decisoes = grupo.decisoes.all()
         envios = grupo.envios.select_related("cidade").all()
         resultados = grupo.resultados.all()
+        ultima_vista = request.session.get("ultima_rodada_vista", 0)
+        nova = resultados.order_by("-rodada").first()
+        notificacao = None
+        if nova and nova.rodada > ultima_vista:
+            notificacao = f"Resultados da rodada {nova.rodada} disponíveis."
+            request.session["ultima_rodada_vista"] = nova.rodada
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
         evento = sortear_evento(rodada_atual)
@@ -188,6 +198,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'resultados': resultados,
             'alerta': alerta,
             'evento': evento,
+            'notificacao': notificacao,
         })
 
     def post(self, request, *args, **kwargs):
@@ -253,6 +264,12 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         decisoes = grupo.decisoes.all()
         envios = grupo.envios.select_related("cidade").all()
         resultados = grupo.resultados.all()
+        ultima_vista = request.session.get("ultima_rodada_vista", 0)
+        nova = resultados.order_by("-rodada").first()
+        notificacao = None
+        if nova and nova.rodada > ultima_vista:
+            notificacao = f"Resultados da rodada {nova.rodada} disponíveis."
+            request.session["ultima_rodada_vista"] = nova.rodada
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
         evento = sortear_evento(rodada_atual)
@@ -271,6 +288,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'resultados': resultados,
             'alerta': alerta,
             'evento': evento,
+            'notificacao': notificacao,
         })
 
 
@@ -354,3 +372,86 @@ class GrupoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 
     def has_permission(self):
         return self.request.user.is_staff or super().has_permission()
+
+
+class RelatoriosView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = "financeiro/relatorios.html"
+    permission_required = "app.view_resultadofinanceiro"
+
+    def has_permission(self):
+        return self.request.user.is_staff or super().has_permission()
+
+    def get(self, request, *args, **kwargs):
+        form = ResultadoFilterForm(request.GET or None)
+        resultados = ResultadoFinanceiro.objects.select_related("grupo")
+        if form.is_valid():
+            if form.cleaned_data.get("rodada"):
+                resultados = resultados.filter(rodada=form.cleaned_data["rodada"])
+            if form.cleaned_data.get("grupo"):
+                resultados = resultados.filter(grupo=form.cleaned_data["grupo"])
+        return render(
+            request,
+            self.template_name,
+            {"resultados": resultados, "form": form},
+        )
+
+
+@login_required
+def export_resultados_pdf(request):
+    rodada = request.GET.get("rodada")
+    grupo_id = request.GET.get("grupo")
+    qs = ResultadoFinanceiro.objects.select_related("grupo")
+    if rodada:
+        qs = qs.filter(rodada=rodada)
+    if grupo_id:
+        qs = qs.filter(grupo_id=grupo_id)
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=resultados.pdf"
+    p = canvas.Canvas(response)
+    y = 800
+    p.drawString(100, y, "Resultados Financeiros")
+    y -= 20
+    for r in qs:
+        p.drawString(
+            100,
+            y,
+            f"Grupo {r.grupo.nome} - Rodada {r.rodada} - Lucro {r.lucro}",
+        )
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = 800
+    p.showPage()
+    p.save()
+    return response
+
+
+@login_required
+def export_resultados_excel(request):
+    rodada = request.GET.get("rodada")
+    grupo_id = request.GET.get("grupo")
+    qs = ResultadoFinanceiro.objects.select_related("grupo")
+    if rodada:
+        qs = qs.filter(rodada=rodada)
+    if grupo_id:
+        qs = qs.filter(grupo_id=grupo_id)
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Grupo", "Rodada", "Receita", "Custos", "Lucro", "Caixa"])
+    for r in qs:
+        ws.append(
+            [
+                r.grupo.nome,
+                r.rodada,
+                float(r.receita),
+                float(r.custos),
+                float(r.lucro),
+                float(r.saldo_caixa),
+            ]
+        )
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = "attachment; filename=resultados.xlsx"
+    wb.save(response)
+    return response
