@@ -82,9 +82,9 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Registro de logs: salvar em histórico os horários das execuções e eventuais falhas de processamento.
 
 ## Sprint 20 – Melhoria de Usabilidade e Interface
--Revisão das telas: aplicar as recomendações do documento de menus e relatórios para menus mais claros, design responsivo e páginas dedicadas de ajuda.
--Aprimoramento do layout: utilizar componentes de frontend modernos para melhorar a experiência em dispositivos móveis e desktop.
--Tutoriais e FAQ: incluir páginas de auxílio rápido, contemplando a exigência de ajuda online dos requisitos não funcionais.
+- Revisão das telas: aplicar as recomendações do documento de menus e relatórios para menus mais claros, design responsivo e páginas dedicadas de ajuda.
+- Aprimoramento do layout: utilizar componentes de frontend modernos para melhorar a experiência em dispositivos móveis e desktop.
+- Tutoriais e FAQ: incluir páginas de auxílio rápido, contemplando a exigência de ajuda online dos requisitos não funcionais.
 
 ## Sprint 21 – Testes e Qualidade
 - Cobertura de código: criar testes unitários e de integração para modelos, views e API, visando boa cobertura.
