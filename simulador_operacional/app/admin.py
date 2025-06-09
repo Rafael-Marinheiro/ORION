@@ -9,6 +9,8 @@ from .models import (
     EventoRodada,
     Cidade,
     Distribuicao,
+    Jogo,
+    Investimento,
 )
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
@@ -81,3 +83,13 @@ class CidadeAdmin(admin.ModelAdmin):
 @admin.register(Distribuicao)
 class DistribuicaoAdmin(admin.ModelAdmin):
     list_display = ("grupo", "cidade", "quantidade", "preco_unitario")
+
+
+@admin.register(Jogo)
+class JogoAdmin(admin.ModelAdmin):
+    list_display = ("nome", "ativo")
+
+
+@admin.register(Investimento)
+class InvestimentoAdmin(admin.ModelAdmin):
+    list_display = ("grupo", "categoria", "valor", "rodada")

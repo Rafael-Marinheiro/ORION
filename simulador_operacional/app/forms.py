@@ -8,6 +8,7 @@ from .models import (
     Cidade,
     Rodada,
     Grupo,
+    Jogo,
 )
 
 
@@ -58,9 +59,10 @@ class DistribuicaoForm(forms.ModelForm):
 
 
 class RodadaForm(forms.ModelForm):
+    jogo = forms.ModelChoiceField(queryset=Jogo.objects.all(), required=False)
     class Meta:
         model = Rodada
-        fields = ["numero", "fim"]
+        fields = ["jogo", "numero", "fim"]
 
 
 class GrupoForm(forms.ModelForm):
@@ -69,12 +71,14 @@ class GrupoForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple,
         required=False,
     )
+    jogo = forms.ModelChoiceField(queryset=Jogo.objects.all(), required=False)
 
     class Meta:
         model = Grupo
         fields = [
             "nome",
             "membros",
+            "jogo",
             "capital",
             "estoque",
             "maquinas",
