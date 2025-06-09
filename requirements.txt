@@ -6,3 +6,5 @@ fdb==2.0.2
 openpyxl==3.1.2
 reportlab==3.6.12
 django-crontab==0.7.1
+gunicorn==23.0.0
+python-dotenv==1.1.0

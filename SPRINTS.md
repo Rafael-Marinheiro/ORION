@@ -98,7 +98,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Container Docker: preparar imagem do projeto com todas as dependências e documentação de variáveis de ambiente.
 - Scripts de deploy: simplificar o processo de implantação, prevendo comandos de migração e carregamento de dados iniciais.
 - Configuração de ambientes: separar configurações de produção e desenvolvimento (ex.: arquivos .env).
-
+*Status: implementado.*
 ## Sprint 23 – Funcionalidades Avançadas
 - Investimentos: implementar as categorias detalhadas em “Considerações Investimentos” (marketing, aquisição de máquinas, contratação de RH e aplicações financeiras){line_range_start=1 line_range_end=19 path=_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt#L1-L19"}{line_range_start=40 line_range_end=77 path=_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt#L40-L77"}.
 - Múltiplas turmas/jogos: permitir que diferentes jogos ocorram simultaneamente, cada um com suas configurações e ranking.
