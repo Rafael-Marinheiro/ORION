@@ -92,6 +92,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 ## Sprint 21 – Testes e Qualidade
 - Cobertura de código: criar testes unitários e de integração para modelos, views e API, visando boa cobertura.
 - Integração contínua: configurar pipeline (GitHub Actions ou similar) para executar testes a cada push, garantindo estabilidade das futuras releases.
+*Status: implementado.*
 
 ## Sprint 22 – Empacotamento e Implantação
 - Container Docker: preparar imagem do projeto com todas as dependências e documentação de variáveis de ambiente.

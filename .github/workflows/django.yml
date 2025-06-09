@@ -1,0 +1,25 @@
+name: Django Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Check for migration conflicts
+        run: |
+          cd simulador_operacional
+          python manage.py makemigrations --check --dry-run --settings=simulador_operacional.settings_test
+      - name: Run tests
+        run: |
+          cd simulador_operacional
+          python manage.py test app --settings=simulador_operacional.settings_test
+
