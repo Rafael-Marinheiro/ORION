@@ -78,6 +78,10 @@ class HomeView(TemplateView):
     template_name = 'home.html'
     # login_url = '/accounts/login/'
 
+class AjudaView(TemplateView):
+    """Página com tutoriais rápidos e perguntas frequentes."""
+    template_name = 'ajuda.html'
+
 @login_required
 def home(request):
     return render(request, 'home.html')

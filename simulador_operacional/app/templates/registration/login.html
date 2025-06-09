@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="login-form">
-    <h2>Login</h2>
+<div class="login-form shadow-sm p-4 bg-light rounded">
+    <h2 class="text-center mb-3">Login</h2>
     {% if form.errors %}
         <div class="alert alert-danger">
             Email ou senha incorretos. Por favor, tente novamente.
         </div>
     {% endif %}
-    
+
     <form method="post">
         {% csrf_token %}
-        <div class="form-group">
-            <label for="id_username">Email:</label>
+        <div class="mb-3">
+            <label for="id_username" class="form-label">Email:</label>
             <input type="email" name="username" id="id_username" class="form-control" required>
         </div>
-        <div class="form-group">
-            <label for="id_password">Senha:</label>
+        <div class="mb-3">
+            <label for="id_password" class="form-label">Senha:</label>
             <input type="password" name="password" id="id_password" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary">Entrar</button>
