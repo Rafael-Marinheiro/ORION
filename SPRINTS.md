@@ -81,6 +81,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Agendamento do encerramento: automatizar o comando fechar_rodadas com tarefas periódicas (Celery ou tarefas do Django) para execução no horário pré-definido.
 - Lembretes por e‑mail: envio de avisos aos grupos quando o prazo para submissão de decisões estiver próximo do fim.
 - Registro de logs: salvar em histórico os horários das execuções e eventuais falhas de processamento.
+*Status: implementado.*
 
 ## Sprint 20 – Melhoria de Usabilidade e Interface
 - Revisão das telas: aplicar as recomendações do documento de menus e relatórios para menus mais claros, design responsivo e páginas dedicadas de ajuda.

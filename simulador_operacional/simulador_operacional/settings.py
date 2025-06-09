@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
+    'django_crontab',
     'app',
 ]
 
@@ -110,4 +111,27 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+CRONJOBS = [
+    ('*/5 * * * *', 'django.core.management.call_command', ['fechar_rodadas']),
+    ('0 * * * *', 'django.core.management.call_command', ['enviar_lembretes']),
+]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'agendamentos': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'agendamentos.log'),
+        },
+    },
+    'loggers': {
+        'agendamentos': {
+            'handlers': ['agendamentos'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }
