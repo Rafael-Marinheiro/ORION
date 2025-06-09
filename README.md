@@ -147,7 +147,8 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 
 - **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates com Bootstrap e pagina de ajuda.
 
-### Nao Implementados
 - **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.
+
+### Nao Implementados
 - **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
 - **Sprint 23 – Funcionalidades Avancadas:** investimentos e multiplos jogos.
