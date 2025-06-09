@@ -13,7 +13,17 @@ from django.views.generic import TemplateView, CreateView, ListView
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from rest_framework import viewsets, generics
-from .serializers import GrupoSerializer, ResultadoFinanceiroSerializer
+from .serializers import (
+    GrupoSerializer,
+    ResultadoFinanceiroSerializer,
+    DecisaoSerializer,
+    DistribuicaoSerializer,
+    EventoSerializer,
+    EventoRodadaSerializer,
+    RodadaSerializer,
+    CidadeSerializer,
+    GameConfigSerializer,
+)
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from decimal import Decimal
@@ -267,9 +277,49 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         })
 
 
-class GrupoViewSet(viewsets.ReadOnlyModelViewSet):
+class GrupoViewSet(viewsets.ModelViewSet):
     queryset = Grupo.objects.all()
     serializer_class = GrupoSerializer
+
+
+class DecisaoViewSet(viewsets.ModelViewSet):
+    queryset = Decisao.objects.all()
+    serializer_class = DecisaoSerializer
+
+
+class DistribuicaoViewSet(viewsets.ModelViewSet):
+    queryset = Distribuicao.objects.all()
+    serializer_class = DistribuicaoSerializer
+
+
+class ResultadoFinanceiroViewSet(viewsets.ModelViewSet):
+    queryset = ResultadoFinanceiro.objects.all()
+    serializer_class = ResultadoFinanceiroSerializer
+
+
+class EventoViewSet(viewsets.ModelViewSet):
+    queryset = Evento.objects.all()
+    serializer_class = EventoSerializer
+
+
+class EventoRodadaViewSet(viewsets.ModelViewSet):
+    queryset = EventoRodada.objects.all()
+    serializer_class = EventoRodadaSerializer
+
+
+class RodadaViewSet(viewsets.ModelViewSet):
+    queryset = Rodada.objects.all()
+    serializer_class = RodadaSerializer
+
+
+class CidadeViewSet(viewsets.ModelViewSet):
+    queryset = Cidade.objects.all()
+    serializer_class = CidadeSerializer
+
+
+class GameConfigViewSet(viewsets.ModelViewSet):
+    queryset = GameConfig.objects.all()
+    serializer_class = GameConfigSerializer
 
 
 class RankingAPIView(generics.ListAPIView):
