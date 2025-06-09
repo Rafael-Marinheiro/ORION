@@ -113,6 +113,7 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    Alertas de ruptura ou desperdício serão exibidos conforme o nível de estoque.
    Utilize o formulário de distribuição para enviar produtos às cidades e registrar custos de transporte automaticamente.
    Consulte o ranking financeiro atualizado em `/ranking/` para comparar o desempenho dos grupos.
+   Para dúvidas rápidas acesse a página de ajuda em `/ajuda/`.
    A cada rodada um evento aleatório será sorteado e exibido no painel, podendo alterar custos de produção, transporte ou demanda.
    Administradores podem abrir uma nova rodada em `/abrir_rodada/` definindo a data e hora de encerramento.
    A gestão de grupos é realizada em `/grupos/`, onde é possível criar ou editar grupos existentes.
@@ -144,8 +145,9 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - **Sprint 18 – Relatorios e Dashboards Avancados:** graficos, exportacao e notificacoes.
 - **Sprint 19 – Automacao de Rodadas:** agendamentos e lembretes automaticos.
 
+- **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates com Bootstrap e pagina de ajuda.
+
 ### Nao Implementados
-- **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates e paginas de ajuda.
 - **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.
 - **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
 - **Sprint 23 – Funcionalidades Avancadas:** investimentos e multiplos jogos.

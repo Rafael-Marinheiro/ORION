@@ -32,6 +32,7 @@ from .views import (
     GrupoUpdateView,
     RankingAPIView,
     RelatoriosView,
+    AjudaView,
     export_resultados_pdf,
     export_resultados_excel,
 )
@@ -70,6 +71,7 @@ urlpatterns = [
     path("grupos/novo/", GrupoCreateView.as_view(), name="criar_grupo"),
     path("grupos/<int:pk>/editar/", GrupoUpdateView.as_view(), name="editar_grupo"),
     path("relatorios/", RelatoriosView.as_view(), name="relatorios"),
+    path("ajuda/", AjudaView.as_view(), name="ajuda"),
     path("export/pdf/", export_resultados_pdf, name="export_resultados_pdf"),
     path("export/excel/", export_resultados_excel, name="export_resultados_excel"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),

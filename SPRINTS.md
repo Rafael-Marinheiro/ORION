@@ -87,6 +87,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Revisão das telas: aplicar as recomendações do documento de menus e relatórios para menus mais claros, design responsivo e páginas dedicadas de ajuda.
 - Aprimoramento do layout: utilizar componentes de frontend modernos para melhorar a experiência em dispositivos móveis e desktop.
 - Tutoriais e FAQ: incluir páginas de auxílio rápido, contemplando a exigência de ajuda online dos requisitos não funcionais.
+*Status: implementado.*
 
 ## Sprint 21 – Testes e Qualidade
 - Cobertura de código: criar testes unitários e de integração para modelos, views e API, visando boa cobertura.
