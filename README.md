@@ -97,6 +97,11 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    ```bash
    python manage.py runserver
    ```
+   Também é possível utilizar o atalho abaixo, que encaminha os argumentos
+   para o `manage.py`:
+   ```bash
+   python main.py runserver
+   ```
 3. Acesse `/register/` para criar uma nova conta ou `/login/` para entrar.
    Administradores podem configurar o jogo em `/config/`.
    Usuários autenticados acessam o painel do grupo em `/painel/`.
