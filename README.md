@@ -111,15 +111,31 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    Gere backups do banco periodicamente executando `python manage.py backupdb`.
    Utilize a API REST em `/api/` para integrar outras aplicações. O ranking financeiro pode ser obtido em `/api/ranking/`.
 
-## Sprints Implementados
+## Historico de Sprints
 
-- **Sprint 9 – Configuração Inicial e Usuários:** modelos de Grupo e Rodada com formulários administrativos, migrações e página de gestão de grupos em `/grupos/`.
-- **Sprint 10 – Painel do Grupo e Decisões:** painel com indicadores básicos e envio de decisões por rodada.
-- **Sprint 11 – Estoques e Produção:** cálculo de estoque e alertas automáticos para ruptura ou desperdício.
-- **Sprint 12 – Distribuição e Comercialização:** despacho de produtos para cidades e cálculo de custos de transporte.
-- **Sprint 13 – Financeiro e Ranking:** consolidação de resultados financeiros e ranking dinâmico em `/ranking/`.
-- **Sprint 14 – Eventos Aleatórios e Encerramento:** sorteio de eventos, abertura de rodadas em `/abrir_rodada/` e fechamento com `fechar_rodadas`.
+### Implementados
+- **Sprint 1 – Autenticacao Completa:** cadastro de usuarios, redefinicao de senha e permissoes.
+- **Sprint 2 – Configuracao do Jogo:** parametros iniciais e ativacao de modulos.
+- **Sprint 3 – Painel do Grupo:** indicadores em tempo real e envio de decisoes.
+- **Sprint 4 – Producao e Estoques:** calculo de estoque e alertas de ruptura.
+- **Sprint 5 – Distribuicao e Comercializacao:** custos de transporte e relatorios de vendas.
+- **Sprint 6 – Financeiro e Ranking:** resultados financeiros, relatorios comparativos e ranking.
+- **Sprint 7 – Eventos Aleatorios:** sorteio automatico de eventos.
+- **Sprint 8 – Encerramento da Rodada:** processamento automatico e relatorios finais.
+- **Sprint 9 – Configuracao Inicial e Usuarios:** modelos de Grupo e Rodada, gestao em `/grupos/`.
+- **Sprint 10 – Painel do Grupo e Decisoes:** painel com indicadores basicos e envio de decisoes.
+- **Sprint 11 – Estoques e Producao:** calculo de estoque e alertas automaticos.
+- **Sprint 12 – Distribuicao e Comercializacao:** despacho de produtos e custos de transporte.
+- **Sprint 13 – Financeiro e Ranking:** consolidacao de resultados e ranking dinamico.
+- **Sprint 14 – Eventos Aleatorios e Encerramento:** sorteio de eventos e fechamento das rodadas.
+- **Sprint 15 – Requisitos Nao Funcionais:** HTTPS e backups automaticos.
+- **Sprint 16 – Revisao e Evolucao:** documentacao e API REST, layout responsivo.
 
-**Sprint 15 – Requisitos Não Funcionais:** HTTPS habilitado, controle de permissões e comando `backupdb` para backups automáticos.
-
-**Sprint 16 – Revisão e Evolução:** documentação aprimorada, API REST disponível em `/api/` e layout responsivo para navegadores e dispositivos móveis.
+### Nao Implementados
+- **Sprint 17 – Expansao da API:** expor todos os recursos via REST e autenticacao segura.
+- **Sprint 18 – Relatorios e Dashboards Avancados:** graficos, exportacao e notificacoes.
+- **Sprint 19 – Automacao de Rodadas:** agendamentos e lembretes automaticos.
+- **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates e paginas de ajuda.
+- **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.
+- **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
+- **Sprint 23 – Funcionalidades Avancadas:** investimentos e multiplos jogos.
