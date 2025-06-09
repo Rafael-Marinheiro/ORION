@@ -66,3 +66,37 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Manter compatibilidade com navegadores e dispositivos.
 - Escrever código modular preparado para futuras integrações.
 
+## Sprint 17 – Expansão da API
+-Abertura completa dos recursos via REST: criar endpoints para todos os modelos relevantes (grupos, decisões, resultados financeiros, eventos etc.) e garantir autenticação.
+-Padrão de segurança e autenticação: uso de tokens ou JWT no Django REST Framework para permitir integrações externas de maneira controlada.
+-Documentação automática: gerar especificação Swagger/OpenAPI para todos os endpoints, facilitando consultas e testes.
+
+## Sprint 18 – Relatórios e Dashboards Avançados
+-Visualizações gráficas: incorporar gráficos (Chart.js ou similar) para exibir comparativos de receita, custos e ranking em tempo real.
+-Exportação e filtros: implementar exportação em PDF e Excel e permitir filtros por rodada ou grupo, conforme descrito no documento de telas{line_range_start=82 line_range_end=88 path=_documentação/TXT/Jogo Simulador Operacional - 10_Telas Menus e Relatórios - Semi-Pronto.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 10_Telas Menus e Relatórios - Semi-Pronto.txt#L82-L88"}.
+-Notificações: exibir alertas no painel sobre novidades ou resultados da rodada.
+
+## Sprint 19 – Automação de Rodadas
+Agendamento do encerramento: automatizar o comando fechar_rodadas com tarefas periódicas (Celery ou tarefas do Django) para execução no horário pré-definido.
+Lembretes por e‑mail: envio de avisos aos grupos quando o prazo para submissão de decisões estiver próximo do fim.
+Registro de logs: salvar em histórico os horários das execuções e eventuais falhas de processamento.
+
+## Sprint 20 – Melhoria de Usabilidade e Interface
+-Revisão das telas: aplicar as recomendações do documento de menus e relatórios para menus mais claros, design responsivo e páginas dedicadas de ajuda.
+-Aprimoramento do layout: utilizar componentes de frontend modernos para melhorar a experiência em dispositivos móveis e desktop.
+-Tutoriais e FAQ: incluir páginas de auxílio rápido, contemplando a exigência de ajuda online dos requisitos não funcionais.
+
+## Sprint 21 – Testes e Qualidade
+-Cobertura de código: criar testes unitários e de integração para modelos, views e API, visando boa cobertura.
+-Integração contínua: configurar pipeline (GitHub Actions ou similar) para executar testes a cada push, garantindo estabilidade das futuras releases.
+
+## Sprint 22 – Empacotamento e Implantação
+-Container Docker: preparar imagem do projeto com todas as dependências e documentação de variáveis de ambiente.
+-Scripts de deploy: simplificar o processo de implantação, prevendo comandos de migração e carregamento de dados iniciais.
+-Configuração de ambientes: separar configurações de produção e desenvolvimento (ex.: arquivos .env).
+
+## Sprint 23 – Funcionalidades Avançadas
+-Investimentos: implementar as categorias detalhadas em “Considerações Investimentos” (marketing, aquisição de máquinas, contratação de RH e aplicações financeiras){line_range_start=1 line_range_end=19 path=_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt#L1-L19"}{line_range_start=40 line_range_end=77 path=_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 14_Considerações Investimentos.txt#L40-L77"}.
+-Múltiplas turmas/jogos: permitir que diferentes jogos ocorram simultaneamente, cada um com suas configurações e ranking.
+-Possíveis extensões: preparar base para módulos futuros (Recursos Humanos, Sustentabilidade, integração LMS), seguindo as ideias presentes em “Futuras Melhorias e Possibilidades de Expansão”{line_range_start=42 line_range_end=59 path=_documentação/TXT/Jogo Simulador Operacional - 15_Considerações Finais.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 15_Considerações Finais.txt#L42-L59"}.
+
