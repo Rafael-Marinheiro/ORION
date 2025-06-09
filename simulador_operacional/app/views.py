@@ -1,4 +1,3 @@
-from django.contrib.auth.views import LoginView
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
@@ -8,7 +7,6 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView,
 )
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView
 from django.views.generic import TemplateView, CreateView, ListView
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -78,7 +76,6 @@ class HomeView(TemplateView):
 
 @login_required
 def home(request):
-    return render(request, 'home.html')
     return render(request, 'home.html')
 
 
