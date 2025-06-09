@@ -1,12 +1,23 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Bem-vindo ao ORION</h1>
-<p>Simulador Operacional Educacional</p>
+<div class="text-center mb-4">
+    <h1 class="mb-2">Bem-vindo ao ORION</h1>
+    <p class="lead">Simulador operacional gamificado para ensino de gestão</p>
+</div>
+
+<div class="mb-4">
+    <p>O ORION possibilita que grupos de estudantes administrem empresas simuladas em um mercado competitivo e dinâmico. A cada rodada são tomadas decisões de produção, compras, finanças, comercialização e investimentos, gerando resultados consolidados em relatórios e rankings.</p>
+    <ul>
+        <li>Interface amigável e módulos integrados.</li>
+        <li>Relatórios gerenciais, dashboards e eventos aleatórios.</li>
+        <li>Classificação entre equipes e suporte a trabalho offline temporário.</li>
+    </ul>
+</div>
+
 {% if user.is_authenticated %}
-<p>Você está logado como {{ user.nome_usuario }}.</p>
-<p><a href="{% url 'painel_grupo' %}">Ir para o Painel do Grupo</a></p>
+<p>Você está logado como {{ user.nome_usuario }}. <a href="{% url 'painel_grupo' %}">Ir para o Painel do Grupo</a></p>
 {% else %}
-<p><a href="{% url 'login' %}">Entrar</a></p>
+<p><a class="btn btn-primary" href="{% url 'login' %}">Entrar</a></p>
 {% endif %}
 {% endblock %}
