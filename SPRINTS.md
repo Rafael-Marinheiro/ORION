@@ -106,3 +106,49 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 
 *Status: implementado.*
 
+## Sprint 24 – Preparação de Assets e Base
+- Criar diretório `static/css/` com `styles.css`.
+- No `base.html`, adicionar `{% load static %}` e `<link rel="stylesheet" href="{% static 'css/styles.css' %}">`.
+- Definir cores e fontes globais no CSS.
+- Inserir rodapé simples no `base.html`.
+*Status: não implementado.*
+
+## Sprint 25 – Telas de Login e Registro
+- Centralizar formulário em um card Bootstrap.
+- Definir largura máxima (~400 px) e bordas com sombra.
+- Padronizar mensagens de erro com classes `alert`.
+*Status: não implementado.*
+
+## Sprint 26 – Tela Home
+- Adicionar logotipo e frase institucional centralizados.
+- Incluir botão destacado para login ou acesso ao painel.
+- Garantir que o layout funcione em telas menores.
+*Status: não implementado.*
+
+## Sprint 27 – Painel do Grupo
+- Mostrar indicadores (capital, estoque, máquinas) em cards.
+- Organizar formulários (decisões, distribuição) em colunas.
+- Converter listagens em tabelas responsivas.
+*Status: não implementado.*
+
+## Sprint 28 – Configuração do Jogo e Rodadas
+- Agrupar campos em grid para facilitar a leitura.
+- Posicionar botões de ação (Salvar/Abrir) alinhados à direita.
+- Exibir mensagens de confirmação após salvar.
+*Status: não implementado.*
+
+## Sprint 29 – Relatórios Financeiros e Ranking
+- Colocar filtros em formulário horizontal.
+- Tabelas com cabeçalho fixo e destaques nos totalizadores.
+- Gráficos centralizados e responsivos.
+*Status: não implementado.*
+
+## Sprint 30 – Páginas de Ajuda
+- Usar margens amplas para facilitar a leitura.
+*Status: não implementado.*
+
+## Sprint 31 – Componentes Reutilizáveis e Ajustes Finais
+- Criar classes personalizadas de botões e alertas.
+- Testar todas as telas em 320 px, 768 px e 1200 px.
+- Garantir que navbar e rodapé funcionem bem em mobile.
+*Status: não implementado.*

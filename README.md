@@ -166,3 +166,13 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.
 - **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
 - **Sprint 23 – Funcionalidades Avancadas:** investimentos e multiplos jogos.
+
+### Planejados
+- **Sprint 24 – Preparação de Assets e Base:** organização do CSS e inclusão de rodapé.
+- **Sprint 25 – Telas de Login e Registro:** card centralizado e mensagens de erro padronizadas.
+- **Sprint 26 – Tela Home:** logotipo e acesso ao painel com layout responsivo.
+- **Sprint 27 – Painel do Grupo:** indicadores em cards e formulários em colunas.
+- **Sprint 28 – Configuração do Jogo e Rodadas:** campos em grid e confirmações.
+- **Sprint 29 – Relatórios Financeiros e Ranking:** filtros horizontais e gráficos responsivos.
+- **Sprint 30 – Páginas de Ajuda:** margens amplas para leitura.
+- **Sprint 31 – Componentes Reutilizáveis e Ajustes Finais:** botões personalizados e testes em várias resoluções.
