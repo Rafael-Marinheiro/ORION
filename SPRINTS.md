@@ -111,7 +111,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - No `base.html`, adicionar `{% load static %}` e `<link rel="stylesheet" href="{% static 'css/styles.css' %}">`.
 - Definir cores e fontes globais no CSS.
 - Inserir rodapé simples no `base.html`.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 25 – Telas de Login e Registro
 - Centralizar formulário em um card Bootstrap.
