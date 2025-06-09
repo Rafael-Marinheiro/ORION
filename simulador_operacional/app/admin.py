@@ -1,13 +1,14 @@
-from django.contrib import
+from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
 from .models import (
     User,
     Rodada,
     ResultadoFinanceiro,
     Grupo,
-    EventoAleatorio,
-    RegistroEvento,
+    Evento,
+    EventoRodada,
+    Cidade,
+    Distribuicao,
 )
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
@@ -38,12 +39,11 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ("email_usuario", "nome_usuario")
     ordering = ("email_usuario",)
-    ordering = ("email_usuario",)
 
 
 @admin.register(Rodada)
 class RodadaAdmin(admin.ModelAdmin):
-    list_display = ("numero", "data_inicio", "data_fim", "encerrada")
+    list_display = ("numero", "inicio", "fim", "fechada")
 
 
 @admin.register(Grupo)
@@ -58,17 +58,26 @@ class ResultadoFinanceiroAdmin(admin.ModelAdmin):
         "rodada",
         "receita",
         "custos",
-        "despesas",
-        "lucro_liquido",
-        "fluxo_caixa_liquido",
+        "lucro",
+        "saldo_caixa",
     )
 
 
-@admin.register(EventoAleatorio)
-class EventoAleatorioAdmin(admin.ModelAdmin):
-    list_display = ("nome", "probabilidade")
+@admin.register(Evento)
+class EventoAdmin(admin.ModelAdmin):
+    list_display = ("nome", "tipo", "probabilidade")
 
 
-@admin.register(RegistroEvento)
-class RegistroEventoAdmin(admin.ModelAdmin):
-    list_display = ("evento", "rodada", "data_aplicacao")
+@admin.register(EventoRodada)
+class EventoRodadaAdmin(admin.ModelAdmin):
+    list_display = ("rodada", "evento", "data")
+
+
+@admin.register(Cidade)
+class CidadeAdmin(admin.ModelAdmin):
+    list_display = ("nome", "distancia_km", "demanda")
+
+
+@admin.register(Distribuicao)
+class DistribuicaoAdmin(admin.ModelAdmin):
+    list_display = ("grupo", "cidade", "quantidade", "preco_unitario")

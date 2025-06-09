@@ -25,9 +25,15 @@ class UserManager(BaseUserManager):
         
         if not senha_usuario:
             raise ValueError('Superusuário deve ter uma senha')
-            
+
         return self.create_user(
-@@ -35,25 +37,118 @@ class User(AbstractBaseUser, PermissionsMixin):
+            email_usuario=email_usuario,
+            nome_usuario=nome_usuario,
+            senha_usuario=senha_usuario,
+            **extra_fields
+        )
+
+class User(AbstractBaseUser, PermissionsMixin):
     TIPO_USUARIO_CHOICES = [
         ('aluno_admin', 'Administrador'),
         ('professor', 'Professor'),
