@@ -80,3 +80,8 @@ class GrupoForm(forms.ModelForm):
             "maquinas",
             "capacidade_maquina",
         ]
+
+
+class ResultadoFilterForm(forms.Form):
+    rodada = forms.IntegerField(required=False, label="Rodada")
+    grupo = forms.ModelChoiceField(queryset=Grupo.objects.all(), required=False)

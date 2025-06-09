@@ -2,24 +2,30 @@
 
 {% block content %}
 <h2>Resultados Financeiros</h2>
+<form method="get">
+    {{ form.as_p }}
+    <button type="submit" class="btn">Filtrar</button>
+</form>
+<p>
+    <a href="{% url 'export_resultados_pdf' %}?rodada={{ form.rodada.value }}&grupo={{ form.grupo.value }}">Exportar PDF</a> |
+    <a href="{% url 'export_resultados_excel' %}?rodada={{ form.rodada.value }}&grupo={{ form.grupo.value }}">Exportar Excel</a>
+</p>
 <table>
     <thead>
         <tr>
             <th>Rodada</th>
             <th>Receita</th>
             <th>Custos</th>
-            <th>Despesas</th>
             <th>Lucro Líquido</th>
         </tr>
     </thead>
     <tbody>
         {% for r in resultados %}
         <tr>
-            <td>{{ r.rodada.numero }}</td>
+            <td>{{ r.rodada }}</td>
             <td>{{ r.receita }}</td>
             <td>{{ r.custos }}</td>
-            <td>{{ r.despesas }}</td>
-            <td>{{ r.lucro_liquido }}</td>
+            <td>{{ r.lucro }}</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -29,13 +35,27 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const data = {
-        labels: [{% for r in resultados %}'Rodada {{ r.rodada.numero }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Lucro Líquido',
-            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            data: [{% for r in resultados %}{{ r.lucro_liquido }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-        }]
+        labels: [{% for r in resultados %}'Rodada {{ r.rodada }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [
+            {
+                label: 'Receita',
+                backgroundColor: 'rgba(75,192,192,0.5)',
+                borderColor: 'rgba(75,192,192,1)',
+                data: [{% for r in resultados %}{{ r.receita }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            },
+            {
+                label: 'Custos',
+                backgroundColor: 'rgba(255,99,132,0.5)',
+                borderColor: 'rgba(255,99,132,1)',
+                data: [{% for r in resultados %}{{ r.custos }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            },
+            {
+                label: 'Lucro',
+                backgroundColor: 'rgba(54,162,235,0.5)',
+                borderColor: 'rgba(54,162,235,1)',
+                data: [{% for r in resultados %}{{ r.lucro }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            }
+        ]
     };
 
     new Chart(
