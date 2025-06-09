@@ -160,15 +160,14 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - **Sprint 17 – Expansao da API:** expor todos os recursos via REST e autenticacao segura.
 - **Sprint 18 – Relatorios e Dashboards Avancados:** graficos, exportacao e notificacoes.
 - **Sprint 19 – Automacao de Rodadas:** agendamentos e lembretes automaticos.
-
 - **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates com Bootstrap e pagina de ajuda.
-
 - **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.
 - **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
 - **Sprint 23 – Funcionalidades Avancadas:** investimentos e multiplos jogos.
+- **Sprint 24 – Preparação de Assets e Base:** organização do CSS e inclusão de rodapé.
 
 ### Planejados
-- **Sprint 24 – Preparação de Assets e Base:** organização do CSS e inclusão de rodapé.
+
 - **Sprint 25 – Telas de Login e Registro:** card centralizado e mensagens de erro padronizadas.
 - **Sprint 26 – Tela Home:** logotipo e acesso ao painel com layout responsivo.
 - **Sprint 27 – Painel do Grupo:** indicadores em cards e formulários em colunas.
