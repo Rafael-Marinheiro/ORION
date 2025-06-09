@@ -104,3 +104,5 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Múltiplas turmas/jogos: permitir que diferentes jogos ocorram simultaneamente, cada um com suas configurações e ranking.
 - Possíveis extensões: preparar base para módulos futuros (Recursos Humanos, Sustentabilidade, integração LMS), seguindo as ideias presentes em “Futuras Melhorias e Possibilidades de Expansão”{line_range_start=42 line_range_end=59 path=_documentação/TXT/Jogo Simulador Operacional - 15_Considerações Finais.txt git_url="https://github.com/Rafael-Marinheiro/ORION/blob/main/_documentação/TXT/Jogo Simulador Operacional - 15_Considerações Finais.txt#L42-L59"}.
 
+*Status: implementado.*
+

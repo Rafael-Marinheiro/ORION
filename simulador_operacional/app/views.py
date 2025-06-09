@@ -21,6 +21,8 @@ from .serializers import (
     RodadaSerializer,
     CidadeSerializer,
     GameConfigSerializer,
+    JogoSerializer,
+    InvestimentoSerializer,
 )
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -43,6 +45,8 @@ from .models import (
     Evento,
     EventoRodada,
     Rodada,
+    Jogo,
+    Investimento,
 )
 from django.http import HttpResponse
 from openpyxl import Workbook
@@ -339,6 +343,16 @@ class CidadeViewSet(viewsets.ModelViewSet):
 class GameConfigViewSet(viewsets.ModelViewSet):
     queryset = GameConfig.objects.all()
     serializer_class = GameConfigSerializer
+
+
+class JogoViewSet(viewsets.ModelViewSet):
+    queryset = Jogo.objects.all()
+    serializer_class = JogoSerializer
+
+
+class InvestimentoViewSet(viewsets.ModelViewSet):
+    queryset = Investimento.objects.all()
+    serializer_class = InvestimentoSerializer
 
 
 class RankingAPIView(generics.ListAPIView):

@@ -1,6 +1,6 @@
 from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
-from app.models import GameConfig, Grupo
+from app.models import GameConfig, Grupo, Jogo, Investimento
 
 
 @override_settings(MIGRATION_MODULES={"app": None})
@@ -29,3 +29,19 @@ class GrupoModelTest(TestCase):
     def test_str(self):
         grupo = Grupo.objects.create(nome="Equipe A")
         self.assertEqual(str(grupo), "Equipe A")
+
+
+@override_settings(MIGRATION_MODULES={"app": None})
+class JogoModelTest(TestCase):
+    def test_str(self):
+        config = GameConfig.objects.create()
+        jogo = Jogo.objects.create(nome="J1", config=config)
+        self.assertEqual(str(jogo), "J1")
+
+
+@override_settings(MIGRATION_MODULES={"app": None})
+class InvestimentoModelTest(TestCase):
+    def test_str(self):
+        grupo = Grupo.objects.create(nome="Equipe B")
+        inv = Investimento.objects.create(grupo=grupo, categoria="marketing", valor=1000)
+        self.assertIn("Equipe B", str(inv))

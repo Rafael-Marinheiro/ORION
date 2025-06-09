@@ -9,6 +9,8 @@ from .models import (
     Rodada,
     Cidade,
     GameConfig,
+    Jogo,
+    Investimento,
 )
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,9 +19,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id_usuario", "nome_usuario", "email_usuario", "tipo_usuario", "status_usuario"]
 
 class GrupoSerializer(serializers.ModelSerializer):
+    jogo = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Grupo
-        fields = ["id", "nome", "capital", "estoque"]
+        fields = ["id", "nome", "capital", "estoque", "jogo"]
 
 class ResultadoFinanceiroSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
@@ -82,5 +85,21 @@ class CidadeSerializer(serializers.ModelSerializer):
 class GameConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = GameConfig
+        fields = "__all__"
+
+
+class JogoSerializer(serializers.ModelSerializer):
+    config = serializers.StringRelatedField()
+
+    class Meta:
+        model = Jogo
+        fields = "__all__"
+
+
+class InvestimentoSerializer(serializers.ModelSerializer):
+    grupo = serializers.StringRelatedField()
+
+    class Meta:
+        model = Investimento
         fields = "__all__"
 

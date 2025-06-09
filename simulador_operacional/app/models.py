@@ -92,9 +92,25 @@ class GameConfig(models.Model):
         return 'Configuração'
 
 
+class Jogo(models.Model):
+    nome = models.CharField(max_length=100)
+    config = models.ForeignKey(GameConfig, on_delete=models.CASCADE, related_name="jogos")
+    ativo = models.BooleanField(default=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "JOGOS"
+        verbose_name = "Jogo"
+        verbose_name_plural = "Jogos"
+
+    def __str__(self):
+        return self.nome
+
+
 class Grupo(models.Model):
     nome = models.CharField(max_length=100)
     membros = models.ManyToManyField(User, related_name="grupos")
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name="grupos", null=True, blank=True)
     capital = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estoque = models.PositiveIntegerField(default=0)
     maquinas = models.PositiveIntegerField(default=1)
@@ -179,6 +195,30 @@ class ResultadoFinanceiro(models.Model):
         return f"{self.grupo.nome} - Rodada {self.rodada}"
 
 
+class Investimento(models.Model):
+    CATEGORIA_CHOICES = [
+        ("marketing", "Marketing"),
+        ("maquinas", "Aquisição de Máquinas"),
+        ("rh", "Recursos Humanos"),
+        ("financeiro", "Aplicações Financeiras"),
+    ]
+
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="investimentos")
+    rodada = models.PositiveIntegerField(default=1)
+    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
+    valor = models.DecimalField(max_digits=12, decimal_places=2)
+    data = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "INVESTIMENTOS"
+        verbose_name = "Investimento"
+        verbose_name_plural = "Investimentos"
+        ordering = ["-data"]
+
+    def __str__(self):
+        return f"{self.grupo.nome} - {self.get_categoria_display()} {self.valor}"
+
+
 class Evento(models.Model):
     TIPO_CHOICES = [
         ("custo_producao", "Custo de Produção"),
@@ -217,7 +257,8 @@ class EventoRodada(models.Model):
 
 
 class Rodada(models.Model):
-    numero = models.PositiveIntegerField(unique=True)
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name="rodadas", null=True, blank=True)
+    numero = models.PositiveIntegerField()
     inicio = models.DateTimeField(auto_now_add=True)
     fim = models.DateTimeField()
     fechada = models.BooleanField(default=False)
