@@ -85,6 +85,10 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    ```bash
    pip install -r requirements.txt
    ```
+4. Registre as tarefas agendadas:
+   ```bash
+   python manage.py crontab add
+   ```
 
 ## Uso
 
@@ -113,6 +117,7 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    Administradores podem abrir uma nova rodada em `/abrir_rodada/` definindo a data e hora de encerramento.
    A gestão de grupos é realizada em `/grupos/`, onde é possível criar ou editar grupos existentes.
    Utilize o comando `python manage.py fechar_rodadas` para processar rodadas cujo prazo terminou e aplicar penalidades aos grupos que não enviaram decisões.
+   Os comandos `fechar_rodadas` e `enviar_lembretes` são executados automaticamente via `django-crontab`, gerando logs em `agendamentos.log`.
    Gere backups do banco periodicamente executando `python manage.py backupdb`.
    Utilize a API REST em `/api/` para integrar outras aplicações. O ranking financeiro pode ser obtido em `/api/ranking/`.
 
@@ -137,9 +142,9 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
 - **Sprint 16 – Revisao e Evolucao:** documentacao e API REST, layout responsivo.
 - **Sprint 17 – Expansao da API:** expor todos os recursos via REST e autenticacao segura.
 - **Sprint 18 – Relatorios e Dashboards Avancados:** graficos, exportacao e notificacoes.
+- **Sprint 19 – Automacao de Rodadas:** agendamentos e lembretes automaticos.
 
 ### Nao Implementados
-- **Sprint 19 – Automacao de Rodadas:** agendamentos e lembretes automaticos.
 - **Sprint 20 – Melhoria de Usabilidade e Interface:** revisao dos templates e paginas de ajuda.
 - **Sprint 21 – Testes e Qualidade:** testes automatizados e integracao continua.
 - **Sprint 22 – Empacotamento e Implantacao:** container Docker e scripts de deploy.
