@@ -76,7 +76,12 @@ def sortear_evento(rodada):
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
     redirect_authenticated_user = True
-    success_url = reverse_lazy('home')
+
+    def get_success_url(self):
+        user = self.request.user
+        if getattr(user, "tipo_usuario", None) == "gamemaster" or user.is_superuser:
+            return reverse_lazy("game_config")
+        return reverse_lazy("painel_grupo")
 
 class HomeView(TemplateView):
     template_name = 'home.html'

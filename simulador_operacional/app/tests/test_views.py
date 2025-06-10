@@ -21,3 +21,48 @@ class PainelGrupoViewTest(TestCase):
         self.client.login(username="view@example.com", password="secret")
         response = self.client.get(reverse("painel_grupo"))
         self.assertEqual(response.status_code, 200)
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class LoginRedirectTest(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.admin = User.objects.create_user(
+            email_usuario="admin@example.com",
+            nome_usuario="Admin",
+            password="pass",
+            tipo_usuario="gamemaster",
+        )
+        self.ceo = User.objects.create_user(
+            email_usuario="ceo@example.com",
+            nome_usuario="CEO",
+            password="pass",
+            tipo_usuario="lider_grupo",
+        )
+        self.member = User.objects.create_user(
+            email_usuario="membro@example.com",
+            nome_usuario="Membro",
+            password="pass",
+            tipo_usuario="membro_grupo",
+        )
+
+    def test_admin_redirect(self):
+        response = self.client.post(
+            reverse("login"),
+            {"username": "admin@example.com", "password": "pass"},
+        )
+        self.assertRedirects(response, reverse("game_config"))
+
+    def test_ceo_redirect(self):
+        response = self.client.post(
+            reverse("login"),
+            {"username": "ceo@example.com", "password": "pass"},
+        )
+        self.assertRedirects(response, reverse("painel_grupo"))
+
+    def test_member_redirect(self):
+        response = self.client.post(
+            reverse("login"),
+            {"username": "membro@example.com", "password": "pass"},
+        )
+        self.assertRedirects(response, reverse("painel_grupo"))
