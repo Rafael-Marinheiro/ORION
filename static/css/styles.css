@@ -5,10 +5,22 @@
     --secondary-color: #1b1f30;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
     font-family: 'Raleway', Arial, sans-serif;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 a {
@@ -16,6 +28,46 @@ a {
 }
 
 footer {
+    position: static;
+    width: 100%;
     background-color: var(--secondary-color);
     color: var(--text-color);
+    padding: 1rem 0;
+    z-index: 1000;
+    margin-top: auto;
+}
+
+.login-form {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+    padding: 1rem;
+    border-radius: 0.25rem;
+}
+
+.login-form h2,
+.login-form label,
+.login-form p,
+.login-form a {
+    color: var(--text-color) !important;
+}
+
+.login-form input.form-control,
+.login-form textarea.form-control,
+.login-form select.form-control {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--accent-color) !important;
+}
+
+.login-form input.form-control:focus,
+.login-form textarea.form-control:focus,
+.login-form select.form-control:focus {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 5px var(--accent-color) !important;
+}
+
+.container {
+    flex: 1;
 }
