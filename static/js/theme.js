@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function () {
   const themeSwitch = document.getElementById('theme-switch');
   const icon = document.getElementById('theme-icon');
