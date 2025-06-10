@@ -10,7 +10,7 @@ class PainelGrupoViewTest(TestCase):
         self.user = User.objects.create_user(
             email_usuario="view@example.com",
             nome_usuario="Viewer",
-            senha_usuario="secret",
+            password="secret",
         )
 
     def test_redirect_if_not_logged_in(self):
