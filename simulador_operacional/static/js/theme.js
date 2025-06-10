@@ -4,16 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const bootstrapLink = document.getElementById('bootstrap-theme');
   if (!themeSwitch) return;
 
-  themeSwitch.checked = document.body.classList.contains('light-theme');
-  if (icon) {
-    icon.textContent = themeSwitch.checked ? '🌙' : '🌞';
-  }
-  if (bootstrapLink && themeSwitch.checked) {
-    bootstrapLink.href = bootstrapLink.href.replace('bootstrap-dark', 'bootstrap-light');
-  }
-
-  themeSwitch.addEventListener('change', function () {
-    const light = themeSwitch.checked;
+  function applyTheme(light) {
     document.body.classList.toggle('light-theme', light);
     if (bootstrapLink) {
       bootstrapLink.href = light
@@ -32,7 +23,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (icon) {
       icon.textContent = light ? '🌙' : '🌞';
-
     }
+    localStorage.setItem('theme', light ? 'light' : 'dark');
+  }
+
+  const stored = localStorage.getItem('theme');
+  themeSwitch.checked = stored ? stored === 'light' : document.body.classList.contains('light-theme');
+  applyTheme(themeSwitch.checked);
+
+  themeSwitch.addEventListener('change', function () {
+    applyTheme(themeSwitch.checked);
   });
 });
