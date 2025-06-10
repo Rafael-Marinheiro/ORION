@@ -1,13 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
   const themeSwitch = document.getElementById('theme-switch');
   const icon = document.getElementById('theme-icon');
+  const bootstrapLink = document.getElementById('bootstrap-theme');
   if (!themeSwitch) return;
 
-  themeSwitch.checked = document.body.classList.contains('light-theme');
-
-  themeSwitch.addEventListener('change', function () {
-    const light = themeSwitch.checked;
+  function applyTheme(light) {
     document.body.classList.toggle('light-theme', light);
+    if (bootstrapLink) {
+      bootstrapLink.href = light
+        ? bootstrapLink.href.replace('bootstrap-dark', 'bootstrap-light')
+        : bootstrapLink.href.replace('bootstrap-light', 'bootstrap-dark');
+    }
     const nav = document.querySelector('nav.navbar');
     if (nav) {
       if (light) {
@@ -20,7 +23,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (icon) {
       icon.textContent = light ? '🌙' : '🌞';
-
     }
+    localStorage.setItem('theme', light ? 'light' : 'dark');
+  }
+
+  const stored = localStorage.getItem('theme');
+  themeSwitch.checked = stored ? stored === 'light' : document.body.classList.contains('light-theme');
+  applyTheme(themeSwitch.checked);
+
+  themeSwitch.addEventListener('change', function () {
+    applyTheme(themeSwitch.checked);
   });
 });
