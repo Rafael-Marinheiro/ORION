@@ -12,7 +12,7 @@ class RankingAPITest(TestCase):
         self.user = User.objects.create_user(
             email_usuario="api@example.com",
             nome_usuario="API User",
-            senha_usuario="pass",
+            password="pass",
         )
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)

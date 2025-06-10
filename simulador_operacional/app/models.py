@@ -4,10 +4,10 @@ from django.db.models import Sum
 from django.utils import timezone
 
 class UserManager(BaseUserManager):
-    def create_user(self, email_usuario, nome_usuario, senha_usuario, **extra_fields):
+    def create_user(self, email_usuario, nome_usuario, password=None, **extra_fields):
         if not email_usuario:
             raise ValueError('O e-mail é obrigatório')
-        if not senha_usuario:
+        if not password:
             raise ValueError('Usuário deve ter uma senha')
         email_usuario = self.normalize_email(email_usuario)
         user = self.model(
@@ -15,21 +15,22 @@ class UserManager(BaseUserManager):
             nome_usuario=nome_usuario,
             **extra_fields
         )
-        user.set_password(senha_usuario)
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email_usuario, nome_usuario, senha_usuario, **extra_fields):
+    def create_superuser(self, email_usuario, nome_usuario, password=None, **extra_fields):
         extra_fields.setdefault('tipo_usuario', 'aluno_admin')
         extra_fields.setdefault('status_usuario', True)
-        
-        if not senha_usuario:
+        extra_fields.setdefault('is_superuser', True)
+
+        if not password:
             raise ValueError('Superusuário deve ter uma senha')
 
         return self.create_user(
             email_usuario=email_usuario,
             nome_usuario=nome_usuario,
-            senha_usuario=senha_usuario,
+            password=password,
             **extra_fields
         )
 

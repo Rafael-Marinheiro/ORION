@@ -10,7 +10,7 @@ class UserModelTest(TestCase):
         user = User.objects.create_user(
             email_usuario="user@example.com",
             nome_usuario="User",
-            senha_usuario="pass123",
+            password="pass123",
         )
         self.assertEqual(user.email_usuario, "user@example.com")
         self.assertTrue(user.check_password("pass123"))
