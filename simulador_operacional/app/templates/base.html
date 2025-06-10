@@ -11,10 +11,6 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container-fluid">
-            <div class="form-check form-switch text-light me-2">
-                <input class="form-check-input" type="checkbox" id="theme-switch">
-                <label class="form-check-label" for="theme-switch" id="theme-icon">🌞</label>
-            </div>
             <a class="navbar-brand" href="{% url 'home' %}">ORION</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -39,6 +35,10 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'ajuda' %}">Ajuda</a></li>
                     {% endif %}
                 </ul>
+            </div>
+            <div class="form-check form-switch text-light ms-auto">
+                <input class="form-check-input" type="checkbox" id="theme-switch">
+                <label class="form-check-label" for="theme-switch" id="theme-icon">🌞</label>
             </div>
         </div>
     </nav>
