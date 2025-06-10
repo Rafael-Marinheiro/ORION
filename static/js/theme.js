@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (icon) {
       icon.textContent = light ? '🌙' : '🌞';
+
     }
   });
 });
