@@ -20,7 +20,7 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email_usuario, nome_usuario, password=None, **extra_fields):
-        extra_fields.setdefault('tipo_usuario', 'aluno_admin')
+        extra_fields.setdefault('tipo_usuario', 'gamemaster')
         extra_fields.setdefault('status_usuario', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -36,9 +36,9 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     TIPO_USUARIO_CHOICES = [
-        ('aluno_admin', 'Administrador'),
-        ('professor', 'Professor'),
-        ('aluno', 'Aluno'),
+        ('gamemaster', 'Administrador'),
+        ('lider_grupo', 'CEO do Grupo'),
+        ('membro_grupo', 'Membro do Grupo'),
     ]
 
     id_usuario = models.AutoField(primary_key=True)
@@ -63,7 +63,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def is_staff(self):
-        return self.tipo_usuario == 'aluno_admin' or self.is_superuser
+        return self.tipo_usuario == 'gamemaster' or self.is_superuser
 
     @property
     def is_active(self):
