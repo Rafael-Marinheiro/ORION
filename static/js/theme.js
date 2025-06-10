@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (bootstrapLink && themeSwitch.checked) {
     bootstrapLink.href = bootstrapLink.href.replace('bootstrap-dark', 'bootstrap-light');
   }
-
   themeSwitch.addEventListener('change', function () {
     const light = themeSwitch.checked;
     document.body.classList.toggle('light-theme', light);
@@ -32,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (icon) {
       icon.textContent = light ? '🌙' : '🌞';
-
     }
   });
 });
