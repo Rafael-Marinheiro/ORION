@@ -35,7 +35,10 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'ajuda' %}">Ajuda</a></li>
                     {% endif %}
                 </ul>
-                <button id="theme-toggle" class="btn btn-outline-light ms-lg-3" type="button">Modo Claro</button>
+                <select id="theme-select" class="form-select form-select-sm w-auto ms-lg-3">
+                    <option value="dark">Modo Escuro</option>
+                    <option value="light">Modo Claro</option>
+                </select>
             </div>
         </div>
     </nav>
