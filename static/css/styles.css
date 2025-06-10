@@ -9,6 +9,20 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     font-family: 'Raleway', Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+body.light-theme {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --accent-color: #0062cc;
+    --secondary-color: #f8f9fa;
 }
 
 a {
