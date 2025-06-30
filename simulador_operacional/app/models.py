@@ -88,6 +88,7 @@ class GameConfig(models.Model):
 
     maquinas_iniciais = models.PositiveIntegerField(default=40)
     capacidade_maquina = models.PositiveIntegerField(default=100)
+    trabalhadores_iniciais = models.PositiveIntegerField(default=80)
     numero_rodadas = models.PositiveIntegerField(
         default=3,
         validators=[MinValueValidator(3), MaxValueValidator(12)],
@@ -125,6 +126,7 @@ class Grupo(models.Model):
     estoque = models.PositiveIntegerField(default=0)
     maquinas = models.PositiveIntegerField(default=1)
     capacidade_maquina = models.PositiveIntegerField(default=100)
+    funcionarios = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = 'GRUPOS'

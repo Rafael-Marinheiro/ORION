@@ -32,6 +32,7 @@ class GameConfigForm(forms.ModelForm):
             "estoque_inicial",
             "maquinas_iniciais",
             "capacidade_maquina",
+            "trabalhadores_iniciais",
             "numero_rodadas",
             "produtos_habilitados",
             "modulo_producao",
@@ -94,7 +95,19 @@ class GrupoForm(forms.ModelForm):
             "estoque",
             "maquinas",
             "capacidade_maquina",
+            "funcionarios",
         ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        membros = cleaned_data.get("membros")
+        if membros is not None:
+            count = membros.count()
+            if count < 3 or count > 6:
+                raise forms.ValidationError(
+                    "Grupo deve ter entre 3 e 6 participantes"
+                )
+        return cleaned_data
 
 
 class ResultadoFilterForm(forms.Form):

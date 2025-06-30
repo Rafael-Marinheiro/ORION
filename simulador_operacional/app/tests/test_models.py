@@ -10,10 +10,10 @@ class UserModelTest(TestCase):
         user = User.objects.create_user(
             email_usuario="user@example.com",
             nome_usuario="User",
-            password="pass123",
+            password="pass1234",
         )
         self.assertEqual(user.email_usuario, "user@example.com")
-        self.assertTrue(user.check_password("pass123"))
+        self.assertTrue(user.check_password("pass1234"))
 
 
 @override_settings(MIGRATION_MODULES={"app": None})
@@ -22,6 +22,7 @@ class GameConfigModelTest(TestCase):
         config = GameConfig.objects.create()
         self.assertEqual(config.capital_inicial, 1000000)
         self.assertEqual(config.maquinas_iniciais, 40)
+        self.assertEqual(config.trabalhadores_iniciais, 80)
         self.assertEqual(config.numero_rodadas, 3)
         self.assertTrue(config.modulo_producao)
 

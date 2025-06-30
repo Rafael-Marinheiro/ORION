@@ -10,7 +10,7 @@ class PainelGrupoViewTest(TestCase):
         self.user = User.objects.create_user(
             email_usuario="view@example.com",
             nome_usuario="Viewer",
-            password="secret",
+            password="secret12",
         )
 
     def test_redirect_if_not_logged_in(self):
@@ -18,7 +18,7 @@ class PainelGrupoViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_get_logged_in(self):
-        self.client.login(username="view@example.com", password="secret")
+        self.client.login(username="view@example.com", password="secret12")
         response = self.client.get(reverse("painel_grupo"))
         self.assertEqual(response.status_code, 200)
 
@@ -30,39 +30,39 @@ class LoginRedirectTest(TestCase):
         self.admin = User.objects.create_user(
             email_usuario="admin@example.com",
             nome_usuario="Admin",
-            password="pass",
+            password="pass1234",
             tipo_usuario="gamemaster",
         )
         self.ceo = User.objects.create_user(
             email_usuario="ceo@example.com",
             nome_usuario="CEO",
-            password="pass",
+            password="pass1234",
             tipo_usuario="lider_grupo",
         )
         self.member = User.objects.create_user(
             email_usuario="membro@example.com",
             nome_usuario="Membro",
-            password="pass",
+            password="pass1234",
             tipo_usuario="membro_grupo",
         )
 
     def test_admin_redirect(self):
         response = self.client.post(
             reverse("login"),
-            {"username": "admin@example.com", "password": "pass"},
+            {"username": "admin@example.com", "password": "pass1234"},
         )
         self.assertRedirects(response, reverse("game_config"))
 
     def test_ceo_redirect(self):
         response = self.client.post(
             reverse("login"),
-            {"username": "ceo@example.com", "password": "pass"},
+            {"username": "ceo@example.com", "password": "pass1234"},
         )
         self.assertRedirects(response, reverse("painel_grupo"))
 
     def test_member_redirect(self):
         response = self.client.post(
             reverse("login"),
-            {"username": "membro@example.com", "password": "pass"},
+            {"username": "membro@example.com", "password": "pass1234"},
         )
         self.assertRedirects(response, reverse("painel_grupo"))

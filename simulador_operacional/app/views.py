@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from rest_framework import viewsets, generics
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from rest_framework.exceptions import PermissionDenied
 from .serializers import (
     GrupoSerializer,
     ResultadoFinanceiroSerializer,
@@ -207,6 +208,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             grupo.estoque = config.estoque_inicial
             grupo.maquinas = config.maquinas_iniciais
             grupo.capacidade_maquina = config.capacidade_maquina
+            grupo.funcionarios = config.trabalhadores_iniciais
             grupo.save()
         form = DecisaoForm()
         envio_form = DistribuicaoForm()
@@ -241,8 +243,16 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         })
 
     def post(self, request, *args, **kwargs):
-        grupo, _ = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
+        grupo, created = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
         grupo.membros.add(request.user)
+        if created:
+            config, _ = GameConfig.objects.get_or_create(id=1)
+            grupo.capital = config.capital_inicial
+            grupo.estoque = config.estoque_inicial
+            grupo.maquinas = config.maquinas_iniciais
+            grupo.capacidade_maquina = config.capacidade_maquina
+            grupo.funcionarios = config.trabalhadores_iniciais
+            grupo.save()
         if 'enviar_decisao' in request.POST:
             form = DecisaoForm(request.POST)
             if form.is_valid():
@@ -256,6 +266,10 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     return redirect('painel_grupo')
 
                 eventos = sortear_eventos(decisao.rodada)
+                capacidade_total = grupo.maquinas * grupo.capacidade_maquina
+                if decisao.quantidade > capacidade_total:
+                    messages.error(request, 'Quantidade acima da capacidade de produção')
+                    return redirect('painel_grupo')
                 custo_prod = Decimal(decisao.quantidade) * Decimal('5')
                 for evento in eventos:
                     if evento.tipo == 'custo_producao':
@@ -401,6 +415,15 @@ class JogoViewSet(viewsets.ModelViewSet):
 class InvestimentoViewSet(viewsets.ModelViewSet):
     queryset = Investimento.objects.all()
     serializer_class = InvestimentoSerializer
+
+    def perform_create(self, serializer):
+        grupo = serializer.validated_data["grupo"]
+        ultimos = grupo.resultados.order_by("-rodada")[:2]
+        if ultimos.count() == 2 and all(r.saldo_caixa < 0 for r in ultimos):
+            raise PermissionDenied(
+                "Grupo com saldo negativo por duas rodadas não pode investir."
+            )
+        serializer.save()
 
 
 class RankingAPIView(generics.ListAPIView):
