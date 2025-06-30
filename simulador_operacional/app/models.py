@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db.models import Sum
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
 class UserManager(BaseUserManager):
@@ -71,7 +72,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class GameConfig(models.Model):
-    capital_inicial = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    capital_inicial = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=1000000,
+    )
     estoque_inicial = models.PositiveIntegerField(default=0)
     produtos_habilitados = models.TextField(blank=True)
 
@@ -81,8 +86,12 @@ class GameConfig(models.Model):
 
     regra_eventos = models.JSONField(default=dict, blank=True)
 
-    maquinas_iniciais = models.PositiveIntegerField(default=1)
+    maquinas_iniciais = models.PositiveIntegerField(default=40)
     capacidade_maquina = models.PositiveIntegerField(default=100)
+    numero_rodadas = models.PositiveIntegerField(
+        default=3,
+        validators=[MinValueValidator(3), MaxValueValidator(12)],
+    )
 
     class Meta:
         db_table = 'CONFIG'
@@ -243,7 +252,7 @@ class Evento(models.Model):
 
 
 class EventoRodada(models.Model):
-    rodada = models.PositiveIntegerField(unique=True)
+    rodada = models.PositiveIntegerField()
     evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name="rodadas")
     data = models.DateTimeField(auto_now_add=True)
 
@@ -252,6 +261,7 @@ class EventoRodada(models.Model):
         verbose_name = "Evento da Rodada"
         verbose_name_plural = "Eventos da Rodada"
         ordering = ["rodada"]
+        unique_together = ["rodada", "evento"]
 
     def __str__(self):
         return f"Rodada {self.rodada} - {self.evento.nome}"

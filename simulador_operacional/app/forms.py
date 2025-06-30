@@ -32,6 +32,7 @@ class GameConfigForm(forms.ModelForm):
             "estoque_inicial",
             "maquinas_iniciais",
             "capacidade_maquina",
+            "numero_rodadas",
             "produtos_habilitados",
             "modulo_producao",
             "modulo_distribuicao",
@@ -63,6 +64,16 @@ class RodadaForm(forms.ModelForm):
     class Meta:
         model = Rodada
         fields = ["jogo", "numero", "fim"]
+
+    def clean_numero(self):
+        numero = self.cleaned_data["numero"]
+        config = GameConfig.objects.first()
+        max_rodadas = config.numero_rodadas if config else 12
+        if numero < 1 or numero > max_rodadas:
+            raise forms.ValidationError(
+                f"Número da rodada deve ser entre 1 e {max_rodadas}"
+            )
+        return numero
 
 
 class GrupoForm(forms.ModelForm):

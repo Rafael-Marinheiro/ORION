@@ -3,7 +3,7 @@
 <h2>Ranking de Grupos</h2>
 <ol>
     {% for g in grupos %}
-    <li>{{ g.nome }} - Capital {{ g.capital }}</li>
+    <li>{{ g.nome }} - Pontuação {{ g.rank_score|floatformat:2 }}</li>
     {% endfor %}
 </ol>
 {% endblock %}
