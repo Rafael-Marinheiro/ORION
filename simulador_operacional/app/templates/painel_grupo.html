@@ -5,8 +5,10 @@
 <p>Capital: {{ grupo.capital }}</p>
 <p>Estoque: {{ grupo.estoque }}</p>
 <p>Máquinas: {{ grupo.maquinas }} | Capacidade por máquina: {{ grupo.capacidade_maquina }}</p>
-{% if evento %}
-<p><strong>Evento da rodada: {{ evento.nome }} - {{ evento.descricao }} ({{ evento.impacto_percentual }}%)</strong></p>
+{% if eventos %}
+    {% for ev in eventos %}
+        <p><strong>Evento da rodada: {{ ev.nome }} - {{ ev.descricao }} ({{ ev.impacto_percentual }}%)</strong></p>
+    {% endfor %}
 {% endif %}
 {% if notificacao %}
 <p><strong>{{ notificacao }}</strong></p>

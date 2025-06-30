@@ -20,7 +20,9 @@ class UserModelTest(TestCase):
 class GameConfigModelTest(TestCase):
     def test_default_values(self):
         config = GameConfig.objects.create()
-        self.assertEqual(config.capital_inicial, 0)
+        self.assertEqual(config.capital_inicial, 1000000)
+        self.assertEqual(config.maquinas_iniciais, 40)
+        self.assertEqual(config.numero_rodadas, 3)
         self.assertTrue(config.modulo_producao)
 
 

@@ -11,6 +11,7 @@ from django.views.generic import TemplateView, CreateView, ListView
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from rest_framework import viewsets, generics
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from .serializers import (
     GrupoSerializer,
     ResultadoFinanceiroSerializer,
@@ -52,26 +53,36 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
 import random
+from django.utils import timezone
+from django.db.models import Sum
 
 
-def sortear_evento(rodada):
-    try:
-        return EventoRodada.objects.get(rodada=rodada).evento
-    except EventoRodada.DoesNotExist:
-        eventos = list(Evento.objects.all())
-        if not eventos:
-            return None
-        total = sum(e.probabilidade for e in eventos)
+def sortear_eventos(rodada):
+    registros = EventoRodada.objects.filter(rodada=rodada)
+    if registros.exists():
+        return [r.evento for r in registros]
+
+    eventos = list(Evento.objects.all())
+    if not eventos:
+        return []
+
+    escolhidos = []
+    total = sum(e.probabilidade for e in eventos)
+    for _ in range(2):
         r = random.uniform(0, total)
         acum = 0
-        escolhida = eventos[-1]
+        escolha = eventos[-1]
         for e in eventos:
             acum += e.probabilidade
             if r <= acum:
-                escolhida = e
+                escolha = e
                 break
-        EventoRodada.objects.create(rodada=rodada, evento=escolhida)
-        return escolhida
+        if escolha not in escolhidos:
+            escolhidos.append(escolha)
+
+    for evento in escolhidos:
+        EventoRodada.objects.create(rodada=rodada, evento=evento)
+    return escolhidos
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
@@ -96,10 +107,13 @@ def home(request):
     return render(request, 'home.html')
 
 
-class RegisterView(CreateView):
+class RegisterView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     template_name = 'registration/register.html'
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('login')
+
+    def test_func(self):
+        return self.request.user.is_staff
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -121,7 +135,6 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
 
 
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.views.generic import UpdateView
 from .models import GameConfig
 from .forms import GameConfigForm
@@ -166,7 +179,20 @@ class RankingView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return self.request.user.is_staff or super().has_permission()
 
     def get_queryset(self):
-        return Grupo.objects.order_by('-capital')
+        grupos = Grupo.objects.annotate(
+            total_lucro=Sum('resultados__lucro'),
+            total_envios=Sum('envios__quantidade'),
+        )
+        total_envios_all = (
+            Distribuicao.objects.aggregate(total=Sum('quantidade'))['total'] or 0
+        )
+        for g in grupos:
+            envios = g.total_envios or 0
+            market_share = (envios / total_envios_all) if total_envios_all else 0
+            capacidade = g.maquinas * g.capacidade_maquina
+            eficiencia = (envios / capacidade) if capacidade else 0
+            g.rank_score = (g.total_lucro or 0) + market_share * 1000 + eficiencia * 100
+        return sorted(grupos, key=lambda x: x.rank_score, reverse=True)
 
 
 class PainelGrupoView(LoginRequiredMixin, TemplateView):
@@ -195,7 +221,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             request.session["ultima_rodada_vista"] = nova.rodada
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
-        evento = sortear_evento(rodada_atual)
+        eventos = sortear_eventos(rodada_atual)
         capacidade_total = grupo.maquinas * grupo.capacidade_maquina
         alerta = None
         if grupo.estoque < capacidade_total * 0.2:
@@ -210,7 +236,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'envios': envios,
             'resultados': resultados,
             'alerta': alerta,
-            'evento': evento,
+            'eventos': eventos,
             'notificacao': notificacao,
         })
 
@@ -222,10 +248,18 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             if form.is_valid():
                 decisao = form.save(commit=False)
                 decisao.grupo = grupo
-                evento = sortear_evento(decisao.rodada)
+                if Decisao.objects.filter(grupo=grupo, rodada=decisao.rodada).exists():
+                    messages.error(request, 'Decisão já enviada para esta rodada')
+                    return redirect('painel_grupo')
+                if Rodada.objects.filter(numero=decisao.rodada, fim__lt=timezone.now()).exists():
+                    messages.error(request, 'Prazo encerrado para esta rodada')
+                    return redirect('painel_grupo')
+
+                eventos = sortear_eventos(decisao.rodada)
                 custo_prod = Decimal(decisao.quantidade) * Decimal('5')
-                if evento and evento.tipo == 'custo_producao':
-                    custo_prod *= Decimal(1 + evento.impacto_percentual / 100)
+                for evento in eventos:
+                    if evento.tipo == 'custo_producao':
+                        custo_prod *= Decimal(1 + evento.impacto_percentual / 100)
                 decisao.save()
                 if grupo.capital < custo_prod:
                     messages.error(request, 'Capital insuficiente para produção')
@@ -247,19 +281,28 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             if envio_form.is_valid():
                 envio = envio_form.save(commit=False)
                 envio.grupo = grupo
-                evento = sortear_evento(envio.rodada)
+                if Distribuicao.objects.filter(grupo=grupo, rodada=envio.rodada).exists():
+                    messages.error(request, 'Envio já realizado nesta rodada')
+                    return redirect('painel_grupo')
+                if Rodada.objects.filter(numero=envio.rodada, fim__lt=timezone.now()).exists():
+                    messages.error(request, 'Prazo encerrado para esta rodada')
+                    return redirect('painel_grupo')
+
+                eventos = sortear_eventos(envio.rodada)
                 if envio.quantidade > grupo.estoque:
                     messages.error(request, 'Estoque insuficiente')
                 else:
                     custo = Decimal(envio.cidade.distancia_km) * envio.quantidade * Decimal('0.1')
-                    if evento and evento.tipo == 'custo_transporte':
-                        custo *= Decimal(1 + evento.impacto_percentual / 100)
+                    for evento in eventos:
+                        if evento.tipo == 'custo_transporte':
+                            custo *= Decimal(1 + evento.impacto_percentual / 100)
                     envio.custo_transporte = custo
                     envio.save()
                     grupo.estoque -= envio.quantidade
                     receita = envio.quantidade * envio.preco_unitario
-                    if evento and evento.tipo == 'demanda':
-                        receita *= Decimal(1 + evento.impacto_percentual / 100)
+                    for evento in eventos:
+                        if evento.tipo == 'demanda':
+                            receita *= Decimal(1 + evento.impacto_percentual / 100)
                     grupo.capital += receita - custo
                     grupo.save()
                     rf, _ = ResultadoFinanceiro.objects.get_or_create(
@@ -285,7 +328,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             request.session["ultima_rodada_vista"] = nova.rodada
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
-        evento = sortear_evento(rodada_atual)
+        eventos = sortear_eventos(rodada_atual)
         capacidade_total = grupo.maquinas * grupo.capacidade_maquina
         alerta = None
         if grupo.estoque < capacidade_total * 0.2:
@@ -300,7 +343,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'envios': envios,
             'resultados': resultados,
             'alerta': alerta,
-            'evento': evento,
+            'eventos': eventos,
             'notificacao': notificacao,
         })
 
@@ -361,8 +404,25 @@ class InvestimentoViewSet(viewsets.ModelViewSet):
 
 
 class RankingAPIView(generics.ListAPIView):
-    queryset = Grupo.objects.order_by("-capital")
     serializer_class = GrupoSerializer
+
+    def get_queryset(self):
+        grupos = Grupo.objects.annotate(
+            total_lucro=Sum('resultados__lucro'),
+            total_envios=Sum('envios__quantidade'),
+        )
+        total_envios_all = (
+            Distribuicao.objects.aggregate(total=Sum('quantidade'))['total'] or 0
+        )
+        ranking = []
+        for g in grupos:
+            envios = g.total_envios or 0
+            market_share = (envios / total_envios_all) if total_envios_all else 0
+            capacidade = g.maquinas * g.capacidade_maquina
+            eficiencia = (envios / capacidade) if capacidade else 0
+            score = (g.total_lucro or 0) + market_share * 1000 + eficiencia * 100
+            ranking.append((score, g))
+        return [g for score, g in sorted(ranking, key=lambda x: x[0], reverse=True)]
 
 
 class GrupoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
