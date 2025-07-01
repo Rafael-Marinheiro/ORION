@@ -113,7 +113,7 @@ class RegisterView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     success_url = reverse_lazy('login')
 
     def test_func(self):
-        return self.request.user.is_staff
+        return getattr(self.request.user, 'tipo_usuario', '') == 'gamemaster'
 
 
 class CustomPasswordResetView(PasswordResetView):

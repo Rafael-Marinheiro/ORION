@@ -120,7 +120,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 
 ## Sprint 25 – Regras de Acesso e Cadastro
 - Bloquear auto-registro, permitindo cadastro apenas pelo administrador.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 26 – Configurações Iniciais do Jogo
 - Definir valores iniciais padrão (capital de R$1.000.000, 40 máquinas e 80 trabalhadores).

@@ -22,8 +22,6 @@
         <button type="submit" class="btn btn-primary">Entrar</button>
         <p><a href="{% url 'password_reset' %}">Esqueceu a senha?</a></p>
     </form>
-    <p>
-        | <a href="{% url 'register' %}">Registrar</a>
-    </p>
+    {# Cadastro somente disponível para administradores logados, não exibir link aqui #}
 </div>
 {% endblock %}
