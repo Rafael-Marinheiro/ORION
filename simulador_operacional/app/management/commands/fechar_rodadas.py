@@ -31,6 +31,13 @@ class Command(BaseCommand):
                     rf.saldo_caixa = grupo.capital
                     rf.lucro = rf.receita - rf.custos
                     rf.save()
+
+                    ultima = grupo.decisoes.order_by('-rodada').first()
+                    if ultima:
+                        ultima.pk = None
+                        ultima.rodada = rodada.numero
+                        ultima.resultado = 'Decisão replicada automaticamente'
+                        ultima.save()
             rodada.fechada = True
             rodada.save()
             logger.info('Rodada %s fechada', rodada.numero)

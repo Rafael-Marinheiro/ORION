@@ -129,7 +129,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 
 ## Sprint 27 – Envio de Decisões
 - Validar envio único de decisões por rodada antes do prazo final.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 28 – Ranking Completo
 - Ordenar grupos por resultado financeiro, market share e eficiência com critérios de desempate.
