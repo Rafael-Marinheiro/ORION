@@ -66,3 +66,32 @@ class LoginRedirectTest(TestCase):
             {"username": "membro@example.com", "password": "pass"},
         )
         self.assertRedirects(response, reverse("painel_grupo"))
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class RegisterViewAccessTest(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.gm = User.objects.create_user(
+            email_usuario="gm@example.com",
+            nome_usuario="GM",
+            password="pass",
+            tipo_usuario="gamemaster",
+        )
+        self.ceo = User.objects.create_user(
+            email_usuario="ceo2@example.com",
+            nome_usuario="CEO",
+            password="pass",
+            tipo_usuario="lider_grupo",
+        )
+
+    def test_gamemaster_can_access(self):
+        self.client.login(username="gm@example.com", password="pass")
+        response = self.client.get(reverse("register"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_non_gamemaster_forbidden(self):
+        self.client.login(username="ceo2@example.com", password="pass")
+        response = self.client.get(reverse("register"))
+        self.assertEqual(response.status_code, 403)
+
