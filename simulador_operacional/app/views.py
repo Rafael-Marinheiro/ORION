@@ -252,6 +252,9 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         grupo, _ = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
         grupo.membros.add(request.user)
         if 'enviar_decisao' in request.POST:
+            if request.user.tipo_usuario != 'lider_grupo' and not request.user.is_staff:
+                messages.error(request, 'Apenas o Aluno CEO pode enviar decisões')
+                return redirect('painel_grupo')
             form = DecisaoForm(request.POST)
             if form.is_valid():
                 decisao = form.save(commit=False)
@@ -259,7 +262,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 if Decisao.objects.filter(grupo=grupo, rodada=decisao.rodada).exists():
                     messages.error(request, 'Decisão já enviada para esta rodada')
                     return redirect('painel_grupo')
-                if Rodada.objects.filter(numero=decisao.rodada, fim__lt=timezone.now()).exists():
+                if Rodada.objects.filter(numero=decisao.rodada, fim__lt=timezone.now()).exists() or Rodada.objects.filter(numero=decisao.rodada, fechada=True).exists():
                     messages.error(request, 'Prazo encerrado para esta rodada')
                     return redirect('painel_grupo')
 
@@ -270,7 +273,15 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                         custo_prod *= Decimal(1 + evento.impacto_percentual / 100)
                 decisao.save()
                 if grupo.capital < custo_prod:
-                    messages.error(request, 'Capital insuficiente para produção')
+                    penalidade = custo_prod * Decimal('0.02')
+                    grupo.capital -= penalidade
+                    grupo.save()
+                    rf, _ = ResultadoFinanceiro.objects.get_or_create(grupo=grupo, rodada=decisao.rodada)
+                    rf.custos += penalidade
+                    rf.saldo_caixa = grupo.capital
+                    rf.lucro = rf.receita - rf.custos
+                    rf.save()
+                    messages.error(request, 'Capital insuficiente para produção. Penalidade aplicada.')
                 else:
                     grupo.capital -= custo_prod
                     grupo.estoque += decisao.quantidade
@@ -285,6 +296,9 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     messages.success(request, 'Decisão registrada')
                     return redirect('painel_grupo')
         elif 'enviar_envio' in request.POST:
+            if request.user.tipo_usuario != 'lider_grupo' and not request.user.is_staff:
+                messages.error(request, 'Apenas o Aluno CEO pode enviar distribuições')
+                return redirect('painel_grupo')
             envio_form = DistribuicaoForm(request.POST)
             if envio_form.is_valid():
                 envio = envio_form.save(commit=False)
@@ -292,13 +306,21 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 if Distribuicao.objects.filter(grupo=grupo, rodada=envio.rodada).exists():
                     messages.error(request, 'Envio já realizado nesta rodada')
                     return redirect('painel_grupo')
-                if Rodada.objects.filter(numero=envio.rodada, fim__lt=timezone.now()).exists():
+                if Rodada.objects.filter(numero=envio.rodada, fim__lt=timezone.now()).exists() or Rodada.objects.filter(numero=envio.rodada, fechada=True).exists():
                     messages.error(request, 'Prazo encerrado para esta rodada')
                     return redirect('painel_grupo')
 
                 eventos = sortear_eventos(envio.rodada)
                 if envio.quantidade > grupo.estoque:
-                    messages.error(request, 'Estoque insuficiente')
+                    penalidade = envio.quantidade * envio.preco_unitario * Decimal('0.05')
+                    grupo.capital -= penalidade
+                    grupo.save()
+                    rf, _ = ResultadoFinanceiro.objects.get_or_create(grupo=grupo, rodada=envio.rodada)
+                    rf.custos += penalidade
+                    rf.saldo_caixa = grupo.capital
+                    rf.lucro = rf.receita - rf.custos
+                    rf.save()
+                    messages.error(request, 'Estoque insuficiente. Penalidade aplicada.')
                 else:
                     custo = Decimal(envio.cidade.distancia_km) * envio.quantidade * Decimal('0.1')
                     for evento in eventos:
