@@ -87,6 +87,10 @@ class GameConfig(models.Model):
     regra_eventos = models.JSONField(default=dict, blank=True)
 
     maquinas_iniciais = models.PositiveIntegerField(default=40)
+    maquinas_iniciais_a = models.PositiveIntegerField(default=15)
+    maquinas_iniciais_b = models.PositiveIntegerField(default=15)
+    maquinas_iniciais_c = models.PositiveIntegerField(default=10)
+    trabalhadores_iniciais = models.PositiveIntegerField(default=80)
     capacidade_maquina = models.PositiveIntegerField(default=100)
     numero_rodadas = models.PositiveIntegerField(
         default=3,
@@ -124,6 +128,10 @@ class Grupo(models.Model):
     capital = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estoque = models.PositiveIntegerField(default=0)
     maquinas = models.PositiveIntegerField(default=1)
+    maquinas_a = models.PositiveIntegerField(default=15)
+    maquinas_b = models.PositiveIntegerField(default=15)
+    maquinas_c = models.PositiveIntegerField(default=10)
+    trabalhadores = models.PositiveIntegerField(default=80)
     capacidade_maquina = models.PositiveIntegerField(default=100)
 
     class Meta:

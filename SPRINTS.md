@@ -125,7 +125,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 ## Sprint 26 – Configurações Iniciais do Jogo
 - Definir valores iniciais padrão (capital de R$1.000.000, 40 máquinas e 80 trabalhadores).
 - Validar o número de rodadas entre 3 e 12.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 27 – Envio de Decisões
 - Validar envio único de decisões por rodada antes do prazo final.
