@@ -205,7 +205,15 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             config, _ = GameConfig.objects.get_or_create(id=1)
             grupo.capital = config.capital_inicial
             grupo.estoque = config.estoque_inicial
-            grupo.maquinas = config.maquinas_iniciais
+            grupo.maquinas_a = config.maquinas_iniciais_a
+            grupo.maquinas_b = config.maquinas_iniciais_b
+            grupo.maquinas_c = config.maquinas_iniciais_c
+            grupo.maquinas = (
+                config.maquinas_iniciais_a
+                + config.maquinas_iniciais_b
+                + config.maquinas_iniciais_c
+            )
+            grupo.trabalhadores = config.trabalhadores_iniciais
             grupo.capacidade_maquina = config.capacidade_maquina
             grupo.save()
         form = DecisaoForm()

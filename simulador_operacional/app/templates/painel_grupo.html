@@ -4,7 +4,12 @@
 <h2>Painel do Grupo {{ grupo.nome }}</h2>
 <p>Capital: {{ grupo.capital }}</p>
 <p>Estoque: {{ grupo.estoque }}</p>
-<p>Máquinas: {{ grupo.maquinas }} | Capacidade por máquina: {{ grupo.capacidade_maquina }}</p>
+<p>
+    Máquinas: {{ grupo.maquinas }}
+    (A: {{ grupo.maquinas_a }}, B: {{ grupo.maquinas_b }}, C: {{ grupo.maquinas_c }}) |
+    Capacidade por máquina: {{ grupo.capacidade_maquina }}
+</p>
+<p>Trabalhadores: {{ grupo.trabalhadores }}</p>
 {% if eventos %}
     {% for ev in eventos %}
         <p><strong>Evento da rodada: {{ ev.nome }} - {{ ev.descricao }} ({{ ev.impacto_percentual }}%)</strong></p>
