@@ -38,6 +38,21 @@ class Command(BaseCommand):
                         ultima.rodada = rodada.numero
                         ultima.resultado = 'Decisão replicada automaticamente'
                         ultima.save()
+                # Custos de armazenagem para produtos em estoque
+                custo_armazenagem = (
+                    Decimal(grupo.estoque) * Decimal('5') * Decimal('0.02')
+                )
+                if custo_armazenagem:
+                    grupo.capital -= custo_armazenagem
+                    grupo.save()
+                    rf, _ = ResultadoFinanceiro.objects.get_or_create(
+                        grupo=grupo,
+                        rodada=rodada.numero,
+                    )
+                    rf.custos += custo_armazenagem
+                    rf.saldo_caixa = grupo.capital
+                    rf.lucro = rf.receita - rf.custos
+                    rf.save()
             rodada.fechada = True
             rodada.save()
             logger.info('Rodada %s fechada', rodada.numero)

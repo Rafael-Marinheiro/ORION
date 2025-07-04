@@ -10,7 +10,8 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, ListView
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, status
+from rest_framework.response import Response
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from .serializers import (
     GrupoSerializer,
@@ -198,6 +199,10 @@ class RankingView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 class PainelGrupoView(LoginRequiredMixin, TemplateView):
     template_name = 'painel_grupo.html'
 
+    def calcular_capacidade_producao(self, grupo):
+        maquinas_operacionais = min(grupo.maquinas, grupo.trabalhadores // 2)
+        return maquinas_operacionais * grupo.capacidade_maquina
+
     def get(self, request, *args, **kwargs):
         grupo, created = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
         grupo.membros.add(request.user)
@@ -230,7 +235,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
         eventos = sortear_eventos(rodada_atual)
-        capacidade_total = grupo.maquinas * grupo.capacidade_maquina
+        capacidade_total = self.calcular_capacidade_producao(grupo)
         alerta = None
         if grupo.estoque < capacidade_total * 0.2:
             alerta = 'Risco de ruptura de estoque'
@@ -259,6 +264,13 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             if form.is_valid():
                 decisao = form.save(commit=False)
                 decisao.grupo = grupo
+                capacidade_total = self.calcular_capacidade_producao(grupo)
+                if decisao.quantidade > capacidade_total:
+                    decisao.quantidade = capacidade_total
+                    messages.warning(
+                        request,
+                        'Quantidade de produção ajustada ao limite operacional.',
+                    )
                 if Decisao.objects.filter(grupo=grupo, rodada=decisao.rodada).exists():
                     messages.error(request, 'Decisão já enviada para esta rodada')
                     return redirect('painel_grupo')
@@ -329,7 +341,13 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     envio.custo_transporte = custo
                     envio.save()
                     grupo.estoque -= envio.quantidade
-                    receita = envio.quantidade * envio.preco_unitario
+                    vendas_realizadas = min(envio.quantidade, envio.cidade.demanda)
+                    if vendas_realizadas < envio.quantidade:
+                        messages.warning(
+                            request,
+                            'Parte da remessa não foi vendida por falta de demanda.',
+                        )
+                    receita = vendas_realizadas * envio.preco_unitario
                     for evento in eventos:
                         if evento.tipo == 'demanda':
                             receita *= Decimal(1 + evento.impacto_percentual / 100)
@@ -359,7 +377,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
         eventos = sortear_eventos(rodada_atual)
-        capacidade_total = grupo.maquinas * grupo.capacidade_maquina
+        capacidade_total = self.calcular_capacidade_producao(grupo)
         alerta = None
         if grupo.estoque < capacidade_total * 0.2:
             alerta = 'Risco de ruptura de estoque'
@@ -431,6 +449,22 @@ class JogoViewSet(viewsets.ModelViewSet):
 class InvestimentoViewSet(viewsets.ModelViewSet):
     queryset = Investimento.objects.all()
     serializer_class = InvestimentoSerializer
+
+    def create(self, request, *args, **kwargs):
+        grupo_id = request.data.get('grupo')
+        if grupo_id:
+            resultados = (
+                ResultadoFinanceiro.objects.filter(grupo_id=grupo_id)
+                .order_by('-rodada')[:2]
+            )
+            if len(resultados) == 2 and all(r.saldo_caixa < 0 for r in resultados):
+                return Response(
+                    {
+                        'detail': 'Investimentos bloqueados por fluxo de caixa negativo.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return super().create(request, *args, **kwargs)
 
 
 class RankingAPIView(generics.ListAPIView):
