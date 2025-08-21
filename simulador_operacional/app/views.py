@@ -54,8 +54,11 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
 import random
+import logging
 from django.utils import timezone
 from django.db.models import Sum
+
+logger = logging.getLogger('agendamentos')
 
 
 def sortear_eventos(rodada):
@@ -83,6 +86,10 @@ def sortear_eventos(rodada):
 
     for evento in escolhidos:
         EventoRodada.objects.create(rodada=rodada, evento=evento)
+    if escolhidos:
+        logger.info('Eventos sorteados para rodada %s: %s', rodada, ', '.join(e.nome for e in escolhidos))
+    else:
+        logger.info('Nenhum evento sorteado para rodada %s', rodada)
     return escolhidos
 
 class CustomLoginView(LoginView):
@@ -234,7 +241,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             request.session["ultima_rodada_vista"] = nova.rodada
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
-        eventos = sortear_eventos(rodada_atual)
+        eventos = [er.evento for er in EventoRodada.objects.filter(rodada=rodada_atual)]
         capacidade_total = self.calcular_capacidade_producao(grupo)
         alerta = None
         if grupo.estoque < capacidade_total * 0.2:
@@ -278,7 +285,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     messages.error(request, 'Prazo encerrado para esta rodada')
                     return redirect('painel_grupo')
 
-                eventos = sortear_eventos(decisao.rodada)
+                eventos = [er.evento for er in EventoRodada.objects.filter(rodada=decisao.rodada)]
                 custo_prod = Decimal(decisao.quantidade) * Decimal('5')
                 for evento in eventos:
                     if evento.tipo == 'custo_producao':
@@ -322,7 +329,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     messages.error(request, 'Prazo encerrado para esta rodada')
                     return redirect('painel_grupo')
 
-                eventos = sortear_eventos(envio.rodada)
+                eventos = [er.evento for er in EventoRodada.objects.filter(rodada=envio.rodada)]
                 if envio.quantidade > grupo.estoque:
                     penalidade = envio.quantidade * envio.preco_unitario * Decimal('0.05')
                     grupo.capital -= penalidade
@@ -376,7 +383,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             request.session["ultima_rodada_vista"] = nova.rodada
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
-        eventos = sortear_eventos(rodada_atual)
+        eventos = [er.evento for er in EventoRodada.objects.filter(rodada=rodada_atual)]
         capacidade_total = self.calcular_capacidade_producao(grupo)
         alerta = None
         if grupo.estoque < capacidade_total * 0.2:

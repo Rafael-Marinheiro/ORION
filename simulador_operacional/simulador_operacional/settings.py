@@ -119,6 +119,7 @@ SIMPLE_JWT = {
 CRONJOBS = [
     ('*/5 * * * *', 'django.core.management.call_command', ['fechar_rodadas']),
     ('0 * * * *', 'django.core.management.call_command', ['enviar_lembretes']),
+    ('*/1 * * * *', 'django.core.management.call_command', ['sortear_eventos_rodada']),
 ]
 
 LOGGING = {
