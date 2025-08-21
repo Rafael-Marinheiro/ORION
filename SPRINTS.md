@@ -133,11 +133,11 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 
 ## Sprint 28 – Ranking Completo
 - Ordenar grupos por resultado financeiro, market share e eficiência com critérios de desempate.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 29 – Eventos Aleatórios Avançados
 - Permitir sorteio de até dois eventos simultâneos em cada rodada.
-*Status: não implementado.*
+*Status: implementado.*
 ## Sprint 30 – Telas de Login e Registro
 - Centralizar formulário em um card Bootstrap.
 - Definir largura máxima (~400 px) e bordas com sombra.
@@ -148,7 +148,7 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Adicionar logotipo e frase institucional centralizados.
 - Incluir botão destacado para login ou acesso ao painel.
 - Garantir que o layout funcione em telas menores.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 32 – Painel do Grupo
 - Mostrar indicadores (capital, estoque, máquinas) em cards.
