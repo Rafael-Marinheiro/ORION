@@ -36,6 +36,19 @@ class GrupoFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("membros", form.errors)
 
+    def test_invalid_member_count_too_many(self):
+        User = get_user_model()
+        extra_user = User.objects.create_user(
+            email_usuario="extra@example.com",
+            nome_usuario="Extra",
+            password="pass",
+        )
+        data = self._base_data()
+        data["membros"] = [u.pk for u in self.users] + [extra_user.pk]
+        form = GrupoForm(data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("membros", form.errors)
+
     def test_valid_member_count(self):
         data = self._base_data()
         data["membros"] = [u.pk for u in self.users[:3]]

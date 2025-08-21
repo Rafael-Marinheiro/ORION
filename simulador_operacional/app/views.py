@@ -211,23 +211,16 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         return maquinas_operacionais * grupo.capacidade_maquina
 
     def get(self, request, *args, **kwargs):
-        grupo, created = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
-        grupo.membros.add(request.user)
-        if created:
-            config, _ = GameConfig.objects.get_or_create(id=1)
-            grupo.capital = config.capital_inicial
-            grupo.estoque = config.estoque_inicial
-            grupo.maquinas_a = config.maquinas_iniciais_a
-            grupo.maquinas_b = config.maquinas_iniciais_b
-            grupo.maquinas_c = config.maquinas_iniciais_c
-            grupo.maquinas = (
-                config.maquinas_iniciais_a
-                + config.maquinas_iniciais_b
-                + config.maquinas_iniciais_c
+        grupo = request.user.grupos.first()
+        if not grupo:
+            messages.error(request, "Você precisa criar ou entrar em um grupo.")
+            return redirect("criar_grupo")
+        membros = grupo.membros.count()
+        if membros < 3 or membros > 6:
+            messages.error(
+                request, "O grupo deve possuir entre 3 e 6 participantes."
             )
-            grupo.trabalhadores = config.trabalhadores_iniciais
-            grupo.capacidade_maquina = config.capacidade_maquina
-            grupo.save()
+            return redirect("criar_grupo")
         form = DecisaoForm()
         envio_form = DistribuicaoForm()
         decisoes = grupo.decisoes.all()
@@ -261,8 +254,16 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         })
 
     def post(self, request, *args, **kwargs):
-        grupo, _ = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
-        grupo.membros.add(request.user)
+        grupo = request.user.grupos.first()
+        if not grupo:
+            messages.error(request, "Você precisa criar ou entrar em um grupo.")
+            return redirect("criar_grupo")
+        membros = grupo.membros.count()
+        if membros < 3 or membros > 6:
+            messages.error(
+                request, "O grupo deve possuir entre 3 e 6 participantes."
+            )
+            return redirect("criar_grupo")
         if 'enviar_decisao' in request.POST:
             if request.user.tipo_usuario != 'lider_grupo' and not request.user.is_staff:
                 messages.error(request, 'Apenas o Aluno CEO pode enviar decisões')
@@ -506,15 +507,32 @@ class GrupoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return self.request.user.is_staff or super().has_permission()
 
 
-class GrupoCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class GrupoCreateView(LoginRequiredMixin, CreateView):
     model = Grupo
     form_class = GrupoForm
     template_name = "grupo_form.html"
-    success_url = reverse_lazy("lista_grupos")
-    permission_required = "app.add_grupo"
+    success_url = reverse_lazy("painel_grupo")
 
-    def has_permission(self):
-        return self.request.user.is_staff or super().has_permission()
+    def form_valid(self, form):
+        grupo = form.save(commit=False)
+        config, _ = GameConfig.objects.get_or_create(id=1)
+        grupo.capital = config.capital_inicial
+        grupo.estoque = config.estoque_inicial
+        grupo.maquinas_a = config.maquinas_iniciais_a
+        grupo.maquinas_b = config.maquinas_iniciais_b
+        grupo.maquinas_c = config.maquinas_iniciais_c
+        grupo.maquinas = (
+            config.maquinas_iniciais_a
+            + config.maquinas_iniciais_b
+            + config.maquinas_iniciais_c
+        )
+        grupo.trabalhadores = config.trabalhadores_iniciais
+        grupo.capacidade_maquina = config.capacidade_maquina
+        grupo.save()
+        form.save_m2m()
+        if self.request.user not in grupo.membros.all():
+            grupo.membros.add(self.request.user)
+        return redirect(self.success_url)
 
 
 class GrupoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
