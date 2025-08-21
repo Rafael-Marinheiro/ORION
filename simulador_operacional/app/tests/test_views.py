@@ -1,6 +1,6 @@
-from django.urls import reverse
 from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from app.models import Grupo
 
 
@@ -31,7 +31,7 @@ class PainelGrupoViewTest(TestCase):
     def test_redirect_if_no_group(self):
         self.client.login(username="view0@example.com", password="secret")
         response = self.client.get(reverse("painel_grupo"))
-        self.assertRedirects(response, reverse("criar_grupo"))
+        self.assertRedirects(response, reverse("home"))
 
     def test_get_logged_in_with_group(self):
         self._create_group(3)
@@ -43,13 +43,13 @@ class PainelGrupoViewTest(TestCase):
         self._create_group(2)
         self.client.login(username="view0@example.com", password="secret")
         response = self.client.get(reverse("painel_grupo"))
-        self.assertRedirects(response, reverse("criar_grupo"))
+        self.assertRedirects(response, reverse("home"))
 
     def test_group_too_large_redirects(self):
         self._create_group(7)
         self.client.login(username="view0@example.com", password="secret")
         response = self.client.get(reverse("painel_grupo"))
-        self.assertRedirects(response, reverse("criar_grupo"))
+        self.assertRedirects(response, reverse("home"))
 
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
@@ -88,7 +88,7 @@ class LoginRedirectTest(TestCase):
             {"username": "ceo@example.com", "password": "pass"},
             follow=True,
         )
-        self.assertRedirects(response, reverse("criar_grupo"))
+        self.assertRedirects(response, reverse("home"))
 
     def test_member_redirect(self):
         response = self.client.post(
@@ -96,7 +96,7 @@ class LoginRedirectTest(TestCase):
             {"username": "membro@example.com", "password": "pass"},
             follow=True,
         )
-        self.assertRedirects(response, reverse("criar_grupo"))
+        self.assertRedirects(response, reverse("home"))
 
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
