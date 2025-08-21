@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.forms import formset_factory
 from .models import (
     User,
     GameConfig,
@@ -112,6 +113,24 @@ class GrupoForm(forms.ModelForm):
                 "O grupo deve possuir entre 3 e 6 participantes."
             )
         return membros
+
+
+class MembroForm(forms.Form):
+    nome = forms.CharField(max_length=150)
+    email = forms.EmailField()
+    senha = forms.CharField(widget=forms.PasswordInput)
+    lider = forms.BooleanField(required=False, label="Líder do grupo")
+
+
+MembroFormSet = formset_factory(
+    MembroForm, min_num=3, max_num=6, validate_min=True, validate_max=True, extra=0
+)
+
+
+class GrupoCadastroForm(forms.ModelForm):
+    class Meta:
+        model = Grupo
+        fields = ["nome", "jogo"]
 
 
 class ResultadoFilterForm(forms.Form):

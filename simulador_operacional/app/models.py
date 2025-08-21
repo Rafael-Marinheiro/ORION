@@ -124,6 +124,13 @@ class Jogo(models.Model):
 class Grupo(models.Model):
     nome = models.CharField(max_length=100)
     membros = models.ManyToManyField(User, related_name="grupos")
+    lider = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="grupos_liderados",
+        null=True,
+        blank=True,
+    )
     jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name="grupos", null=True, blank=True)
     capital = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estoque = models.PositiveIntegerField(default=0)

@@ -36,6 +36,8 @@ from .forms import (
     RodadaForm,
     GrupoForm,
     ResultadoFilterForm,
+    MembroFormSet,
+    GrupoCadastroForm,
 )
 from .models import (
     GameConfig,
@@ -49,6 +51,7 @@ from .models import (
     Rodada,
     Jogo,
     Investimento,
+    User,
 )
 from django.http import HttpResponse
 from openpyxl import Workbook
@@ -211,23 +214,19 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         return maquinas_operacionais * grupo.capacidade_maquina
 
     def get(self, request, *args, **kwargs):
-        grupo, created = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
-        grupo.membros.add(request.user)
-        if created:
-            config, _ = GameConfig.objects.get_or_create(id=1)
-            grupo.capital = config.capital_inicial
-            grupo.estoque = config.estoque_inicial
-            grupo.maquinas_a = config.maquinas_iniciais_a
-            grupo.maquinas_b = config.maquinas_iniciais_b
-            grupo.maquinas_c = config.maquinas_iniciais_c
-            grupo.maquinas = (
-                config.maquinas_iniciais_a
-                + config.maquinas_iniciais_b
-                + config.maquinas_iniciais_c
+        grupo = request.user.grupos.first()
+        if not grupo:
+            messages.error(
+                request,
+                "Você ainda não foi alocado a um grupo. Procure o GameMaster.",
             )
-            grupo.trabalhadores = config.trabalhadores_iniciais
-            grupo.capacidade_maquina = config.capacidade_maquina
-            grupo.save()
+            return redirect("home")
+        membros = grupo.membros.count()
+        if membros < 3 or membros > 6:
+            messages.error(
+                request, "O grupo deve possuir entre 3 e 6 participantes."
+            )
+            return redirect("home")
         form = DecisaoForm()
         envio_form = DistribuicaoForm()
         decisoes = grupo.decisoes.all()
@@ -261,8 +260,19 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         })
 
     def post(self, request, *args, **kwargs):
-        grupo, _ = Grupo.objects.get_or_create(nome=request.user.nome_usuario)
-        grupo.membros.add(request.user)
+        grupo = request.user.grupos.first()
+        if not grupo:
+            messages.error(
+                request,
+                "Você ainda não foi alocado a um grupo. Procure o GameMaster.",
+            )
+            return redirect("home")
+        membros = grupo.membros.count()
+        if membros < 3 or membros > 6:
+            messages.error(
+                request, "O grupo deve possuir entre 3 e 6 participantes."
+            )
+            return redirect("home")
         if 'enviar_decisao' in request.POST:
             if request.user.tipo_usuario != 'lider_grupo' and not request.user.is_staff:
                 messages.error(request, 'Apenas o Aluno CEO pode enviar decisões')
@@ -506,15 +516,74 @@ class GrupoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return self.request.user.is_staff or super().has_permission()
 
 
-class GrupoCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
-    model = Grupo
-    form_class = GrupoForm
+class GrupoCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "grupo_form.html"
     success_url = reverse_lazy("lista_grupos")
-    permission_required = "app.add_grupo"
 
-    def has_permission(self):
-        return self.request.user.is_staff or super().has_permission()
+    def test_func(self):
+        user = self.request.user
+        return getattr(user, "tipo_usuario", "") == "gamemaster" or user.is_superuser
+
+    def get(self, request, *args, **kwargs):
+        grupo_form = GrupoCadastroForm()
+        membro_formset = MembroFormSet()
+        return render(
+            request,
+            self.template_name,
+            {"form": grupo_form, "membro_formset": membro_formset},
+        )
+
+    def post(self, request, *args, **kwargs):
+        grupo_form = GrupoCadastroForm(request.POST)
+        membro_formset = MembroFormSet(request.POST)
+        if grupo_form.is_valid() and membro_formset.is_valid():
+            grupo = grupo_form.save(commit=False)
+            config, _ = GameConfig.objects.get_or_create(id=1)
+            grupo.capital = config.capital_inicial
+            grupo.estoque = config.estoque_inicial
+            grupo.maquinas_a = config.maquinas_iniciais_a
+            grupo.maquinas_b = config.maquinas_iniciais_b
+            grupo.maquinas_c = config.maquinas_iniciais_c
+            grupo.maquinas = (
+                config.maquinas_iniciais_a
+                + config.maquinas_iniciais_b
+                + config.maquinas_iniciais_c
+            )
+            grupo.trabalhadores = config.trabalhadores_iniciais
+            grupo.capacidade_maquina = config.capacidade_maquina
+            grupo.save()
+            lider = None
+            for form in membro_formset:
+                user = User.objects.create_user(
+                    email_usuario=form.cleaned_data["email"],
+                    nome_usuario=form.cleaned_data["nome"],
+                    password=form.cleaned_data["senha"],
+                    tipo_usuario=(
+                        "lider_grupo" if form.cleaned_data.get("lider") else "membro_grupo"
+                    ),
+                )
+                grupo.membros.add(user)
+                if form.cleaned_data.get("lider"):
+                    lider = user
+            if not lider:
+                grupo.delete()
+                membro_formset._non_form_errors = membro_formset.error_class(
+                    ["Selecione um líder para o grupo."]
+                )
+                return render(
+                    request,
+                    self.template_name,
+                    {"form": grupo_form, "membro_formset": membro_formset},
+                )
+            grupo.lider = lider
+            grupo.save()
+            messages.success(request, "Grupo criado com sucesso.")
+            return redirect(self.success_url)
+        return render(
+            request,
+            self.template_name,
+            {"form": grupo_form, "membro_formset": membro_formset},
+        )
 
 
 class GrupoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
