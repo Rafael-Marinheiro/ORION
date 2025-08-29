@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from app.models import Rodada, Grupo, ResultadoFinanceiro, EventoRodada
+from app.models import Rodada, Grupo, ResultadoFinanceiro, EventoRodada, Produto
 from app.services.penalidade_service import aplicar_penalidade
 import logging
 
@@ -48,10 +48,21 @@ class Command(BaseCommand):
                         grupo.estoque -= perda
                 if perdas:
                     grupo.save()
-                # Custos de armazenagem para produtos em estoque
-                custo_armazenagem = (
-                    Decimal(grupo.estoque) * Decimal('5') * Decimal('0.02')
-                )
+                # Remove produtos vencidos e calcula custo de armazenagem
+                produtos = Produto.objects.filter(grupo=grupo)
+                removidos = 0
+                for prod in produtos:
+                    if prod.esta_vencido():
+                        removidos += prod.quantidade
+                        prod.quantidade = 0
+                        prod.save()
+                if removidos:
+                    grupo.estoque = max(grupo.estoque - removidos, 0)
+                    grupo.save()
+
+                custo_armazenagem = Decimal("0")
+                for prod in produtos:
+                    custo_armazenagem += prod.custo_armazenagem()
                 if custo_armazenagem:
                     grupo.capital -= custo_armazenagem
                     grupo.save()

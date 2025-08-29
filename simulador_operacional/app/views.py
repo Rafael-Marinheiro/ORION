@@ -287,6 +287,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         decisoes = grupo.decisoes.all()
         envios = grupo.envios.select_related("cidade").all()
         resultados = grupo.resultados.all()
+        produtos = grupo.produtos.prefetch_related("materias_primas").all()
         fornecedores = Fornecedor.objects.all()
         pedidos = grupo.pedidos_materia_prima.select_related("fornecedor").all()
         ultima_vista = request.session.get("ultima_rodada_vista", 0)
@@ -313,6 +314,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             alerta = 'Risco de ruptura de estoque'
         elif grupo.estoque > capacidade_total:
             alerta = 'Risco de desperdício de estoque'
+        produtos = grupo.produtos.prefetch_related("materias_primas").all()
         return render(request, self.template_name, {
             'grupo': grupo,
             'decisoes': decisoes,
@@ -327,6 +329,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'alerta': alerta,
             'eventos': eventos,
             'notificacao': notificacao,
+            'produtos': produtos,
         })
 
     def post(self, request, *args, **kwargs):
@@ -536,6 +539,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         decisoes = grupo.decisoes.all()
         envios = grupo.envios.select_related("cidade").all()
         resultados = grupo.resultados.all()
+        produtos = grupo.produtos.prefetch_related("materias_primas").all()
         fornecedores = Fornecedor.objects.all()
         pedidos = grupo.pedidos_materia_prima.select_related("fornecedor").all()
         ultima_vista = request.session.get("ultima_rodada_vista", 0)
@@ -567,6 +571,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'alerta': alerta,
             'eventos': eventos,
             'notificacao': notificacao,
+            'produtos': produtos,
         })
 
 

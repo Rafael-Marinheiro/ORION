@@ -155,6 +155,7 @@ class InvestimentoSerializer(serializers.ModelSerializer):
 class ProdutoSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
     usuario = serializers.StringRelatedField()
+    materias_primas = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Produto

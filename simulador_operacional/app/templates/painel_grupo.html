@@ -82,6 +82,15 @@
     {% endfor %}
 </ul>
 
+<h3>Produtos</h3>
+<ul>
+    {% for prod in produtos %}
+    <li>{{ prod.nome }} - {{ prod.quantidade }} un - validade {{ prod.validade }} - composição: {% for mp in prod.materias_primas.all %}{{ mp.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</li>
+    {% empty %}
+    <li>Nenhum produto registrado.</li>
+    {% endfor %}
+</ul>
+
 <h3>Resultados Financeiros</h3>
 <ul>
     {% for r in resultados %}
