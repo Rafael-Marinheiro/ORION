@@ -14,6 +14,8 @@ from .models import (
     Produto,
     EstoqueDetalhado,
     MateriaPrima,
+    Fornecedor,
+    PedidoMateriaPrima,
 )
 
 class UserSerializer(serializers.ModelSerializer):
@@ -175,5 +177,22 @@ class MateriaPrimaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MateriaPrima
+        fields = "__all__"
+
+
+class FornecedorSerializer(serializers.ModelSerializer):
+    cidade = serializers.StringRelatedField()
+
+    class Meta:
+        model = Fornecedor
+        fields = "__all__"
+
+
+class PedidoMateriaPrimaSerializer(serializers.ModelSerializer):
+    fornecedor = serializers.StringRelatedField()
+    grupo = serializers.StringRelatedField()
+
+    class Meta:
+        model = PedidoMateriaPrima
         fields = "__all__"
 

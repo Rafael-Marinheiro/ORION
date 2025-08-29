@@ -10,6 +10,8 @@ from .models import (
     Rodada,
     Grupo,
     Jogo,
+    Fornecedor,
+    PedidoMateriaPrima,
 )
 
 
@@ -167,3 +169,15 @@ class GrupoCadastroForm(forms.ModelForm):
 class ResultadoFilterForm(forms.Form):
     rodada = forms.IntegerField(required=False, label="Rodada")
     grupo = forms.ModelChoiceField(queryset=Grupo.objects.all(), required=False)
+
+
+class FornecedorForm(forms.ModelForm):
+    class Meta:
+        model = Fornecedor
+        fields = ["nome", "cidade", "prazo_entrega", "custo_logistico_km"]
+
+
+class PedidoMateriaPrimaForm(forms.ModelForm):
+    class Meta:
+        model = PedidoMateriaPrima
+        fields = ["fornecedor", "quantidade", "custo_unitario"]

@@ -25,6 +25,8 @@ from .serializers import (
     GameConfigSerializer,
     JogoSerializer,
     InvestimentoSerializer,
+    FornecedorSerializer,
+    PedidoMateriaPrimaSerializer,
 )
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -38,6 +40,8 @@ from .forms import (
     ResultadoFilterForm,
     MembroFormSet,
     GrupoCadastroForm,
+    FornecedorForm,
+    PedidoMateriaPrimaForm,
 )
 from .models import (
     GameConfig,
@@ -52,6 +56,8 @@ from .models import (
     Jogo,
     Investimento,
     User,
+    Fornecedor,
+    PedidoMateriaPrima,
 )
 from .services.economia_service import (
     calcular_custo_total,
@@ -59,6 +65,7 @@ from .services.economia_service import (
     calcular_preco_final,
 )
 from .services.penalidade_service import aplicar_penalidade
+from .services.materias_primas import calcular_custo_logistico
 from django.http import HttpResponse
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
@@ -275,9 +282,13 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             return redirect("home")
         form = DecisaoForm()
         envio_form = DistribuicaoForm()
+        fornecedor_form = FornecedorForm()
+        pedido_form = PedidoMateriaPrimaForm()
         decisoes = grupo.decisoes.all()
         envios = grupo.envios.select_related("cidade").all()
         resultados = grupo.resultados.all()
+        fornecedores = Fornecedor.objects.all()
+        pedidos = grupo.pedidos_materia_prima.select_related("fornecedor").all()
         ultima_vista = request.session.get("ultima_rodada_vista", 0)
         nova = resultados.order_by("-rodada").first()
         notificacao = None
@@ -307,7 +318,11 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'decisoes': decisoes,
             'form': form,
             'envio_form': envio_form,
+            'fornecedor_form': fornecedor_form,
+            'pedido_form': pedido_form,
             'envios': envios,
+            'fornecedores': fornecedores,
+            'pedidos': pedidos,
             'resultados': resultados,
             'alerta': alerta,
             'eventos': eventos,
@@ -479,11 +494,50 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     rf.save()
                     messages.success(request, 'Distribuição registrada')
                     return redirect('painel_grupo')
+        elif 'registrar_fornecedor' in request.POST:
+            fornecedor_form = FornecedorForm(request.POST)
+            if fornecedor_form.is_valid():
+                fornecedor_form.save()
+                messages.success(request, 'Fornecedor registrado')
+                return redirect('painel_grupo')
+        elif 'registrar_pedido' in request.POST:
+            pedido_form = PedidoMateriaPrimaForm(request.POST)
+            if pedido_form.is_valid():
+                pedido = pedido_form.save(commit=False)
+                pedido.grupo = grupo
+                pedido.prazo_entrega = pedido.fornecedor.prazo_entrega
+                ultima = grupo.decisoes.first()
+                rodada_atual = ultima.rodada + 1 if ultima else 1
+                remessa = grupo.envios.filter(
+                    cidade=pedido.fornecedor.cidade, rodada=rodada_atual
+                ).exists()
+                valor_pedido = pedido.quantidade * pedido.custo_unitario
+                pedido.custo_logistico = calcular_custo_logistico(
+                    pedido.fornecedor.cidade.distancia_km,
+                    valor_pedido,
+                    remessa_simultanea=remessa,
+                )
+                total = valor_pedido + pedido.custo_logistico
+                if grupo.capital < total:
+                    messages.error(
+                        request, 'Capital insuficiente para compra de matéria-prima'
+                    )
+                    return redirect('painel_grupo')
+                pedido.save()
+                grupo.capital -= total
+                grupo.materia_prima += pedido.quantidade
+                grupo.save()
+                messages.success(request, 'Pedido registrado')
+                return redirect('painel_grupo')
         form = DecisaoForm()
         envio_form = DistribuicaoForm()
+        fornecedor_form = FornecedorForm()
+        pedido_form = PedidoMateriaPrimaForm()
         decisoes = grupo.decisoes.all()
         envios = grupo.envios.select_related("cidade").all()
         resultados = grupo.resultados.all()
+        fornecedores = Fornecedor.objects.all()
+        pedidos = grupo.pedidos_materia_prima.select_related("fornecedor").all()
         ultima_vista = request.session.get("ultima_rodada_vista", 0)
         nova = resultados.order_by("-rodada").first()
         notificacao = None
@@ -504,7 +558,11 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'decisoes': decisoes,
             'form': form,
             'envio_form': envio_form,
+            'fornecedor_form': fornecedor_form,
+            'pedido_form': pedido_form,
             'envios': envios,
+            'fornecedores': fornecedores,
+            'pedidos': pedidos,
             'resultados': resultados,
             'alerta': alerta,
             'eventos': eventos,
@@ -581,6 +639,16 @@ class InvestimentoViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         return super().create(request, *args, **kwargs)
+
+
+class FornecedorViewSet(viewsets.ModelViewSet):
+    queryset = Fornecedor.objects.all()
+    serializer_class = FornecedorSerializer
+
+
+class PedidoMateriaPrimaViewSet(viewsets.ModelViewSet):
+    queryset = PedidoMateriaPrima.objects.all()
+    serializer_class = PedidoMateriaPrimaSerializer
 
 
 class RankingAPIView(generics.GenericAPIView):
