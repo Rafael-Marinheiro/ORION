@@ -11,6 +11,9 @@ from .models import (
     GameConfig,
     Jogo,
     Investimento,
+    Produto,
+    EstoqueDetalhado,
+    MateriaPrima,
 )
 
 class UserSerializer(serializers.ModelSerializer):
@@ -119,5 +122,33 @@ class InvestimentoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Investimento
+        fields = "__all__"
+
+
+class ProdutoSerializer(serializers.ModelSerializer):
+    grupo = serializers.StringRelatedField()
+    usuario = serializers.StringRelatedField()
+
+    class Meta:
+        model = Produto
+        fields = "__all__"
+
+
+class EstoqueDetalhadoSerializer(serializers.ModelSerializer):
+    produto = serializers.StringRelatedField()
+    grupo = serializers.StringRelatedField()
+    usuario = serializers.StringRelatedField()
+
+    class Meta:
+        model = EstoqueDetalhado
+        fields = "__all__"
+
+
+class MateriaPrimaSerializer(serializers.ModelSerializer):
+    grupo = serializers.StringRelatedField()
+    usuario = serializers.StringRelatedField()
+
+    class Meta:
+        model = MateriaPrima
         fields = "__all__"
 
