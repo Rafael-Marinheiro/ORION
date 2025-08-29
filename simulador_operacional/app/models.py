@@ -205,6 +205,22 @@ class Distribuicao(models.Model):
         return f"{self.cidade.nome} - {self.quantidade}"
 
 
+class VendaCidade(models.Model):
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="vendas_cidade")
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE, related_name="vendas_cidade")
+    rodada = models.PositiveIntegerField()
+    quantidade_vendida = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "VENDAS_CIDADE"
+        unique_together = ("grupo", "cidade", "rodada")
+        verbose_name = "Venda por Cidade"
+        verbose_name_plural = "Vendas por Cidade"
+
+    def __str__(self):
+        return f"{self.grupo.nome} - {self.cidade.nome} ({self.rodada})"
+
+
 class ResultadoFinanceiro(models.Model):
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="resultados")
     rodada = models.PositiveIntegerField()
