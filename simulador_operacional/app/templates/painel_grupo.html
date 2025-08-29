@@ -13,6 +13,11 @@
 {% if eventos %}
     {% for ev in eventos %}
         <p><strong>Evento da rodada: {{ ev.nome }} - {{ ev.descricao }} ({{ ev.impacto_percentual }}%)</strong></p>
+        {% if ev.tipo == 'greve' %}
+            <p><strong>A produção está paralisada nesta rodada.</strong></p>
+        {% elif ev.tipo == 'perda_estoque' %}
+            <p><strong>Parte do estoque foi perdida.</strong></p>
+        {% endif %}
     {% endfor %}
 {% endif %}
 {% if notificacao %}

@@ -242,6 +242,15 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
         eventos = [er.evento for er in EventoRodada.objects.filter(rodada=rodada_atual)]
+        perda_key = f'perda_aplicada_{rodada_atual}'
+        for evento in eventos:
+            if evento.tipo == 'perda_estoque' and not request.session.get(perda_key):
+                perda = int(grupo.estoque * evento.impacto_percentual / 100)
+                if perda:
+                    grupo.estoque -= perda
+                    grupo.save()
+                    messages.warning(request, f'Perda de estoque de {perda} unidades.')
+                request.session[perda_key] = True
         capacidade_total = self.calcular_capacidade_producao(grupo)
         alerta = None
         if grupo.estoque < capacidade_total * 0.2:
@@ -297,6 +306,21 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     return redirect('painel_grupo')
 
                 eventos = [er.evento for er in EventoRodada.objects.filter(rodada=decisao.rodada)]
+                perda_key = f'perda_aplicada_{decisao.rodada}'
+                perda_aplicada = False
+                for evento in eventos:
+                    if evento.tipo == 'perda_estoque' and not request.session.get(perda_key):
+                        perda = int(grupo.estoque * evento.impacto_percentual / 100)
+                        if perda:
+                            grupo.estoque -= perda
+                            grupo.save()
+                            messages.warning(request, f'Perda de estoque de {perda} unidades.')
+                        perda_aplicada = True
+                    if evento.tipo == 'greve':
+                        messages.error(request, 'Greve em andamento. Produção paralisada.')
+                        return redirect('painel_grupo')
+                if perda_aplicada:
+                    request.session[perda_key] = True
                 custo_prod = Decimal(decisao.quantidade) * Decimal('5')
                 for evento in eventos:
                     if evento.tipo == 'custo_producao':
@@ -345,6 +369,18 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     return redirect('painel_grupo')
 
                 eventos = [er.evento for er in EventoRodada.objects.filter(rodada=envio.rodada)]
+                perda_key = f'perda_aplicada_{envio.rodada}'
+                perda_aplicada = False
+                for evento in eventos:
+                    if evento.tipo == 'perda_estoque' and not request.session.get(perda_key):
+                        perda = int(grupo.estoque * evento.impacto_percentual / 100)
+                        if perda:
+                            grupo.estoque -= perda
+                            grupo.save()
+                            messages.warning(request, f'Perda de estoque de {perda} unidades.')
+                        perda_aplicada = True
+                if perda_aplicada:
+                    request.session[perda_key] = True
                 if envio.quantidade > grupo.estoque:
                     penalidade = envio.quantidade * envio.preco_unitario * Decimal('0.05')
                     grupo.capital -= penalidade
