@@ -298,7 +298,17 @@ class Investimento(models.Model):
     rodada = models.PositiveIntegerField(default=1)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
+    roi = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0"))
+    tempo_maturacao = models.PositiveIntegerField(default=1)
+    retorno_aplicado = models.BooleanField(default=False)
     data = models.DateTimeField(auto_now_add=True)
+
+    CARACTERISTICAS = {
+        "marketing": {"roi": Decimal("0.05"), "tempo": 1},
+        "maquinas": {"roi": Decimal("0.10"), "tempo": 2},
+        "rh": {"roi": Decimal("0.03"), "tempo": 1},
+        "financeiro": {"roi": Decimal("0.02"), "tempo": 1},
+    }
 
     class Meta:
         db_table = "INVESTIMENTOS"
@@ -308,6 +318,21 @@ class Investimento(models.Model):
 
     def __str__(self):
         return f"{self.grupo.nome} - {self.get_categoria_display()} {self.valor}"
+
+    def save(self, *args, **kwargs):
+        if (self.roi == Decimal("0") or self.tempo_maturacao == 0) and self.categoria in self.CARACTERISTICAS:
+            config = self.CARACTERISTICAS[self.categoria]
+            self.roi = config["roi"]
+            self.tempo_maturacao = config["tempo"]
+        super().save(*args, **kwargs)
+
+    @property
+    def retorno_projetado(self):
+        return (self.valor * self.roi).quantize(Decimal("0.01"))
+
+    @property
+    def retorno_efetivo(self):
+        return self.retorno_projetado if self.retorno_aplicado else Decimal("0")
 
 
 class Evento(models.Model):

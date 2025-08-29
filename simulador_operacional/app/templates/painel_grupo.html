@@ -91,6 +91,15 @@
     {% endfor %}
 </ul>
 
+<h3>Investimentos</h3>
+<ul>
+    {% for inv in investimentos %}
+    <li>{{ inv.get_categoria_display }} - aplicado {{ inv.valor }} - retorno projetado {{ inv.retorno_projetado }} - retorno efetivo {{ inv.retorno_efetivo }}</li>
+    {% empty %}
+    <li>Nenhum investimento registrado.</li>
+    {% endfor %}
+</ul>
+
 <h3>Resultados Financeiros</h3>
 <ul>
     {% for r in resultados %}
