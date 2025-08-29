@@ -53,6 +53,12 @@ from .models import (
     Investimento,
     User,
 )
+from .services.economia_service import (
+    calcular_custo_total,
+    calcular_demanda,
+    calcular_preco_final,
+)
+from .services.penalidade_service import aplicar_penalidade
 from django.http import HttpResponse
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
@@ -367,14 +373,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 decisao.save()
                 if grupo.capital < custo_prod:
                     penalidade = custo_prod * Decimal('0.02')
-                    grupo.capital -= penalidade
-                    grupo.save()
-                    rf, _ = ResultadoFinanceiro.objects.get_or_create(grupo=grupo, rodada=decisao.rodada)
-                    rf.custos += penalidade
-                    rf.penalidades += penalidade
-                    rf.saldo_caixa = grupo.capital
-                    rf.lucro = rf.receita - rf.custos
-                    rf.save()
+                    aplicar_penalidade(grupo, decisao.rodada, penalidade)
                     messages.error(request, 'Capital insuficiente para produção. Penalidade aplicada.')
                 else:
                     if grupo.materia_prima < decisao.quantidade:
@@ -423,20 +422,10 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     request.session[perda_key] = True
                 if envio.quantidade > grupo.estoque:
                     penalidade = envio.quantidade * envio.preco_unitario * Decimal('0.05')
-                    grupo.capital -= penalidade
-                    grupo.save()
-                    rf, _ = ResultadoFinanceiro.objects.get_or_create(grupo=grupo, rodada=envio.rodada)
-                    rf.custos += penalidade
-                    rf.penalidades += penalidade
-                    rf.saldo_caixa = grupo.capital
-                    rf.lucro = rf.receita - rf.custos
-                    rf.save()
+                    aplicar_penalidade(grupo, envio.rodada, penalidade)
                     messages.error(request, 'Estoque insuficiente. Penalidade aplicada.')
                 else:
-                    custo = Decimal(envio.cidade.distancia_km) * envio.quantidade * Decimal('0.1')
-                    for evento in eventos:
-                        if evento.tipo == 'custo_transporte':
-                            custo *= Decimal(1 + evento.impacto_percentual / 100)
+                    custo = calcular_custo_total(envio.quantidade, envio.cidade.distancia_km, eventos)
                     envio.custo_transporte = custo
 
                     # calcular fator de marketing baseado nos investimentos da cidade
@@ -456,10 +445,18 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                         )
                         fator_marketing = min(fator_marketing, Decimal('1.2'))
 
-                    demanda_ajustada = int(envio.cidade.demanda * fator_marketing)
+                    demanda_ajustada = calcular_demanda(
+                        envio.cidade.demanda, fator_marketing, eventos
+                    )
                     vendas_realizadas = min(envio.quantidade, demanda_ajustada)
                     envio.vendas_realizadas = vendas_realizadas
                     envio.fator_marketing = fator_marketing
+                    preco_final = calcular_preco_final(
+                        envio.preco_unitario,
+                        Decimal('0'),
+                        fator_marketing,
+                        eventos,
+                    )
                     envio.qualidade = Decimal('1')
                     envio.save()
 
@@ -469,10 +466,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                             request,
                             'Parte da remessa não foi vendida por falta de demanda.',
                         )
-                    receita = vendas_realizadas * envio.preco_unitario
-                    for evento in eventos:
-                        if evento.tipo == 'demanda':
-                            receita *= Decimal(1 + evento.impacto_percentual / 100)
+                    receita = vendas_realizadas * preco_final
                     grupo.capital += receita - custo
                     grupo.save()
                     rf, _ = ResultadoFinanceiro.objects.get_or_create(
