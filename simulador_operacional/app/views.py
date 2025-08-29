@@ -71,6 +71,7 @@ from .services.economia_service import (
 from .services.penalidade_service import aplicar_penalidade
 from .services.materias_primas import calcular_custo_logistico
 from .services.investimentos import aplicar_retorno_investimentos
+from .services.classificacao import calcular_ranking
 from django.http import HttpResponse, JsonResponse
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
@@ -80,7 +81,6 @@ import logging
 from math import log
 from django.utils import timezone
 from django.db.models import Sum
-from collections import defaultdict
 
 logger = logging.getLogger('agendamentos')
 
@@ -117,50 +117,6 @@ def sortear_eventos(rodada):
     return escolhidos
 
 
-def calcular_ranking():
-    grupos = Grupo.objects.annotate(
-        total_lucro=Sum('resultados__lucro'),
-        total_penalidades=Sum('resultados__penalidades'),
-    )
-
-    totais_por_rodada = {
-        d['rodada']: d['total']
-        for d in Distribuicao.objects.values('rodada').annotate(
-            total=Sum('vendas_realizadas')
-        )
-    }
-
-    vendas_por_grupo = Distribuicao.objects.values('grupo_id', 'rodada').annotate(
-        total=Sum('vendas_realizadas')
-    )
-
-    shares = defaultdict(list)
-    for dado in vendas_por_grupo:
-        total_rodada = totais_por_rodada.get(dado['rodada']) or 0
-        share = dado['total'] / total_rodada if total_rodada else 0
-        shares[dado['grupo_id']].append(share)
-
-    ranking = []
-    for g in grupos:
-        market_share_medio = (
-            sum(shares[g.id]) / len(shares[g.id]) if shares[g.id] else 0
-        )
-        ultimo_rf = g.resultados.order_by('-rodada').first()
-        saldo_caixa = ultimo_rf.saldo_caixa if ultimo_rf else g.capital
-        g.market_share_medio = market_share_medio
-        g.saldo_caixa_final = saldo_caixa
-        g.total_penalidades = g.total_penalidades or 0
-        ranking.append(g)
-
-    return sorted(
-        ranking,
-        key=lambda g: (
-            -(float(g.total_lucro or 0)),
-            -float(g.market_share_medio),
-            -(float(g.saldo_caixa_final or 0)),
-            float(g.total_penalidades or 0),
-        ),
-    )
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
@@ -253,7 +209,7 @@ class RodadaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
 
 class RankingView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    template_name = 'ranking.html'
+    template_name = 'classificacao.html'
     model = Grupo
     context_object_name = 'grupos'
     permission_required = 'app.view_resultadofinanceiro'
