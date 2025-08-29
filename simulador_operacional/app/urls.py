@@ -39,6 +39,8 @@ from .views import (
     InvestimentoViewSet,
     FornecedorViewSet,
     PedidoMateriaPrimaViewSet,
+    InvestimentoCapacidadeView,
+    investir_capacidade_api,
 )
 
 router = DefaultRouter()
@@ -79,6 +81,7 @@ urlpatterns = [
     path("grupos/", GrupoListView.as_view(), name="lista_grupos"),
     path("grupos/novo/", GrupoCreateView.as_view(), name="criar_grupo"),
     path("grupos/<int:pk>/editar/", GrupoUpdateView.as_view(), name="editar_grupo"),
+    path("investimentos/capacidade/", InvestimentoCapacidadeView.as_view(), name="investir_capacidade"),
     path("relatorios/", RelatoriosView.as_view(), name="relatorios"),
     path("ajuda/", AjudaView.as_view(), name="ajuda"),
     path("export/pdf/", export_resultados_pdf, name="export_resultados_pdf"),
@@ -86,6 +89,7 @@ urlpatterns = [
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/ranking/", RankingAPIView.as_view(), name="api_ranking"),
+    path("api/investir-capacidade/", investir_capacidade_api, name="api_investir_capacidade"),
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     path("api/", include(router.urls)),
 ]

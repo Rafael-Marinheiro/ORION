@@ -12,6 +12,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from .serializers import (
     GrupoSerializer,
@@ -28,7 +30,7 @@ from .serializers import (
     FornecedorSerializer,
     PedidoMateriaPrimaSerializer,
 )
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from decimal import Decimal
 from .forms import (
@@ -42,6 +44,7 @@ from .forms import (
     GrupoCadastroForm,
     FornecedorForm,
     PedidoMateriaPrimaForm,
+    InvestimentoCapacidadeForm,
 )
 from .models import (
     GameConfig,
@@ -58,6 +61,7 @@ from .models import (
     User,
     Fornecedor,
     PedidoMateriaPrima,
+    LinhaProducao,
 )
 from .services.economia_service import (
     calcular_custo_total,
@@ -207,7 +211,7 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
 
 
-from django.views.generic import UpdateView
+from django.views.generic import UpdateView, FormView
 from .models import GameConfig
 from .forms import GameConfigForm
 
@@ -756,6 +760,24 @@ class GrupoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         return self.request.user.is_staff or super().has_permission()
 
 
+class InvestimentoCapacidadeView(LoginRequiredMixin, FormView):
+    template_name = "investimento_capacidade.html"
+    form_class = InvestimentoCapacidadeForm
+    success_url = reverse_lazy("investir_capacidade")
+
+    def form_valid(self, form):
+        linha = form.cleaned_data["linha"]
+        aumento = form.cleaned_data["aumento_capacidade"]
+        valor = form.cleaned_data["valor"]
+        linha.capacidade += aumento
+        linha.save()
+        Investimento.objects.create(
+            grupo=linha.grupo, categoria="maquinas", valor=valor
+        )
+        messages.success(self.request, "Capacidade ampliada com sucesso.")
+        return super().form_valid(form)
+
+
 class RelatoriosView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = "financeiro/relatorios.html"
     permission_required = "app.view_resultadofinanceiro"
@@ -837,3 +859,16 @@ def export_resultados_excel(request):
     response["Content-Disposition"] = "attachment; filename=resultados.xlsx"
     wb.save(response)
     return response
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def investir_capacidade_api(request):
+    linha_id = request.data.get("linha")
+    aumento = int(request.data.get("aumento", 0))
+    valor = Decimal(request.data.get("valor", 0))
+    linha = get_object_or_404(LinhaProducao, id=linha_id)
+    linha.capacidade += aumento
+    linha.save()
+    Investimento.objects.create(grupo=linha.grupo, categoria="maquinas", valor=valor)
+    return Response({"nova_capacidade": linha.capacidade})

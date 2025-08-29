@@ -152,6 +152,22 @@ class Grupo(models.Model):
         return self.nome
 
 
+class LinhaProducao(models.Model):
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="linhas_producao")
+    capacidade = models.PositiveIntegerField(default=0)
+    maquinas = models.PositiveIntegerField(default=0)
+    mao_de_obra = models.PositiveIntegerField(default=0)
+    producao = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "LINHAS_PRODUCAO"
+        verbose_name = "Linha de Produção"
+        verbose_name_plural = "Linhas de Produção"
+
+    def __str__(self):
+        return f"Linha {self.id} - {self.grupo.nome}"
+
+
 class Decisao(models.Model):
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='decisoes')
     rodada = models.PositiveIntegerField()

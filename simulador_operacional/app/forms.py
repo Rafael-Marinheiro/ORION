@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.forms import formset_factory
+from decimal import Decimal
 from .models import (
     User,
     GameConfig,
@@ -12,6 +13,7 @@ from .models import (
     Jogo,
     Fornecedor,
     PedidoMateriaPrima,
+    LinhaProducao,
 )
 
 
@@ -181,3 +183,9 @@ class PedidoMateriaPrimaForm(forms.ModelForm):
     class Meta:
         model = PedidoMateriaPrima
         fields = ["fornecedor", "quantidade", "custo_unitario"]
+
+
+class InvestimentoCapacidadeForm(forms.Form):
+    linha = forms.ModelChoiceField(queryset=LinhaProducao.objects.all())
+    aumento_capacidade = forms.IntegerField(min_value=1)
+    valor = forms.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"))
