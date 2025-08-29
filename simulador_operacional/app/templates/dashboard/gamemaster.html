@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Dashboard Gamemaster</h2>
+<canvas id="gmChart"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('gmChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Rodada 1','Rodada 2','Rodada 3'],
+        datasets: [{
+            label: 'Exemplo',
+            data: [10,20,30],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)'
+        }]
+    }
+});
+</script>
+{% endblock %}

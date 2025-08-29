@@ -71,9 +71,10 @@ from .services.economia_service import (
 from .services.penalidade_service import aplicar_penalidade
 from .services.materias_primas import calcular_custo_logistico
 from .services.investimentos import aplicar_retorno_investimentos
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
+import csv
 import random
 import logging
 from math import log
@@ -866,6 +867,54 @@ def export_resultados_excel(request):
     response["Content-Disposition"] = "attachment; filename=resultados.xlsx"
     wb.save(response)
     return response
+
+
+@login_required
+def export_resultados_csv(request):
+    rodada = request.GET.get("rodada")
+    grupo_id = request.GET.get("grupo")
+    qs = ResultadoFinanceiro.objects.select_related("grupo")
+    if rodada:
+        qs = qs.filter(rodada=rodada)
+    if grupo_id:
+        qs = qs.filter(grupo_id=grupo_id)
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = "attachment; filename=resultados.csv"
+    writer = csv.writer(response)
+    writer.writerow(["Grupo", "Rodada", "Receita", "Custos", "Lucro", "Caixa"])
+    for r in qs:
+        writer.writerow([
+            r.grupo.nome,
+            r.rodada,
+            float(r.receita),
+            float(r.custos),
+            float(r.lucro),
+            float(r.saldo_caixa),
+        ])
+    return response
+
+
+@login_required
+def export_resultados_json(request):
+    rodada = request.GET.get("rodada")
+    grupo_id = request.GET.get("grupo")
+    qs = ResultadoFinanceiro.objects.select_related("grupo")
+    if rodada:
+        qs = qs.filter(rodada=rodada)
+    if grupo_id:
+        qs = qs.filter(grupo_id=grupo_id)
+    data = [
+        {
+            "grupo": r.grupo.nome,
+            "rodada": r.rodada,
+            "receita": float(r.receita),
+            "custos": float(r.custos),
+            "lucro": float(r.lucro),
+            "caixa": float(r.saldo_caixa),
+        }
+        for r in qs
+    ]
+    return JsonResponse(data, safe=False)
 
 
 @api_view(["POST"])
