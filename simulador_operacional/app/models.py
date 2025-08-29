@@ -321,3 +321,70 @@ class Rodada(models.Model):
 
     def __str__(self):
         return f"Rodada {self.numero}"
+
+
+class Produto(models.Model):
+    nome = models.CharField(max_length=100)
+    descricao = models.TextField(blank=True)
+    quantidade = models.PositiveIntegerField(default=0)
+    custo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="produtos")
+    usuario = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="produtos"
+    )
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "PRODUTOS"
+        verbose_name = "Produto"
+        verbose_name_plural = "Produtos"
+
+    def __str__(self):
+        return self.nome
+
+
+class EstoqueDetalhado(models.Model):
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="estoques")
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="estoques")
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="movimentos_estoque",
+    )
+    quantidade = models.PositiveIntegerField()
+    custo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    custo_total = models.DecimalField(max_digits=12, decimal_places=2)
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ESTOQUE_DETALHADO"
+        verbose_name = "Estoque Detalhado"
+        verbose_name_plural = "Estoques Detalhados"
+
+    def __str__(self):
+        return f"{self.produto.nome} - {self.quantidade}"
+
+
+class MateriaPrima(models.Model):
+    nome = models.CharField(max_length=100)
+    quantidade = models.PositiveIntegerField(default=0)
+    custo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="materias_primas")
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="materias_primas",
+    )
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "MATERIAS_PRIMAS"
+        verbose_name = "Matéria Prima"
+        verbose_name_plural = "Matérias Primas"
+
+    def __str__(self):
+        return self.nome

@@ -11,6 +11,9 @@ from .models import (
     Distribuicao,
     Jogo,
     Investimento,
+    Produto,
+    EstoqueDetalhado,
+    MateriaPrima,
 )
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
@@ -94,3 +97,24 @@ class JogoAdmin(admin.ModelAdmin):
 @admin.register(Investimento)
 class InvestimentoAdmin(admin.ModelAdmin):
     list_display = ("grupo", "cidade", "categoria", "valor", "rodada")
+
+
+@admin.register(Produto)
+class ProdutoAdmin(admin.ModelAdmin):
+    list_display = ("nome", "grupo", "quantidade", "custo_unitario")
+
+
+@admin.register(EstoqueDetalhado)
+class EstoqueDetalhadoAdmin(admin.ModelAdmin):
+    list_display = (
+        "produto",
+        "grupo",
+        "quantidade",
+        "custo_unitario",
+        "custo_total",
+    )
+
+
+@admin.register(MateriaPrima)
+class MateriaPrimaAdmin(admin.ModelAdmin):
+    list_display = ("nome", "grupo", "quantidade", "custo_unitario")
