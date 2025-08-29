@@ -134,6 +134,7 @@ class Grupo(models.Model):
     jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name="grupos", null=True, blank=True)
     capital = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estoque = models.PositiveIntegerField(default=0)
+    materia_prima = models.PositiveIntegerField(default=0)
     maquinas = models.PositiveIntegerField(default=1)
     maquinas_a = models.PositiveIntegerField(default=15)
     maquinas_b = models.PositiveIntegerField(default=15)

@@ -126,3 +126,63 @@ class RegisterViewAccessTest(TestCase):
         response = self.client.get(reverse("register"))
         self.assertEqual(response.status_code, 403)
 
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class ProducaoMateriaPrimaTest(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.ceo = User.objects.create_user(
+            email_usuario="ceo@example.com",
+            nome_usuario="CEO",
+            password="pass",
+            tipo_usuario="lider_grupo",
+        )
+        self.members = [
+            User.objects.create_user(
+                email_usuario=f"m{i}@example.com",
+                nome_usuario=f"M{i}",
+                password="pass",
+            )
+            for i in range(2)
+        ]
+
+    def _create_group(self, materia_prima):
+        grupo = Grupo.objects.create(nome="G1", capital=1000, materia_prima=materia_prima)
+        grupo.membros.add(self.ceo, *self.members)
+        return grupo
+
+    def test_producao_sem_materia_prima(self):
+        grupo = self._create_group(0)
+        self.client.login(username="ceo@example.com", password="pass")
+        response = self.client.post(
+            reverse("painel_grupo"),
+            {
+                "rodada": 1,
+                "descricao": "Prod",
+                "quantidade": 10,
+                "enviar_decisao": "",
+            },
+        )
+        self.assertRedirects(response, reverse("painel_grupo"))
+        grupo.refresh_from_db()
+        self.assertEqual(grupo.estoque, 0)
+        self.assertEqual(grupo.materia_prima, 0)
+
+    def test_producao_com_materia_prima(self):
+        grupo = self._create_group(20)
+        self.client.login(username="ceo@example.com", password="pass")
+        response = self.client.post(
+            reverse("painel_grupo"),
+            {
+                "rodada": 1,
+                "descricao": "Prod",
+                "quantidade": 10,
+                "enviar_decisao": "",
+            },
+        )
+        self.assertRedirects(response, reverse("painel_grupo"))
+        grupo.refresh_from_db()
+        self.assertEqual(grupo.estoque, 10)
+        self.assertEqual(grupo.materia_prima, 10)
+        self.assertEqual(grupo.capital, 950)
+

@@ -312,7 +312,11 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     rf.save()
                     messages.error(request, 'Capital insuficiente para produção. Penalidade aplicada.')
                 else:
+                    if grupo.materia_prima < decisao.quantidade:
+                        messages.error(request, 'Matéria-prima insuficiente para produção.')
+                        return redirect('painel_grupo')
                     grupo.capital -= custo_prod
+                    grupo.materia_prima -= decisao.quantidade
                     grupo.estoque += decisao.quantidade
                     grupo.save()
                     rf, _ = ResultadoFinanceiro.objects.get_or_create(

@@ -97,6 +97,7 @@ class GrupoForm(forms.ModelForm):
             "jogo",
             "capital",
             "estoque",
+            "materia_prima",
             "maquinas",
             "maquinas_a",
             "maquinas_b",
