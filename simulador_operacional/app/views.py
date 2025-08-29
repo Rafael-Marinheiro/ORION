@@ -70,6 +70,7 @@ from .services.economia_service import (
 )
 from .services.penalidade_service import aplicar_penalidade
 from .services.materias_primas import calcular_custo_logistico
+from .services.investimentos import aplicar_retorno_investimentos
 from django.http import HttpResponse
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
@@ -303,6 +304,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         ultima = grupo.decisoes.first()
         rodada_atual = ultima.rodada + 1 if ultima else 1
         eventos = [er.evento for er in EventoRodada.objects.filter(rodada=rodada_atual)]
+        aplicar_retorno_investimentos(grupo, rodada_atual)
         perda_key = f'perda_aplicada_{rodada_atual}'
         for evento in eventos:
             if evento.tipo == 'perda_estoque' and not request.session.get(perda_key):
@@ -319,6 +321,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         elif grupo.estoque > capacidade_total:
             alerta = 'Risco de desperdício de estoque'
         produtos = grupo.produtos.prefetch_related("materias_primas").all()
+        investimentos = grupo.investimentos.all()
         return render(request, self.template_name, {
             'grupo': grupo,
             'decisoes': decisoes,
@@ -334,6 +337,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             'eventos': eventos,
             'notificacao': notificacao,
             'produtos': produtos,
+            'investimentos': investimentos,
         })
 
     def post(self, request, *args, **kwargs):
@@ -788,15 +792,18 @@ class RelatoriosView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         form = ResultadoFilterForm(request.GET or None)
         resultados = ResultadoFinanceiro.objects.select_related("grupo")
+        investimentos = Investimento.objects.select_related("grupo", "cidade")
         if form.is_valid():
             if form.cleaned_data.get("rodada"):
                 resultados = resultados.filter(rodada=form.cleaned_data["rodada"])
+                investimentos = investimentos.filter(rodada=form.cleaned_data["rodada"])
             if form.cleaned_data.get("grupo"):
                 resultados = resultados.filter(grupo=form.cleaned_data["grupo"])
+                investimentos = investimentos.filter(grupo=form.cleaned_data["grupo"])
         return render(
             request,
             self.template_name,
-            {"resultados": resultados, "form": form},
+            {"resultados": resultados, "form": form, "investimentos": investimentos},
         )
 
 

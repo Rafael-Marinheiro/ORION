@@ -1,6 +1,8 @@
 from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
+from decimal import Decimal
 from app.models import GameConfig, Grupo, Jogo, Investimento, Evento
+from app.services.investimentos import aplicar_retorno_investimentos
 
 
 @override_settings(MIGRATION_MODULES={"app": None})
@@ -57,6 +59,17 @@ class InvestimentoModelTest(TestCase):
         grupo = Grupo.objects.create(nome="Equipe B")
         inv = Investimento.objects.create(grupo=grupo, categoria="marketing", valor=1000)
         self.assertIn("Equipe B", str(inv))
+
+
+@override_settings(MIGRATION_MODULES={"app": None})
+class InvestimentoRetornoServiceTest(TestCase):
+    def test_aplicar_retorno(self):
+        grupo = Grupo.objects.create(nome="Equipe C", capital=1000)
+        inv = Investimento.objects.create(grupo=grupo, categoria="financeiro", valor=100)
+        aplicar_retorno_investimentos(grupo, inv.rodada + inv.tempo_maturacao)
+        inv.refresh_from_db()
+        self.assertTrue(inv.retorno_aplicado)
+        self.assertGreater(grupo.capital, Decimal("1000"))
 
 
 @override_settings(MIGRATION_MODULES={"app": None})
