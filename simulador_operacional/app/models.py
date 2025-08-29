@@ -329,6 +329,11 @@ class Produto(models.Model):
     descricao = models.TextField(blank=True)
     quantidade = models.PositiveIntegerField(default=0)
     custo_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    custo_producao = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    validade = models.DateField(null=True, blank=True)
+    materias_primas = models.ManyToManyField(
+        "MateriaPrima", related_name="produtos", blank=True
+    )
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="produtos")
     usuario = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="produtos"
@@ -342,6 +347,12 @@ class Produto(models.Model):
 
     def __str__(self):
         return self.nome
+
+    def esta_vencido(self):
+        return self.validade and self.validade < timezone.now().date()
+
+    def custo_armazenagem(self):
+        return self.quantidade * self.custo_producao * Decimal("0.02")
 
 
 class EstoqueDetalhado(models.Model):
