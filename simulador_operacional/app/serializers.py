@@ -20,9 +20,25 @@ class UserSerializer(serializers.ModelSerializer):
 
 class GrupoSerializer(serializers.ModelSerializer):
     jogo = serializers.StringRelatedField(read_only=True)
+    total_lucro = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    market_share_medio = serializers.FloatField(read_only=True)
+    saldo_caixa_final = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    total_penalidades = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
     class Meta:
         model = Grupo
-        fields = ["id", "nome", "capital", "estoque", "materia_prima", "jogo"]
+        fields = [
+            "id",
+            "nome",
+            "capital",
+            "estoque",
+            "materia_prima",
+            "jogo",
+            "total_lucro",
+            "market_share_medio",
+            "saldo_caixa_final",
+            "total_penalidades",
+        ]
 
 class ResultadoFinanceiroSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
@@ -36,6 +52,7 @@ class ResultadoFinanceiroSerializer(serializers.ModelSerializer):
             "custos",
             "lucro",
             "saldo_caixa",
+            "penalidades",
         ]
 
 

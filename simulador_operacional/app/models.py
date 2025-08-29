@@ -228,6 +228,7 @@ class ResultadoFinanceiro(models.Model):
     custos = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     lucro = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     saldo_caixa = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    penalidades = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     data_registro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
