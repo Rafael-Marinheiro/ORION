@@ -16,6 +16,7 @@
             <th>Rodada</th>
             <th>Receita</th>
             <th>Custos</th>
+            <th>Custo de Envio</th>
             <th>Lucro Líquido</th>
         </tr>
     </thead>
@@ -25,7 +26,30 @@
             <td>{{ r.rodada }}</td>
             <td>{{ r.receita }}</td>
             <td>{{ r.custos }}</td>
+            <td>{{ r.custo_envio_total }}</td>
             <td>{{ r.lucro }}</td>
+        </tr>
+        <tr>
+            <td colspan="5">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cidade</th>
+                            <th>Quantidade Vendida</th>
+                            <th>Custo de Envio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for envio in r.grupo.envios.filter(rodada=r.rodada) %}
+                        <tr>
+                            <td>{{ envio.cidade.nome }}</td>
+                            <td>{{ envio.vendas_realizadas }}</td>
+                            <td>{{ envio.custo_transporte }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
         </tr>
         {% endfor %}
     </tbody>

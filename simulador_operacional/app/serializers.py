@@ -8,6 +8,7 @@ from .models import (
     EventoRodada,
     Rodada,
     Cidade,
+    Mercado,
     GameConfig,
     Jogo,
     Investimento,
@@ -16,6 +17,7 @@ from .models import (
     MateriaPrima,
     Fornecedor,
     PedidoMateriaPrima,
+    VendaCidade,
 )
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,6 +49,9 @@ class GrupoSerializer(serializers.ModelSerializer):
 
 class ResultadoFinanceiroSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
+    custo_envio = serializers.DecimalField(
+        source="custo_envio_total", max_digits=12, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = ResultadoFinanceiro
@@ -55,6 +60,7 @@ class ResultadoFinanceiroSerializer(serializers.ModelSerializer):
             "rodada",
             "receita",
             "custos",
+            "custo_envio",
             "lucro",
             "saldo_caixa",
             "penalidades",
@@ -104,6 +110,12 @@ class CidadeSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class MercadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mercado
+        fields = "__all__"
+
+
 class GameConfigSerializer(serializers.ModelSerializer):
     produtos_habilitados = serializers.ListField(
         child=serializers.CharField(), required=False
@@ -149,6 +161,15 @@ class InvestimentoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Investimento
+        fields = "__all__"
+
+
+class VendaCidadeSerializer(serializers.ModelSerializer):
+    grupo = serializers.StringRelatedField()
+    cidade = serializers.StringRelatedField()
+
+    class Meta:
+        model = VendaCidade
         fields = "__all__"
 
 

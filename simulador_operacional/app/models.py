@@ -186,10 +186,30 @@ class Decisao(models.Model):
         return f"Decisão {self.rodada} - {self.grupo.nome}"
 
 
+class Mercado(models.Model):
+    nome = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "MERCADOS"
+        verbose_name = "Mercado"
+        verbose_name_plural = "Mercados"
+
+    def __str__(self):
+        return self.nome
+
+
 class Cidade(models.Model):
     nome = models.CharField(max_length=100)
     distancia_km = models.PositiveIntegerField()
     demanda = models.PositiveIntegerField(default=0)
+    limite_demanda = models.PositiveIntegerField(default=0)
+    mercado = models.ForeignKey(
+        Mercado,
+        on_delete=models.CASCADE,
+        related_name="cidades",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = 'CIDADES'
@@ -256,6 +276,13 @@ class ResultadoFinanceiro(models.Model):
 
     def __str__(self):
         return f"{self.grupo.nome} - Rodada {self.rodada}"
+
+    @property
+    def custo_envio_total(self):
+        total = self.grupo.envios.filter(rodada=self.rodada).aggregate(
+            total=Sum("custo_transporte")
+        )["total"]
+        return total or Decimal("0")
 
 
 class Investimento(models.Model):
