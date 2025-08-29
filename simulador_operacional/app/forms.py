@@ -189,3 +189,8 @@ class InvestimentoCapacidadeForm(forms.Form):
     linha = forms.ModelChoiceField(queryset=LinhaProducao.objects.all())
     aumento_capacidade = forms.IntegerField(min_value=1)
     valor = forms.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"))
+
+
+class FeedbackForm(forms.Form):
+    email = forms.EmailField(required=False, label="E-mail")
+    suggestion = forms.CharField(label="Sugestão", widget=forms.Textarea)

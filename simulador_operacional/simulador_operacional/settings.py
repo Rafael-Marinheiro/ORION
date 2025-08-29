@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.environ.get("ENV_FILE", BASE_DIR / ".env"))
 
+# Caminho do arquivo de roadmap para registrar feedback dos usuários
+ROADMAP_FILE = BASE_DIR.parent / "docs" / "roadmap.md"
+
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-secret")
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if os.getenv("DJANGO_ALLOWED_HOSTS") else []
