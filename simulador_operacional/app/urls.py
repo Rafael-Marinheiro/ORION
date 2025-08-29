@@ -49,6 +49,7 @@ router.register("eventos-rodada", EventoRodadaViewSet)
 router.register("rodadas", RodadaViewSet)
 router.register("cidades", CidadeViewSet)
 router.register("config", GameConfigViewSet)
+router.register("game-config", GameConfigViewSet, basename="game-config")
 router.register("jogos", JogoViewSet)
 router.register("investimentos", InvestimentoViewSet)
 

@@ -26,6 +26,36 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 class GameConfigForm(forms.ModelForm):
+    PRODUTO_CHOICES = [
+        ("A", "Produto A"),
+        ("B", "Produto B"),
+        ("C", "Produto C"),
+    ]
+
+    produtos_habilitados = forms.MultipleChoiceField(
+        choices=PRODUTO_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Produtos habilitados",
+    )
+
+    regra_eventos = forms.JSONField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
+        label="Parâmetros de eventos",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.produtos_habilitados:
+            self.initial["produtos_habilitados"] = (
+                self.instance.produtos_habilitados.split(",")
+            )
+
+    def clean_produtos_habilitados(self):
+        produtos = self.cleaned_data.get("produtos_habilitados", [])
+        return ",".join(produtos)
+
     class Meta:
         model = GameConfig
         fields = [

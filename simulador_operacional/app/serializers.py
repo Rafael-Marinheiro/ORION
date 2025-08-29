@@ -103,9 +103,34 @@ class CidadeSerializer(serializers.ModelSerializer):
 
 
 class GameConfigSerializer(serializers.ModelSerializer):
+    produtos_habilitados = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    regra_eventos = serializers.JSONField(required=False)
+
     class Meta:
         model = GameConfig
         fields = "__all__"
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["produtos_habilitados"] = (
+            instance.produtos_habilitados.split(",")
+            if instance.produtos_habilitados
+            else []
+        )
+        return rep
+
+    def create(self, validated_data):
+        produtos = validated_data.pop("produtos_habilitados", [])
+        validated_data["produtos_habilitados"] = ",".join(produtos)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        produtos = validated_data.pop("produtos_habilitados", None)
+        if produtos is not None:
+            validated_data["produtos_habilitados"] = ",".join(produtos)
+        return super().update(instance, validated_data)
 
 
 class JogoSerializer(serializers.ModelSerializer):
