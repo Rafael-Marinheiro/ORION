@@ -40,6 +40,7 @@ class Command(BaseCommand):
                             rodada=rodada.numero,
                         )
                         rf.custos += penalidade
+                        rf.penalidades += penalidade
                         rf.saldo_caixa = grupo.capital
                         rf.lucro = rf.receita - rf.custos
                         rf.save()

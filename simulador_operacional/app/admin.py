@@ -62,6 +62,7 @@ class ResultadoFinanceiroAdmin(admin.ModelAdmin):
         "custos",
         "lucro",
         "saldo_caixa",
+        "penalidades",
     )
 
 

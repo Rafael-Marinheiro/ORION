@@ -61,6 +61,7 @@ import logging
 from math import log
 from django.utils import timezone
 from django.db.models import Sum
+from collections import defaultdict
 
 logger = logging.getLogger('agendamentos')
 
@@ -95,6 +96,52 @@ def sortear_eventos(rodada):
     else:
         logger.info('Nenhum evento sorteado para rodada %s', rodada)
     return escolhidos
+
+
+def calcular_ranking():
+    grupos = Grupo.objects.annotate(
+        total_lucro=Sum('resultados__lucro'),
+        total_penalidades=Sum('resultados__penalidades'),
+    )
+
+    totais_por_rodada = {
+        d['rodada']: d['total']
+        for d in Distribuicao.objects.values('rodada').annotate(
+            total=Sum('vendas_realizadas')
+        )
+    }
+
+    vendas_por_grupo = Distribuicao.objects.values('grupo_id', 'rodada').annotate(
+        total=Sum('vendas_realizadas')
+    )
+
+    shares = defaultdict(list)
+    for dado in vendas_por_grupo:
+        total_rodada = totais_por_rodada.get(dado['rodada']) or 0
+        share = dado['total'] / total_rodada if total_rodada else 0
+        shares[dado['grupo_id']].append(share)
+
+    ranking = []
+    for g in grupos:
+        market_share_medio = (
+            sum(shares[g.id]) / len(shares[g.id]) if shares[g.id] else 0
+        )
+        ultimo_rf = g.resultados.order_by('-rodada').first()
+        saldo_caixa = ultimo_rf.saldo_caixa if ultimo_rf else g.capital
+        g.market_share_medio = market_share_medio
+        g.saldo_caixa_final = saldo_caixa
+        g.total_penalidades = g.total_penalidades or 0
+        ranking.append(g)
+
+    return sorted(
+        ranking,
+        key=lambda g: (
+            -(float(g.total_lucro or 0)),
+            -float(g.market_share_medio),
+            -(float(g.saldo_caixa_final or 0)),
+            float(g.total_penalidades or 0),
+        ),
+    )
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
@@ -191,20 +238,7 @@ class RankingView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return self.request.user.is_staff or super().has_permission()
 
     def get_queryset(self):
-        grupos = Grupo.objects.annotate(
-            total_lucro=Sum('resultados__lucro'),
-            total_envios=Sum('envios__vendas_realizadas'),
-        )
-        total_envios_all = (
-            Distribuicao.objects.aggregate(total=Sum('vendas_realizadas'))['total'] or 0
-        )
-        for g in grupos:
-            envios = g.total_envios or 0
-            market_share = (envios / total_envios_all) if total_envios_all else 0
-            capacidade = g.maquinas * g.capacidade_maquina
-            eficiencia = (envios / capacidade) if capacidade else 0
-            g.rank_score = (g.total_lucro or 0) + market_share * 1000 + eficiencia * 100
-        return sorted(grupos, key=lambda x: x.rank_score, reverse=True)
+        return calcular_ranking()
 
 
 class PainelGrupoView(LoginRequiredMixin, TemplateView):
@@ -332,6 +366,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     grupo.save()
                     rf, _ = ResultadoFinanceiro.objects.get_or_create(grupo=grupo, rodada=decisao.rodada)
                     rf.custos += penalidade
+                    rf.penalidades += penalidade
                     rf.saldo_caixa = grupo.capital
                     rf.lucro = rf.receita - rf.custos
                     rf.save()
@@ -387,6 +422,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     grupo.save()
                     rf, _ = ResultadoFinanceiro.objects.get_or_create(grupo=grupo, rodada=envio.rodada)
                     rf.custos += penalidade
+                    rf.penalidades += penalidade
                     rf.saldo_caixa = grupo.capital
                     rf.lucro = rf.receita - rf.custos
                     rf.save()
@@ -548,26 +584,13 @@ class InvestimentoViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
 
-class RankingAPIView(generics.ListAPIView):
+class RankingAPIView(generics.GenericAPIView):
     serializer_class = GrupoSerializer
 
-    def get_queryset(self):
-        grupos = Grupo.objects.annotate(
-            total_lucro=Sum('resultados__lucro'),
-            total_envios=Sum('envios__vendas_realizadas'),
-        )
-        total_envios_all = (
-            Distribuicao.objects.aggregate(total=Sum('vendas_realizadas'))['total'] or 0
-        )
-        ranking = []
-        for g in grupos:
-            envios = g.total_envios or 0
-            market_share = (envios / total_envios_all) if total_envios_all else 0
-            capacidade = g.maquinas * g.capacidade_maquina
-            eficiencia = (envios / capacidade) if capacidade else 0
-            score = (g.total_lucro or 0) + market_share * 1000 + eficiencia * 100
-            ranking.append((score, g))
-        return [g for score, g in sorted(ranking, key=lambda x: x[0], reverse=True)]
+    def get(self, request, *args, **kwargs):
+        grupos = calcular_ranking()
+        serializer = self.get_serializer(grupos, many=True)
+        return Response(serializer.data)
 
 
 class GrupoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
