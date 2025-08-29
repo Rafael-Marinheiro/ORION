@@ -2,6 +2,7 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from app.models import Rodada, Grupo, ResultadoFinanceiro, EventoRodada
+from app.services.penalidade_service import aplicar_penalidade
 import logging
 
 logger = logging.getLogger('agendamentos')
@@ -33,17 +34,7 @@ class Command(BaseCommand):
                             ultima.save()
                     else:
                         penalidade = grupo.capital * Decimal('0.10')
-                        grupo.capital -= penalidade
-                        grupo.save()
-                        rf, _ = ResultadoFinanceiro.objects.get_or_create(
-                            grupo=grupo,
-                            rodada=rodada.numero,
-                        )
-                        rf.custos += penalidade
-                        rf.penalidades += penalidade
-                        rf.saldo_caixa = grupo.capital
-                        rf.lucro = rf.receita - rf.custos
-                        rf.save()
+                        aplicar_penalidade(grupo, rodada.numero, penalidade)
 
                         ultima = grupo.decisoes.order_by('-rodada').first()
                         if ultima:
