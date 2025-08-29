@@ -190,6 +190,9 @@ class Distribuicao(models.Model):
     quantidade = models.PositiveIntegerField()
     preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     custo_transporte = models.DecimalField(max_digits=10, decimal_places=2)
+    vendas_realizadas = models.PositiveIntegerField(default=0)
+    qualidade = models.DecimalField(max_digits=5, decimal_places=2, default=1)
+    fator_marketing = models.DecimalField(max_digits=5, decimal_places=2, default=1)
     data_envio = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -230,6 +233,7 @@ class Investimento(models.Model):
     ]
 
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="investimentos")
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE, null=True, blank=True, related_name="investimentos")
     rodada = models.PositiveIntegerField(default=1)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
