@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Classificação Final</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Posição</th>
+            <th>Grupo</th>
+            <th>Eficiência Operacional</th>
+            <th>Desempenho Financeiro</th>
+            <th>Demanda Atendida</th>
+            <th>Sustentabilidade</th>
+            <th>Saldo de Caixa</th>
+            <th>Desperdício</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for g in grupos %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ g.nome }}</td>
+            <td>{{ g.eficiencia_operacional|floatformat:2 }}</td>
+            <td>{{ g.desempenho_financeiro|floatformat:2 }}</td>
+            <td>{{ g.demanda_atendida|floatformat:2 }}</td>
+            <td>{{ g.sustentabilidade|floatformat:2 }}</td>
+            <td>{{ g.saldo_caixa_final|floatformat:2 }}</td>
+            <td>{{ g.desperdicio_total }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

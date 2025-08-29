@@ -2,16 +2,16 @@ import pytest
 from decimal import Decimal
 
 from app.models import Grupo, Cidade, Distribuicao, ResultadoFinanceiro
-from app.views import calcular_ranking
+from app.services.classificacao import calcular_ranking
 
 
 @pytest.mark.django_db
-def test_ranking_resolves_tie_with_market_share():
+def test_ranking_prioritizes_operational_efficiency():
     cidade = Cidade.objects.create(nome="X", distancia_km=10, demanda=100)
     g1 = Grupo.objects.create(nome="G1", capital=1000)
     g2 = Grupo.objects.create(nome="G2", capital=1000)
 
-    # Rodada 1
+    # Ambos vendem 50, mas g1 envia menos, sendo mais eficiente
     Distribuicao.objects.create(
         grupo=g1,
         cidade=cidade,
@@ -19,48 +19,28 @@ def test_ranking_resolves_tie_with_market_share():
         quantidade=60,
         preco_unitario=10,
         custo_transporte=0,
-        vendas_realizadas=60,
+        vendas_realizadas=50,
     )
     Distribuicao.objects.create(
         grupo=g2,
         cidade=cidade,
         rodada=1,
-        quantidade=40,
+        quantidade=100,
         preco_unitario=10,
         custo_transporte=0,
-        vendas_realizadas=40,
-    )
-
-    # Rodada 2
-    Distribuicao.objects.create(
-        grupo=g1,
-        cidade=cidade,
-        rodada=2,
-        quantidade=80,
-        preco_unitario=10,
-        custo_transporte=0,
-        vendas_realizadas=80,
-    )
-    Distribuicao.objects.create(
-        grupo=g2,
-        cidade=cidade,
-        rodada=2,
-        quantidade=20,
-        preco_unitario=10,
-        custo_transporte=0,
-        vendas_realizadas=20,
+        vendas_realizadas=50,
     )
 
     ResultadoFinanceiro.objects.create(
         grupo=g1,
-        rodada=2,
+        rodada=1,
         lucro=Decimal("200"),
         saldo_caixa=Decimal("1000"),
         penalidades=Decimal("0"),
     )
     ResultadoFinanceiro.objects.create(
         grupo=g2,
-        rodada=2,
+        rodada=1,
         lucro=Decimal("200"),
         saldo_caixa=Decimal("1000"),
         penalidades=Decimal("0"),
