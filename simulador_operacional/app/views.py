@@ -215,6 +215,11 @@ class GameConfigUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
         obj, _ = GameConfig.objects.get_or_create(id=1)
         return obj
 
+    def form_valid(self, form):
+        form.instance.produtos_habilitados = form.cleaned_data["produtos_habilitados"]
+        form.instance.regra_eventos = form.cleaned_data.get("regra_eventos", {})
+        return super().form_valid(form)
+
 
 class RodadaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Rodada
