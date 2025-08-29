@@ -22,7 +22,7 @@ class GrupoSerializer(serializers.ModelSerializer):
     jogo = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Grupo
-        fields = ["id", "nome", "capital", "estoque", "jogo"]
+        fields = ["id", "nome", "capital", "estoque", "materia_prima", "jogo"]
 
 class ResultadoFinanceiroSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
