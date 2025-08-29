@@ -37,6 +37,8 @@ from .views import (
     export_resultados_excel,
     JogoViewSet,
     InvestimentoViewSet,
+    FornecedorViewSet,
+    PedidoMateriaPrimaViewSet,
 )
 
 router = DefaultRouter()
@@ -52,6 +54,8 @@ router.register("config", GameConfigViewSet)
 router.register("game-config", GameConfigViewSet, basename="game-config")
 router.register("jogos", JogoViewSet)
 router.register("investimentos", InvestimentoViewSet)
+router.register("fornecedores", FornecedorViewSet)
+router.register("pedidos-materia-prima", PedidoMateriaPrimaViewSet)
 
 schema_view = get_schema_view(
     openapi.Info(title="Simulador API", default_version="v1"),

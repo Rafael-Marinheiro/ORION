@@ -41,6 +41,20 @@
     <button type="submit" name="enviar_envio" class="btn">Distribuir</button>
 </form>
 
+<h3>Registrar Fornecedor</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ fornecedor_form.as_p }}
+    <button type="submit" name="registrar_fornecedor" class="btn">Registrar</button>
+</form>
+
+<h3>Registrar Pedido de Matéria-Prima</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ pedido_form.as_p }}
+    <button type="submit" name="registrar_pedido" class="btn">Comprar</button>
+</form>
+
 <h3>Histórico de Decisões</h3>
 <ul>
     {% for d in decisoes %}
@@ -56,6 +70,15 @@
     <li>{{ e.cidade.nome }} - {{ e.quantidade }} un - custo {{ e.custo_transporte }} - preço {{ e.preco_unitario }}</li>
     {% empty %}
     <li>Nenhum envio registrado.</li>
+    {% endfor %}
+</ul>
+
+<h3>Pedidos de Matéria-Prima</h3>
+<ul>
+    {% for p in pedidos %}
+    <li>{{ p.fornecedor.nome }} - {{ p.quantidade }} un - custo {{ p.custo_logistico }}</li>
+    {% empty %}
+    <li>Nenhum pedido registrado.</li>
     {% endfor %}
 </ul>
 

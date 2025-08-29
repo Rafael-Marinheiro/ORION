@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db.models import Sum
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from decimal import Decimal
 
 class UserManager(BaseUserManager):
     def create_user(self, email_usuario, nome_usuario, password=None, **extra_fields):
@@ -388,3 +389,44 @@ class MateriaPrima(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class Fornecedor(models.Model):
+    nome = models.CharField(max_length=100)
+    cidade = models.ForeignKey(
+        Cidade, on_delete=models.CASCADE, related_name="fornecedores"
+    )
+    prazo_entrega = models.PositiveIntegerField()
+    custo_logistico_km = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("1.50")
+    )
+
+    class Meta:
+        db_table = "FORNECEDORES"
+        verbose_name = "Fornecedor"
+        verbose_name_plural = "Fornecedores"
+
+    def __str__(self):
+        return self.nome
+
+
+class PedidoMateriaPrima(models.Model):
+    fornecedor = models.ForeignKey(
+        Fornecedor, on_delete=models.CASCADE, related_name="pedidos"
+    )
+    grupo = models.ForeignKey(
+        Grupo, on_delete=models.CASCADE, related_name="pedidos_materia_prima"
+    )
+    quantidade = models.PositiveIntegerField()
+    custo_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    prazo_entrega = models.PositiveIntegerField()
+    custo_logistico = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    data_pedido = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "PEDIDOS_MATERIA_PRIMA"
+        verbose_name = "Pedido de Matéria-Prima"
+        verbose_name_plural = "Pedidos de Matéria-Prima"
+
+    def __str__(self):
+        return f"{self.fornecedor.nome} - {self.quantidade}"
