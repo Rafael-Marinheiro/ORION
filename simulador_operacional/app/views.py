@@ -7,7 +7,7 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView,
 )
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, CreateView, ListView
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView, FormView
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from rest_framework import viewsets, generics, status
@@ -45,6 +45,7 @@ from .forms import (
     FornecedorForm,
     PedidoMateriaPrimaForm,
     InvestimentoCapacidadeForm,
+    FeedbackForm,
 )
 from .models import (
     GameConfig,
@@ -78,9 +79,11 @@ from reportlab.pdfgen import canvas
 import csv
 import random
 import logging
+import os
 from math import log
 from django.utils import timezone
 from django.db.models import Sum
+from django.conf import settings
 
 logger = logging.getLogger('agendamentos')
 
@@ -136,6 +139,31 @@ class AjudaView(TemplateView):
     """Página com tutoriais rápidos e perguntas frequentes."""
     template_name = 'ajuda.html'
 
+
+class FeedbackView(FormView):
+    template_name = 'feedback.html'
+    form_class = FeedbackForm
+    success_url = reverse_lazy('feedback')
+
+    def form_valid(self, form):
+        suggestion = form.cleaned_data['suggestion']
+        email = form.cleaned_data.get('email')
+        line = f"- {suggestion}"
+        if email:
+            line += f" (contato: {email})"
+        line += f" - {timezone.now().date()}\n"
+        roadmap_path = settings.ROADMAP_FILE
+        roadmap_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(roadmap_path, 'a+', encoding='utf-8') as f:
+            f.seek(0, os.SEEK_END)
+            if f.tell() > 0:
+                f.seek(f.tell() - 1)
+                if f.read(1) != "\n":
+                    f.write("\n")
+            f.write(line)
+        messages.success(self.request, 'Obrigado pelo feedback!')
+        return super().form_valid(form)
+
 @login_required
 def home(request):
     return render(request, 'home.html')
@@ -169,7 +197,7 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
 
 
-from django.views.generic import UpdateView, FormView
+# Removido import duplicado de FormView/UpdateView
 from .models import GameConfig
 from .forms import GameConfigForm
 

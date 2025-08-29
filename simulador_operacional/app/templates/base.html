@@ -29,10 +29,12 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Registrar</a></li>
                         {% endif %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'ajuda' %}">Ajuda</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'feedback' %}">Feedback</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Sair</a></li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'ajuda' %}">Ajuda</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'feedback' %}">Feedback</a></li>
                     {% endif %}
                 </ul>
                 <select id="theme-select" class="form-select form-select-sm w-auto ms-lg-3">
