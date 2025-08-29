@@ -1,6 +1,6 @@
 from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
-from app.models import GameConfig, Grupo, Jogo, Investimento
+from app.models import GameConfig, Grupo, Jogo, Investimento, Evento
 
 
 @override_settings(MIGRATION_MODULES={"app": None})
@@ -57,3 +57,11 @@ class InvestimentoModelTest(TestCase):
         grupo = Grupo.objects.create(nome="Equipe B")
         inv = Investimento.objects.create(grupo=grupo, categoria="marketing", valor=1000)
         self.assertIn("Equipe B", str(inv))
+
+
+@override_settings(MIGRATION_MODULES={"app": None})
+class EventoModelTest(TestCase):
+    def test_tipo_choices(self):
+        tipos = dict(Evento.TIPO_CHOICES)
+        self.assertIn("perda_estoque", tipos)
+        self.assertIn("greve", tipos)

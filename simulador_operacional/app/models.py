@@ -254,6 +254,8 @@ class Evento(models.Model):
         ("custo_producao", "Custo de Produção"),
         ("custo_transporte", "Custo de Transporte"),
         ("demanda", "Demanda"),
+        ("perda_estoque", "Perda de Estoque"),
+        ("greve", "Greve"),
     ]
 
     nome = models.CharField(max_length=100)

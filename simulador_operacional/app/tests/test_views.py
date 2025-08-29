@@ -2,7 +2,15 @@ from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APIClient
-from app.models import Grupo, Cidade, Investimento, Distribuicao
+from app.models import (
+    Grupo,
+    Cidade,
+    Investimento,
+    Distribuicao,
+    Evento,
+    EventoRodada,
+    Decisao,
+)
 
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
@@ -186,6 +194,72 @@ class ProducaoMateriaPrimaTest(TestCase):
         self.assertEqual(grupo.estoque, 10)
         self.assertEqual(grupo.materia_prima, 10)
         self.assertEqual(grupo.capital, 950)
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class EventosAleatoriosTest(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.ceo = User.objects.create_user(
+            email_usuario="ceoevent@example.com",
+            nome_usuario="CEO",
+            password="pass",
+            tipo_usuario="lider_grupo",
+        )
+        self.members = [
+            User.objects.create_user(
+                email_usuario=f"me{i}@example.com",
+                nome_usuario=f"ME{i}",
+                password="pass",
+            )
+            for i in range(2)
+        ]
+
+    def _create_group(self, estoque=100, materia_prima=100):
+        grupo = Grupo.objects.create(
+            nome="GEventos",
+            capital=1000,
+            estoque=estoque,
+            materia_prima=materia_prima,
+        )
+        grupo.membros.add(self.ceo, *self.members)
+        return grupo
+
+    def test_perda_estoque_reduce_inventory(self):
+        grupo = self._create_group(estoque=100)
+        evento = Evento.objects.create(
+            nome="Perda",
+            tipo="perda_estoque",
+            impacto_percentual=50,
+        )
+        EventoRodada.objects.create(rodada=1, evento=evento)
+        self.client.login(username="ceoevent@example.com", password="pass")
+        self.client.get(reverse("painel_grupo"))
+        grupo.refresh_from_db()
+        self.assertEqual(grupo.estoque, 50)
+
+    def test_greve_blocks_production(self):
+        grupo = self._create_group(materia_prima=20, estoque=0)
+        evento = Evento.objects.create(
+            nome="Greve",
+            tipo="greve",
+            impacto_percentual=100,
+        )
+        EventoRodada.objects.create(rodada=1, evento=evento)
+        self.client.login(username="ceoevent@example.com", password="pass")
+        response = self.client.post(
+            reverse("painel_grupo"),
+            {
+                "rodada": 1,
+                "descricao": "Prod",
+                "quantidade": 10,
+                "enviar_decisao": "",
+            },
+        )
+        self.assertRedirects(response, reverse("painel_grupo"))
+        grupo.refresh_from_db()
+        self.assertEqual(grupo.estoque, 0)
+        self.assertFalse(Decisao.objects.filter(grupo=grupo, rodada=1).exists())
 
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
