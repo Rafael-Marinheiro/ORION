@@ -92,4 +92,4 @@ class JogoAdmin(admin.ModelAdmin):
 
 @admin.register(Investimento)
 class InvestimentoAdmin(admin.ModelAdmin):
-    list_display = ("grupo", "categoria", "valor", "rodada")
+    list_display = ("grupo", "cidade", "categoria", "valor", "rodada")

@@ -98,6 +98,7 @@ class JogoSerializer(serializers.ModelSerializer):
 
 class InvestimentoSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
+    cidade = serializers.StringRelatedField()
 
     class Meta:
         model = Investimento

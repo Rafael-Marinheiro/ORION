@@ -58,6 +58,7 @@ from openpyxl import Workbook
 from reportlab.pdfgen import canvas
 import random
 import logging
+from math import log
 from django.utils import timezone
 from django.db.models import Sum
 
@@ -192,10 +193,10 @@ class RankingView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         grupos = Grupo.objects.annotate(
             total_lucro=Sum('resultados__lucro'),
-            total_envios=Sum('envios__quantidade'),
+            total_envios=Sum('envios__vendas_realizadas'),
         )
         total_envios_all = (
-            Distribuicao.objects.aggregate(total=Sum('quantidade'))['total'] or 0
+            Distribuicao.objects.aggregate(total=Sum('vendas_realizadas'))['total'] or 0
         )
         for g in grupos:
             envios = g.total_envios or 0
@@ -360,9 +361,32 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                         if evento.tipo == 'custo_transporte':
                             custo *= Decimal(1 + evento.impacto_percentual / 100)
                     envio.custo_transporte = custo
+
+                    # calcular fator de marketing baseado nos investimentos da cidade
+                    total_marketing = (
+                        Investimento.objects.filter(
+                            grupo=grupo,
+                            categoria='marketing',
+                            cidade=envio.cidade,
+                        ).aggregate(total=Sum('valor'))['total']
+                        or 0
+                    )
+                    fator_marketing = Decimal('1')
+                    if total_marketing > 0:
+                        total_marketing = min(total_marketing, Decimal('10000'))
+                        fator_marketing = Decimal(
+                            1 + (log(float(total_marketing)) / log(10000)) * 0.2
+                        )
+                        fator_marketing = min(fator_marketing, Decimal('1.2'))
+
+                    demanda_ajustada = int(envio.cidade.demanda * fator_marketing)
+                    vendas_realizadas = min(envio.quantidade, demanda_ajustada)
+                    envio.vendas_realizadas = vendas_realizadas
+                    envio.fator_marketing = fator_marketing
+                    envio.qualidade = Decimal('1')
                     envio.save()
+
                     grupo.estoque -= envio.quantidade
-                    vendas_realizadas = min(envio.quantidade, envio.cidade.demanda)
                     if vendas_realizadas < envio.quantidade:
                         messages.warning(
                             request,
@@ -494,10 +518,10 @@ class RankingAPIView(generics.ListAPIView):
     def get_queryset(self):
         grupos = Grupo.objects.annotate(
             total_lucro=Sum('resultados__lucro'),
-            total_envios=Sum('envios__quantidade'),
+            total_envios=Sum('envios__vendas_realizadas'),
         )
         total_envios_all = (
-            Distribuicao.objects.aggregate(total=Sum('quantidade'))['total'] or 0
+            Distribuicao.objects.aggregate(total=Sum('vendas_realizadas'))['total'] or 0
         )
         ranking = []
         for g in grupos:
