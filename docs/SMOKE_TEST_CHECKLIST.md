@@ -3,6 +3,14 @@
 ## Objetivo
 Validar rapidamente os fluxos críticos após mudanças ou antes de release.
 
+## Automacao (tecnica)
+Rodar fluxo tecnico automatizado com relatorio:
+`python tools/run_smoke.py`
+
+Saida:
+- status no terminal (pass/fail por etapa);
+- relatorio em `docs/reports/smoke_YYYYMMDD_HHMMSS.md`.
+
 ## Pré-requisitos
 - Banco migrado: `python manage.py migrate`
 - Dados base: `python manage.py seed_dados_base`
@@ -48,3 +56,7 @@ Validar rapidamente os fluxos críticos após mudanças ou antes de release.
 - Nenhum erro 500 em fluxos acima.
 - Dados persistidos em relatórios/ranking/jobs.
 - Regras de negócio chave observadas (CEO da rodada, D+1, demanda por produto, isolamento por jogo).
+
+## Observacao
+A automacao cobre sanidade tecnica e testes de fluxo.
+A validacao de usabilidade percebida (clareza, fluidez, entendimento) continua sendo manual.

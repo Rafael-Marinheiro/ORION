@@ -19,3 +19,4 @@ Este diretorio concentra toda a documentacao funcional, tecnica e operacional do
 ## Estrutura
 - `roadmap.md`: ideias e sugestoes de evolucao.
 - `release/`: notas e artefatos de releases (`rc1`, `rc2`, etc.).
+- `reports/`: relatorios gerados por automacao (smoke).

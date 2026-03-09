@@ -103,3 +103,6 @@ agendamentos.log
 # Local documentação binária
 _documentação/DOC/*.rar
 _documenta*/DOC/*.rar
+
+# Smoke automation reports
+docs/reports/smoke_*.md

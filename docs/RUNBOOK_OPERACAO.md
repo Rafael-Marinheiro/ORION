@@ -24,6 +24,14 @@
 5. Sanidade do Django:
 `python manage.py check --settings=simulador_operacional.settings_ci`
 
+## 2.1) Smoke automatizado
+Executar fluxo tecnico automatizado com relatorio:
+`python tools/run_smoke.py`
+
+Saida:
+- status das etapas no terminal;
+- relatorio em `docs/reports/smoke_YYYYMMDD_HHMMSS.md`.
+
 ## 3) Observabilidade
 1. Dashboard operacional:
 `/jobs/`
