@@ -99,3 +99,7 @@ agendamentos.log
 .idea/
 
 
+
+# Local documentação binária
+_documentação/DOC/*.rar
+_documenta*/DOC/*.rar
