@@ -120,4 +120,32 @@
         document.getElementById('graficoFallback').style.display = 'block';
     }
 </script>
+
+<h3>Investimentos</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Grupo</th>
+            <th>Categoria</th>
+            <th>Valor</th>
+            <th>Retorno Projetado</th>
+            <th>Retorno Efetivo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for inv in investimentos %}
+        <tr>
+            <td>{{ inv.grupo.nome }}</td>
+            <td>{{ inv.get_categoria_display }}</td>
+            <td>{{ inv.valor }}</td>
+            <td>{{ inv.retorno_projetado }}</td>
+            <td>{{ inv.retorno_efetivo }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">Nenhum investimento registrado.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

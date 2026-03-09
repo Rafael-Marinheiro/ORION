@@ -34,6 +34,7 @@ CUSTO_OPERADOR_POR_RODADA = Decimal("2000")
 RETENCAO_PADRAO_PERCENT = Decimal("50")
 
 
+
 class Command(BaseCommand):
     help = "Fecha rodadas cujo prazo se encerrou"
 

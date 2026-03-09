@@ -87,7 +87,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class GameConfig(models.Model):
-    capital_inicial = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    capital_inicial = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=1000000,
+    )
     estoque_inicial = models.PositiveIntegerField(default=0)
     produtos_habilitados = models.TextField(blank=True)
 
@@ -98,8 +102,16 @@ class GameConfig(models.Model):
     regra_eventos = models.JSONField(default=dict, blank=True)
     ranking_pesos = models.JSONField(default=default_ranking_pesos, blank=True)
 
-    maquinas_iniciais = models.PositiveIntegerField(default=1)
+    maquinas_iniciais = models.PositiveIntegerField(default=40)
+    maquinas_iniciais_a = models.PositiveIntegerField(default=15)
+    maquinas_iniciais_b = models.PositiveIntegerField(default=15)
+    maquinas_iniciais_c = models.PositiveIntegerField(default=10)
+    trabalhadores_iniciais = models.PositiveIntegerField(default=80)
     capacidade_maquina = models.PositiveIntegerField(default=100)
+    numero_rodadas = models.PositiveIntegerField(
+        default=3,
+        validators=[MinValueValidator(3), MaxValueValidator(12)],
+    )
 
     class Meta:
         db_table = "CONFIG"
@@ -128,10 +140,22 @@ class Jogo(models.Model):
 class Grupo(models.Model):
     nome = models.CharField(max_length=100)
     membros = models.ManyToManyField(User, related_name="grupos")
+    lider = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="grupos_liderados",
+        null=True,
+        blank=True,
+    )
     jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name="grupos", null=True, blank=True)
     capital = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estoque = models.PositiveIntegerField(default=0)
+    materia_prima = models.PositiveIntegerField(default=0)
     maquinas = models.PositiveIntegerField(default=1)
+    maquinas_a = models.PositiveIntegerField(default=15)
+    maquinas_b = models.PositiveIntegerField(default=15)
+    maquinas_c = models.PositiveIntegerField(default=10)
+    trabalhadores = models.PositiveIntegerField(default=80)
     capacidade_maquina = models.PositiveIntegerField(default=100)
 
     class Meta:
@@ -141,6 +165,22 @@ class Grupo(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class LinhaProducao(models.Model):
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="linhas_producao")
+    capacidade = models.PositiveIntegerField(default=0)
+    maquinas = models.PositiveIntegerField(default=0)
+    mao_de_obra = models.PositiveIntegerField(default=0)
+    producao = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "LINHAS_PRODUCAO"
+        verbose_name = "Linha de Produção"
+        verbose_name_plural = "Linhas de Produção"
+
+    def __str__(self):
+        return f"Linha {self.id} - {self.grupo.nome}"
 
 
 class Decisao(models.Model):
@@ -167,10 +207,30 @@ class Decisao(models.Model):
         return f"Decisao {self.rodada} - {self.grupo.nome}"
 
 
+class Mercado(models.Model):
+    nome = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "MERCADOS"
+        verbose_name = "Mercado"
+        verbose_name_plural = "Mercados"
+
+    def __str__(self):
+        return self.nome
+
+
 class Cidade(models.Model):
     nome = models.CharField(max_length=100)
     distancia_km = models.PositiveIntegerField()
     demanda = models.PositiveIntegerField(default=0)
+    limite_demanda = models.PositiveIntegerField(default=0)
+    mercado = models.ForeignKey(
+        Mercado,
+        on_delete=models.CASCADE,
+        related_name="cidades",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "CIDADES"
@@ -495,6 +555,7 @@ class ResultadoFinanceiro(models.Model):
     custos = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     lucro = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     saldo_caixa = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    penalidades = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     data_registro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -505,6 +566,13 @@ class ResultadoFinanceiro(models.Model):
 
     def __str__(self):
         return f"{self.grupo.nome} - Rodada {self.rodada}"
+
+    @property
+    def custo_envio_total(self):
+        total = self.grupo.envios.filter(rodada=self.rodada).aggregate(
+            total=Sum("custo_transporte")
+        )["total"]
+        return total or Decimal("0")
 
 
 class Investimento(models.Model):
@@ -521,6 +589,7 @@ class Investimento(models.Model):
     ]
 
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="investimentos")
+    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE, null=True, blank=True, related_name="investimentos")
     rodada = models.PositiveIntegerField(default=1)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
     cidade = models.ForeignKey(
@@ -548,6 +617,13 @@ class Investimento(models.Model):
     processado = models.BooleanField(default=False)
     data = models.DateTimeField(auto_now_add=True)
 
+    CARACTERISTICAS = {
+        "marketing": {"roi": Decimal("0.05"), "tempo": 1},
+        "maquinas": {"roi": Decimal("0.10"), "tempo": 2},
+        "rh": {"roi": Decimal("0.03"), "tempo": 1},
+        "financeiro": {"roi": Decimal("0.02"), "tempo": 1},
+    }
+
     class Meta:
         db_table = "INVESTIMENTOS"
         verbose_name = "Investimento"
@@ -557,12 +633,29 @@ class Investimento(models.Model):
     def __str__(self):
         return f"{self.grupo.nome} - {self.get_categoria_display()} {self.valor}"
 
+    def save(self, *args, **kwargs):
+        if (self.roi == Decimal("0") or self.tempo_maturacao == 0) and self.categoria in self.CARACTERISTICAS:
+            config = self.CARACTERISTICAS[self.categoria]
+            self.roi = config["roi"]
+            self.tempo_maturacao = config["tempo"]
+        super().save(*args, **kwargs)
+
+    @property
+    def retorno_projetado(self):
+        return (self.valor * self.roi).quantize(Decimal("0.01"))
+
+    @property
+    def retorno_efetivo(self):
+        return self.retorno_projetado if self.retorno_aplicado else Decimal("0")
+
 
 class Evento(models.Model):
     TIPO_CHOICES = [
         ("custo_producao", "Custo de Producao"),
         ("custo_transporte", "Custo de Transporte"),
         ("demanda", "Demanda"),
+        ("perda_estoque", "Perda de Estoque"),
+        ("greve", "Greve"),
     ]
     MODO_CHOICES = [
         ("percentual", "Percentual"),

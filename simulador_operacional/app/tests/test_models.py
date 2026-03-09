@@ -31,7 +31,13 @@ class UserModelTest(TestCase):
 class GameConfigModelTest(TestCase):
     def test_default_values(self):
         config = GameConfig.objects.create()
-        self.assertEqual(config.capital_inicial, 0)
+        self.assertEqual(config.capital_inicial, 1000000)
+        self.assertEqual(config.maquinas_iniciais, 40)
+        self.assertEqual(config.maquinas_iniciais_a, 15)
+        self.assertEqual(config.maquinas_iniciais_b, 15)
+        self.assertEqual(config.maquinas_iniciais_c, 10)
+        self.assertEqual(config.trabalhadores_iniciais, 80)
+        self.assertEqual(config.numero_rodadas, 3)
         self.assertTrue(config.modulo_producao)
 
 
@@ -40,6 +46,12 @@ class GrupoModelTest(TestCase):
     def test_str(self):
         grupo = Grupo.objects.create(nome="Equipe A")
         self.assertEqual(str(grupo), "Equipe A")
+
+    def test_machine_defaults(self):
+        grupo = Grupo.objects.create(nome="Equipe B")
+        self.assertEqual(grupo.maquinas_a, 15)
+        self.assertEqual(grupo.maquinas_b, 15)
+        self.assertEqual(grupo.maquinas_c, 10)
 
 
 @override_settings(MIGRATION_MODULES={"app": None})

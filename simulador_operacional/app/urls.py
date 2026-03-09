@@ -68,6 +68,7 @@ router.register("eventos-rodada", EventoRodadaViewSet)
 router.register("rodadas", RodadaViewSet)
 router.register("cidades", CidadeViewSet)
 router.register("config", GameConfigViewSet)
+router.register("game-config", GameConfigViewSet, basename="game-config")
 router.register("jogos", JogoViewSet)
 router.register("investimentos", InvestimentoViewSet)
 router.register("materias-primas", MateriaPrimaViewSet)
@@ -110,11 +111,15 @@ urlpatterns = [
     path("grupos/", GrupoListView.as_view(), name="lista_grupos"),
     path("grupos/novo/", GrupoCreateView.as_view(), name="criar_grupo"),
     path("grupos/<int:pk>/editar/", GrupoUpdateView.as_view(), name="editar_grupo"),
+    path("investimentos/capacidade/", InvestimentoCapacidadeView.as_view(), name="investir_capacidade"),
     path("relatorios/", RelatoriosView.as_view(), name="relatorios"),
     path("jobs/", JobsView.as_view(), name="jobs"),
     path("ajuda/", AjudaView.as_view(), name="ajuda"),
+    path("feedback/", FeedbackView.as_view(), name="feedback"),
     path("export/pdf/", export_resultados_pdf, name="export_resultados_pdf"),
     path("export/excel/", export_resultados_excel, name="export_resultados_excel"),
+    path("export/csv/", export_resultados_csv, name="export_resultados_csv"),
+    path("export/json/", export_resultados_json, name="export_resultados_json"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/ranking/", RankingAPIView.as_view(), name="api_ranking"),

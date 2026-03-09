@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.environ.get("ENV_FILE", BASE_DIR / ".env"))
 
+# Caminho do arquivo de roadmap para registrar feedback dos usuários
+ROADMAP_FILE = BASE_DIR.parent / "docs" / "roadmap.md"
+
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-secret")
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if os.getenv("DJANGO_ALLOWED_HOSTS") else []
@@ -66,6 +69,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'app.validators.LetterAndDigitPasswordValidator'},
 ]
 
 AUTH_USER_MODEL = 'app.User'
@@ -119,6 +123,7 @@ SIMPLE_JWT = {
 CRONJOBS = [
     ('*/5 * * * *', 'django.core.management.call_command', ['fechar_rodadas']),
     ('0 * * * *', 'django.core.management.call_command', ['enviar_lembretes']),
+    ('*/1 * * * *', 'django.core.management.call_command', ['sortear_eventos_rodada']),
 ]
 
 LOGGING = {

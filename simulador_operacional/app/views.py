@@ -430,6 +430,31 @@ class AjudaView(TemplateView):
     template_name = "ajuda.html"
 
 
+
+class FeedbackView(FormView):
+    template_name = 'feedback.html'
+    form_class = FeedbackForm
+    success_url = reverse_lazy('feedback')
+
+    def form_valid(self, form):
+        suggestion = form.cleaned_data['suggestion']
+        email = form.cleaned_data.get('email')
+        line = f"- {suggestion}"
+        if email:
+            line += f" (contato: {email})"
+        line += f" - {timezone.now().date()}\n"
+        roadmap_path = settings.ROADMAP_FILE
+        roadmap_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(roadmap_path, 'a+', encoding='utf-8') as f:
+            f.seek(0, os.SEEK_END)
+            if f.tell() > 0:
+                f.seek(f.tell() - 1)
+                if f.read(1) != "\n":
+                    f.write("\n")
+            f.write(line)
+        messages.success(self.request, 'Obrigado pelo feedback!')
+        return super().form_valid(form)
+
 @login_required
 def home(request):
     return render(request, "home.html")
@@ -439,6 +464,9 @@ class RegisterView(CreateView):
     template_name = "registration/register.html"
     form_class = CustomUserCreationForm
     success_url = reverse_lazy("login")
+
+    def test_func(self):
+        return getattr(self.request.user, 'tipo_usuario', '') == 'gamemaster'
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -473,6 +501,11 @@ class GameConfigUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
     def get_object(self, queryset=None):
         obj, _ = GameConfig.objects.get_or_create(id=1)
         return obj
+
+    def form_valid(self, form):
+        form.instance.produtos_habilitados = form.cleaned_data["produtos_habilitados"]
+        form.instance.regra_eventos = form.cleaned_data.get("regra_eventos", {})
+        return super().form_valid(form)
 
 
 class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -1310,6 +1343,21 @@ class CompraMateriaPrimaViewSet(JogoScopedQuerysetMixin, viewsets.ModelViewSet):
     serializer_class = CompraMateriaPrimaSerializer
     jogo_lookup = "grupo__jogo_id"
 
+    def create(self, request, *args, **kwargs):
+        grupo_id = request.data.get('grupo')
+        if grupo_id:
+            resultados = (
+                ResultadoFinanceiro.objects.filter(grupo_id=grupo_id)
+                .order_by('-rodada')[:2]
+            )
+            if len(resultados) == 2 and all(r.saldo_caixa < 0 for r in resultados):
+                return Response(
+                    {
+                        'detail': 'Investimentos bloqueados por fluxo de caixa negativo.'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return super().create(request, *args, **kwargs)
 
 class RankingAPIView(generics.ListAPIView):
     serializer_class = GrupoSerializer
@@ -1363,15 +1411,74 @@ class GrupoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return self.request.user.is_staff or super().has_permission()
 
 
-class GrupoCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
-    model = Grupo
-    form_class = GrupoForm
+class GrupoCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "grupo_form.html"
     success_url = reverse_lazy("lista_grupos")
-    permission_required = "app.add_grupo"
 
-    def has_permission(self):
-        return self.request.user.is_staff or super().has_permission()
+    def test_func(self):
+        user = self.request.user
+        return getattr(user, "tipo_usuario", "") == "gamemaster" or user.is_superuser
+
+    def get(self, request, *args, **kwargs):
+        grupo_form = GrupoCadastroForm()
+        membro_formset = MembroFormSet()
+        return render(
+            request,
+            self.template_name,
+            {"form": grupo_form, "membro_formset": membro_formset},
+        )
+
+    def post(self, request, *args, **kwargs):
+        grupo_form = GrupoCadastroForm(request.POST)
+        membro_formset = MembroFormSet(request.POST)
+        if grupo_form.is_valid() and membro_formset.is_valid():
+            grupo = grupo_form.save(commit=False)
+            config, _ = GameConfig.objects.get_or_create(id=1)
+            grupo.capital = config.capital_inicial
+            grupo.estoque = config.estoque_inicial
+            grupo.maquinas_a = config.maquinas_iniciais_a
+            grupo.maquinas_b = config.maquinas_iniciais_b
+            grupo.maquinas_c = config.maquinas_iniciais_c
+            grupo.maquinas = (
+                config.maquinas_iniciais_a
+                + config.maquinas_iniciais_b
+                + config.maquinas_iniciais_c
+            )
+            grupo.trabalhadores = config.trabalhadores_iniciais
+            grupo.capacidade_maquina = config.capacidade_maquina
+            grupo.save()
+            lider = None
+            for form in membro_formset:
+                user = User.objects.create_user(
+                    email_usuario=form.cleaned_data["email"],
+                    nome_usuario=form.cleaned_data["nome"],
+                    password=form.cleaned_data["senha"],
+                    tipo_usuario=(
+                        "lider_grupo" if form.cleaned_data.get("lider") else "membro_grupo"
+                    ),
+                )
+                grupo.membros.add(user)
+                if form.cleaned_data.get("lider"):
+                    lider = user
+            if not lider:
+                grupo.delete()
+                membro_formset._non_form_errors = membro_formset.error_class(
+                    ["Selecione um líder para o grupo."]
+                )
+                return render(
+                    request,
+                    self.template_name,
+                    {"form": grupo_form, "membro_formset": membro_formset},
+                )
+            grupo.lider = lider
+            grupo.save()
+            messages.success(request, "Grupo criado com sucesso.")
+            return redirect(self.success_url)
+        return render(
+            request,
+            self.template_name,
+            {"form": grupo_form, "membro_formset": membro_formset},
+        )
 
 
 class GrupoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -1550,3 +1657,64 @@ def export_resultados_excel(request):
     response["Content-Disposition"] = "attachment; filename=resultados.xlsx"
     wb.save(response)
     return response
+
+
+@login_required
+def export_resultados_csv(request):
+    rodada = request.GET.get("rodada")
+    grupo_id = request.GET.get("grupo")
+    qs = ResultadoFinanceiro.objects.select_related("grupo")
+    if rodada:
+        qs = qs.filter(rodada=rodada)
+    if grupo_id:
+        qs = qs.filter(grupo_id=grupo_id)
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = "attachment; filename=resultados.csv"
+    writer = csv.writer(response)
+    writer.writerow(["Grupo", "Rodada", "Receita", "Custos", "Lucro", "Caixa"])
+    for r in qs:
+        writer.writerow([
+            r.grupo.nome,
+            r.rodada,
+            float(r.receita),
+            float(r.custos),
+            float(r.lucro),
+            float(r.saldo_caixa),
+        ])
+    return response
+
+
+@login_required
+def export_resultados_json(request):
+    rodada = request.GET.get("rodada")
+    grupo_id = request.GET.get("grupo")
+    qs = ResultadoFinanceiro.objects.select_related("grupo")
+    if rodada:
+        qs = qs.filter(rodada=rodada)
+    if grupo_id:
+        qs = qs.filter(grupo_id=grupo_id)
+    data = [
+        {
+            "grupo": r.grupo.nome,
+            "rodada": r.rodada,
+            "receita": float(r.receita),
+            "custos": float(r.custos),
+            "lucro": float(r.lucro),
+            "caixa": float(r.saldo_caixa),
+        }
+        for r in qs
+    ]
+    return JsonResponse(data, safe=False)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def investir_capacidade_api(request):
+    linha_id = request.data.get("linha")
+    aumento = int(request.data.get("aumento", 0))
+    valor = Decimal(request.data.get("valor", 0))
+    linha = get_object_or_404(LinhaProducao, id=linha_id)
+    linha.capacidade += aumento
+    linha.save()
+    Investimento.objects.create(grupo=linha.grupo, categoria="maquinas", valor=valor)
+    return Response({"nova_capacidade": linha.capacidade})

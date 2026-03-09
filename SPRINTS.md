@@ -7,19 +7,22 @@ Este documento resume as funcionalidades previstas para cada sprint de desenvolv
 ## Sprint 1 – Autenticação Completa
 - Implementar cadastro e edição de usuários pelo administrador.
 - Criar fluxo de redefinição de senha.
-- Ajustar permissões e papéis (aluno, professor, administrador).  
+- Ajustar permissões e papéis (aluno, professor, administrador).
+- Bloquear auto-registro de visitantes, permitindo cadastro apenas pelo administrador.
 *Relacionado aos requisitos RF03.*
 
 ## Sprint 2 – Configuração do Jogo
 - Modelar parâmetros iniciais (capital, estoque, produtos habilitados).
 - Tela para ativar ou desativar módulos do jogo.
-- Definir regras para eventos aleatórios por rodada.  
+- Definir regras para eventos aleatórios por rodada.
+- Aplicar valores padrão (capital de R$1.000.000, 40 máquinas e 80 trabalhadores) e limitar rodadas entre 3 e 12.
 *Relacionado aos requisitos RF04, RF05 e RF06.*
 
 ## Sprint 3 – Painel do Grupo
 - Desenvolver painel com indicadores em tempo real.
 - Histórico das decisões e suas consequências.
-- Formulário para envio de decisões antes do fechamento de rodada.  
+- Formulário para envio de decisões antes do fechamento de rodada.
+- Validar envio único por rodada e impedir submissões após o horário limite.
 *Relacionado aos requisitos RF07, RF08 e RF09.*
 
 ## Sprint 4 – Produção e Estoques
@@ -45,12 +48,14 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 
 ### Sprint 6c – Ranking Dinâmico
 - Implementação do ranking dinâmico dos grupos.
+- Calcular ranking considerando market share e eficiência e aplicar critérios de desempate.
 
 *Todos os itens acima estão ligados aos requisitos RF16, RF17 e RF18.*
 
 ## Sprint 7 – Eventos Aleatórios
 - Sorteio e aplicação automática de eventos com probabilidades.
-- Notificação imediata do impacto aos grupos.  
+- Notificação imediata do impacto aos grupos.
+- Permitir até dois eventos simultâneos por rodada.
 *Relacionado aos requisitos RF19 e RF20.*
 
 ## Sprint 8 – Encerramento da Rodada
@@ -113,41 +118,61 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 - Inserir rodapé simples no `base.html`.
 *Status: implementado.*
 
-## Sprint 25 – Telas de Login e Registro
+## Sprint 25 – Regras de Acesso e Cadastro
+- Bloquear auto-registro, permitindo cadastro apenas pelo administrador.
+*Status: implementado.*
+
+## Sprint 26 – Configurações Iniciais do Jogo
+- Definir valores iniciais padrão (capital de R$1.000.000, 40 máquinas e 80 trabalhadores).
+- Validar o número de rodadas entre 3 e 12.
+*Status: implementado.*
+
+## Sprint 27 – Envio de Decisões
+- Validar envio único de decisões por rodada antes do prazo final.
+*Status: implementado.*
+
+## Sprint 28 – Ranking Completo
+- Ordenar grupos por resultado financeiro, market share e eficiência com critérios de desempate.
+*Status: não implementado.*
+
+## Sprint 29 – Eventos Aleatórios Avançados
+- Permitir sorteio de até dois eventos simultâneos em cada rodada.
+*Status: não implementado.*
+## Sprint 30 – Telas de Login e Registro
 - Centralizar formulário em um card Bootstrap.
 - Definir largura máxima (~400 px) e bordas com sombra.
 - Padronizar mensagens de erro com classes `alert`.
 *Status: não implementado.*
 
-## Sprint 26 – Tela Home
+## Sprint 31 – Tela Home
 - Adicionar logotipo e frase institucional centralizados.
 - Incluir botão destacado para login ou acesso ao painel.
 - Garantir que o layout funcione em telas menores.
 *Status: não implementado.*
 
-## Sprint 27 – Painel do Grupo
+## Sprint 32 – Painel do Grupo
 - Mostrar indicadores (capital, estoque, máquinas) em cards.
 - Organizar formulários (decisões, distribuição) em colunas.
 - Converter listagens em tabelas responsivas.
 *Status: não implementado.*
 
-## Sprint 28 – Configuração do Jogo e Rodadas
+## Sprint 33 – Configuração do Jogo e Rodadas
 - Agrupar campos em grid para facilitar a leitura.
 - Posicionar botões de ação (Salvar/Abrir) alinhados à direita.
 - Exibir mensagens de confirmação após salvar.
 *Status: não implementado.*
 
-## Sprint 29 – Relatórios Financeiros e Ranking
+## Sprint 34 – Relatórios Financeiros e Ranking
 - Colocar filtros em formulário horizontal.
 - Tabelas com cabeçalho fixo e destaques nos totalizadores.
 - Gráficos centralizados e responsivos.
 *Status: não implementado.*
 
-## Sprint 30 – Páginas de Ajuda
+## Sprint 35 – Páginas de Ajuda
 - Usar margens amplas para facilitar a leitura.
 *Status: não implementado.*
 
-## Sprint 31 – Componentes Reutilizáveis e Ajustes Finais
+## Sprint 36 – Componentes Reutilizáveis e Ajustes Finais
 - Criar classes personalizadas de botões e alertas.
 - Testar todas as telas em 320 px, 768 px e 1200 px.
 - Garantir que navbar e rodapé funcionem bem em mobile.

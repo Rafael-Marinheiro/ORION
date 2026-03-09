@@ -42,11 +42,25 @@ class GrupoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Grupo
-        fields = ["id", "nome", "capital", "estoque", "jogo"]
+        fields = [
+            "id",
+            "nome",
+            "capital",
+            "estoque",
+            "materia_prima",
+            "jogo",
+            "total_lucro",
+            "market_share_medio",
+            "saldo_caixa_final",
+            "total_penalidades",
+        ]
 
 
 class ResultadoFinanceiroSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
+    custo_envio = serializers.DecimalField(
+        source="custo_envio_total", max_digits=12, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = ResultadoFinanceiro
@@ -97,10 +111,41 @@ class CidadeSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class MercadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mercado
+        fields = "__all__"
+
+
 class GameConfigSerializer(serializers.ModelSerializer):
+    produtos_habilitados = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    regra_eventos = serializers.JSONField(required=False)
+
     class Meta:
         model = GameConfig
         fields = "__all__"
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["produtos_habilitados"] = (
+            instance.produtos_habilitados.split(",")
+            if instance.produtos_habilitados
+            else []
+        )
+        return rep
+
+    def create(self, validated_data):
+        produtos = validated_data.pop("produtos_habilitados", [])
+        validated_data["produtos_habilitados"] = ",".join(produtos)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        produtos = validated_data.pop("produtos_habilitados", None)
+        if produtos is not None:
+            validated_data["produtos_habilitados"] = ",".join(produtos)
+        return super().update(instance, validated_data)
 
 
 class JogoSerializer(serializers.ModelSerializer):
@@ -113,6 +158,7 @@ class JogoSerializer(serializers.ModelSerializer):
 
 class InvestimentoSerializer(serializers.ModelSerializer):
     grupo = serializers.StringRelatedField()
+    cidade = serializers.StringRelatedField()
 
     class Meta:
         model = Investimento
