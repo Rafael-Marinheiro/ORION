@@ -2,20 +2,20 @@
 
 Este diretorio concentra toda a documentacao funcional, tecnica e operacional do projeto.
 
-## Estrutura
-- `BACKLOG.md`: backlog oficial de implementacao.
-- `CHANGELOG.md`: historico de mudancas por versao.
-- `VERSION`: versao alvo da release.
-- `roadmap.md`: ideias e sugestoes de evolucao.
-- `RUNBOOK_OPERACAO.md`: operacao do sistema em ambiente.
-- `SMOKE_TEST_CHECKLIST.md`: roteiro de validacao rapida pos-deploy.
-- `RELEASE_CHECKLIST.md`: checklist de release.
-- `BACKUP_RESTORE_CHECKLIST.md`: plano de backup/restore.
-- `release/`: notas e artefatos de releases (`rc1`, `rc2`, etc.).
+## Fonte canonica por assunto
+- Escopo e andamento de implementacao: `BACKLOG.md`
+- Historico de mudancas por versao: `CHANGELOG.md`
+- Versao corrente de release: `VERSION`
+- Procedimentos operacionais: `RUNBOOK_OPERACAO.md`
+- Validacao rapida pos-deploy: `SMOKE_TEST_CHECKLIST.md`
+- Processo de release: `RELEASE_CHECKLIST.md`
+- Backup e restauracao: `BACKUP_RESTORE_CHECKLIST.md`
+- Artefatos de release (resumo, plano e historico): `release/`
 
-## Convencoes
-- Novos documentos devem ser criados em `docs/`.
-- Atualizacoes de release devem refletir em:
-  - `docs/VERSION`
-  - `docs/CHANGELOG.md`
-  - `docs/release/RELEASE_NOTES_<versao>.md`
+## Regra de documentacao
+- Evitar duplicacao de conteudo entre arquivos.
+- Quando necessario, registrar apenas resumo curto e referenciar o documento canonico.
+
+## Estrutura
+- `roadmap.md`: ideias e sugestoes de evolucao.
+- `release/`: notas e artefatos de releases (`rc1`, `rc2`, etc.).
