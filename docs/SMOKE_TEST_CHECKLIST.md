@@ -60,3 +60,6 @@ Saida:
 ## Observacao
 A automacao cobre sanidade tecnica e testes de fluxo.
 A validacao de usabilidade percebida (clareza, fluidez, entendimento) continua sendo manual.
+
+## Registro de Sessao Manual
+Use `docs/USABILITY_SESSION_TEMPLATE.md` para registrar evidencias, friccoes e decisoes da sessao.
