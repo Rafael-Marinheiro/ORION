@@ -1,58 +1,159 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Painel do Grupo {{ grupo.nome }}</h2>
-<p>Capital: {{ grupo.capital }}</p>
-<p>Estoque: {{ grupo.estoque }}</p>
-<p>Máquinas: {{ grupo.maquinas }} | Capacidade por máquina: {{ grupo.capacidade_maquina }}</p>
+<h2>Painel do Grupo{% if grupo %} {{ grupo.nome }}{% endif %}</h2>
+
+{% if sem_grupo %}
+<p>Seu usuario nao esta vinculado a um grupo. Solicite vinculacao ao administrador.</p>
+{% else %}
+<div class="painel-kpi">
+    <div><strong>Capital:</strong> {{ grupo.capital }}</div>
+    <div><strong>Estoque:</strong> {{ grupo.estoque }}</div>
+    <div><strong>Rodada ativa:</strong> {% if rodada_ativa %}{{ rodada_ativa.numero }}{% else %}--{% endif %}</div>
+    <div><strong>CEO da rodada:</strong> {% if ceo_rodada %}{{ ceo_rodada.nome_usuario }}{% else %}Nao definido{% endif %}</div>
+</div>
+
+{% if rodada_ativa %}
+<p><strong>Encerramento:</strong> {{ rodada_ativa.fim|date:'d/m/Y H:i' }}</p>
+{% else %}
+<p><strong>Nao ha rodada ativa no momento.</strong></p>
+{% endif %}
 {% if evento %}
-<p><strong>Evento da rodada: {{ evento.nome }} - {{ evento.descricao }} ({{ evento.impacto_percentual }}%)</strong></p>
+<p><strong>Evento da rodada:</strong> {{ evento.nome }} - {{ evento.descricao }}</p>
 {% endif %}
-{% if notificacao %}
-<p><strong>{{ notificacao }}</strong></p>
-{% endif %}
-{% if alerta %}
-<p><strong>{{ alerta }}</strong></p>
-{% endif %}
+{% if notificacao %}<p><strong>{{ notificacao }}</strong></p>{% endif %}
+{% if alerta %}<p><strong>{{ alerta }}</strong></p>{% endif %}
+{% if not pode_submeter %}<p><strong>Modo leitura:</strong> apenas o CEO da rodada pode submeter decisoes.</p>{% endif %}
+{% if submissao_realizada %}<p><strong>Submissao oficial enviada para esta rodada. Edicao bloqueada.</strong></p>{% endif %}
 
-<h3>Enviar Decisão</h3>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" name="enviar_decisao" class="btn">Enviar</button>
+<form method="get" class="painel-card mb-3">
+    <label for="rodada">Filtro por rodada</label>
+    <input id="rodada" type="number" name="rodada" value="{{ rodada_filtro }}" min="1">
+    <button type="submit" class="btn">Aplicar filtro</button>
+    <a href="{% url 'painel_grupo' %}" class="btn">Limpar</a>
 </form>
 
-<h3>Distribuir Produtos</h3>
-<form method="post">
-    {% csrf_token %}
-    {{ envio_form.as_p }}
-    <button type="submit" name="enviar_envio" class="btn">Distribuir</button>
-</form>
+<div class="painel-grid">
+    <section class="painel-card">
+        <h3>1) Compra de Materia-Prima (D+1)</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ compra_mp_form.as_p }}
+            <button type="submit" name="enviar_compra_mp" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Compra de MP</button>
+        </form>
+        <h4>Saldo de Materias-Primas</h4>
+        <ul>
+            {% for s in saldos_mp %}
+            <li>{{ s.materia_prima.codigo }} - {{ s.quantidade_kg }} kg</li>
+            {% empty %}
+            <li>Nenhum saldo de materia-prima registrado.</li>
+            {% endfor %}
+        </ul>
+    </section>
 
-<h3>Histórico de Decisões</h3>
-<ul>
-    {% for d in decisoes %}
-    <li>Rodada {{ d.rodada }} - {{ d.descricao }} ({{ d.data_criacao|date:'d/m H:i' }})</li>
-    {% empty %}
-    <li>Nenhuma decisão registrada.</li>
-    {% endfor %}
-</ul>
+    <section class="painel-card">
+        <h3>2) Producao por Produto</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ producao_form.as_p }}
+            <button type="submit" name="enviar_producao" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Producao</button>
+        </form>
+        <h4>Capacidade por Linha</h4>
+        <ul>
+            {% for c in capacidades_produto %}
+            <li>{{ c.produto.codigo }}: {{ c.maquinas }} maq / {{ c.operadores }} op / {{ c.capacidade_unidades_rodada }} un</li>
+            {% empty %}
+            <li>Nenhuma capacidade configurada.</li>
+            {% endfor %}
+        </ul>
+        <h4>Saldo de Produtos</h4>
+        <ul>
+            {% for s in saldos_produto %}
+            <li>{{ s.produto.codigo }} - lote R{{ s.rodada_entrada }}: {{ s.quantidade }} un</li>
+            {% empty %}
+            <li>Nenhum saldo de produto registrado.</li>
+            {% endfor %}
+        </ul>
+    </section>
 
-<h3>Envios Realizados</h3>
-<ul>
-    {% for e in envios %}
-    <li>{{ e.cidade.nome }} - {{ e.quantidade }} un - custo {{ e.custo_transporte }} - preço {{ e.preco_unitario }}</li>
-    {% empty %}
-    <li>Nenhum envio registrado.</li>
-    {% endfor %}
-</ul>
+    <section class="painel-card">
+        <h3>3) Distribuir Produtos</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ envio_form.as_p }}
+            <button type="submit" name="enviar_envio" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Distribuicao</button>
+        </form>
+        <h4>Envios Realizados</h4>
+        <ul>
+            {% for e in envios %}
+            <li>R{{ e.rodada }} - {{ e.cidade.nome }} - enviado {{ e.quantidade }} / vendido {{ e.quantidade_vendida }} / sobra {{ e.quantidade_sobra }}</li>
+            {% empty %}
+            <li>Nenhum envio registrado.</li>
+            {% endfor %}
+        </ul>
+    </section>
 
-<h3>Resultados Financeiros</h3>
-<ul>
-    {% for r in resultados %}
-    <li>Rodada {{ r.rodada }} - Receita {{ r.receita }} - Custos {{ r.custos }} - Lucro {{ r.lucro }} - Caixa {{ r.saldo_caixa }}</li>
-    {% empty %}
-    <li>Nenhum resultado registrado.</li>
-    {% endfor %}
-</ul>
+    <section class="painel-card">
+        <h3>4) Investimentos</h3>
+        <p class="muted">Marketing por cidade, maquinas/RH por linha (D+1) e aplicacoes financeiras (1.5%/rodada).</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ investimento_form.as_p }}
+            <button type="submit" name="enviar_investimento" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Investimento</button>
+        </form>
+        <p><strong>Saldo aplicado:</strong> {% if aplicacao_financeira %}{{ aplicacao_financeira.saldo_aplicado }}{% else %}0{% endif %}</p>
+        <ul>
+            {% for i in investimentos %}
+            <li>R{{ i.rodada }} - {{ i.get_categoria_display }} - {{ i.valor }} - ativa em R{{ i.rodada_ativacao }} - {% if i.processado %}processado{% else %}pendente{% endif %}</li>
+            {% empty %}
+            <li>Nenhum investimento registrado.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="painel-card">
+        <h3>5) Submissao Oficial da Rodada</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" name="enviar_decisao" class="btn btn-primary" {% if not permite_edicao %}disabled{% endif %}>Enviar Submissao</button>
+        </form>
+        <h4>Historico de Submissoes</h4>
+        <ul>
+            {% for d in decisoes %}
+            <li>Rodada {{ d.rodada }} - {{ d.descricao }} ({{ d.data_criacao|date:'d/m H:i' }})</li>
+            {% empty %}
+            <li>Nenhuma submissao registrada.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="painel-card">
+        <h3>6) Financeiro</h3>
+        <ul>
+            {% for c in compras_mp %}
+            <li>Compra R{{ c.rodada_pedido }} - {{ c.materia_prima.codigo }} - total {{ c.valor_total }} (desc. log {{ c.desconto_logistico }})</li>
+            {% empty %}
+            <li>Nenhuma compra de materia-prima registrada.</li>
+            {% endfor %}
+        </ul>
+        <h4>Producoes</h4>
+        <ul>
+            {% for p in producoes %}
+            <li>R{{ p.rodada }} - {{ p.produto.nome }} - {{ p.quantidade_produzida }} un - custo {{ p.custo_total }}</li>
+            {% empty %}
+            <li>Nenhuma producao registrada.</li>
+            {% endfor %}
+        </ul>
+        <h4>Resultados Financeiros</h4>
+        <ul>
+            {% for r in resultados %}
+            <li>R{{ r.rodada }} - Receita {{ r.receita }} - Custos {{ r.custos }} - Lucro {{ r.lucro }} - Caixa {{ r.saldo_caixa }}</li>
+            {% empty %}
+            <li>Nenhum resultado registrado.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endif %}
 {% endblock %}

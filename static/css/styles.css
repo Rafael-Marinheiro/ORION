@@ -93,3 +93,60 @@ body[data-theme='dark'] .navbar {
 body[data-theme='light'] .navbar {
     background-color: #f8f9fa !important;
 }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 8px;
+    vertical-align: top;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.painel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.painel-card {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.painel-kpi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.painel-kpi div {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 8px;
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.muted {
+    color: var(--text-color);
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+    .painel-grid {
+        grid-template-columns: 1fr;
+    }
+}

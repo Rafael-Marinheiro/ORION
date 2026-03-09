@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Wizard de Configuracao do Jogo</h2>
+<p>Etapa {{ step }} de 3</p>
+
+{% if step == 1 %}
+<h3>Etapa 1 - Parametros Base</h3>
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="step" value="1">
+    {{ form.as_p }}
+    <button type="submit" class="btn">Avancar</button>
+</form>
+{% elif step == 2 %}
+<h3>Etapa 2 - Modulos e Regras</h3>
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="step" value="2">
+    {{ form.as_p }}
+    <button type="submit" name="voltar" class="btn">Voltar</button>
+    <button type="submit" class="btn">Avancar</button>
+</form>
+{% else %}
+<h3>Etapa 3 - Revisao Final</h3>
+<p><strong>Capital inicial:</strong> {{ dados_step1.capital_inicial }}</p>
+<p><strong>Estoque inicial:</strong> {{ dados_step1.estoque_inicial }}</p>
+<p><strong>Maquinas iniciais:</strong> {{ dados_step1.maquinas_iniciais }}</p>
+<p><strong>Capacidade por maquina:</strong> {{ dados_step1.capacidade_maquina }}</p>
+<p><strong>Produtos habilitados:</strong> {{ dados_step2.produtos_habilitados }}</p>
+<p><strong>Modulo Producao:</strong> {{ dados_step2.modulo_producao }}</p>
+<p><strong>Modulo Distribuicao:</strong> {{ dados_step2.modulo_distribuicao }}</p>
+<p><strong>Modulo Financeiro:</strong> {{ dados_step2.modulo_financeiro }}</p>
+<p><strong>Regras de eventos:</strong> {{ dados_step2.regra_eventos }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="step" value="3">
+    <button type="submit" name="voltar" class="btn">Voltar</button>
+    <button type="submit" name="confirmar" class="btn btn-primary">Confirmar e Salvar</button>
+</form>
+{% endif %}
+{% endblock %}

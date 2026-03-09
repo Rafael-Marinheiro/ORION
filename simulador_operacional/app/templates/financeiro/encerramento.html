@@ -2,14 +2,13 @@
 {% block content %}
 <h2>Resumo do Encerramento</h2>
 {% if rodada %}
-<p>Rodada encerrada: {{ rodada.numero }} - {{ rodada.data_fim }}</p>
+<p>Rodada encerrada: {{ rodada.numero }} - {{ rodada.fim|date:'d/m/Y H:i' }}</p>
 {% if resultado %}
 <ul>
   <li>Receita: {{ resultado.receita }}</li>
   <li>Custos: {{ resultado.custos }}</li>
-  <li>Despesas: {{ resultado.despesas }}</li>
-  <li>Lucro Líquido: {{ resultado.lucro_liquido }}</li>
-  <li>Fluxo de Caixa Líquido: {{ resultado.fluxo_caixa_liquido }}</li>
+  <li>Lucro: {{ resultado.lucro }}</li>
+  <li>Saldo em Caixa: {{ resultado.saldo_caixa }}</li>
 </ul>
 {% else %}
 <p>Sem resultado registrado para a rodada.</p>

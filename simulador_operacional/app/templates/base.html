@@ -18,14 +18,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Início</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Inicio</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'painel_grupo' %}">Painel</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'ranking' %}">Ranking</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'relatorios' %}">Relatórios</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'relatorios' %}">Relatorios</a></li>
                         {% if user.is_staff %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'game_config' %}">Configuração</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'game_config' %}">Configuracao</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'game_config_wizard' %}">Wizard Config</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'abrir_rodada' %}">Abrir Rodada</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'lista_grupos' %}">Grupos</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'jobs' %}">Jobs</a></li>
                         {% endif %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'ajuda' %}">Ajuda</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Sair</a></li>
@@ -63,4 +65,3 @@
     <script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>
-
