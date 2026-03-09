@@ -122,6 +122,15 @@ Sistema de simulação operacional para fins pedagógicos, permitindo que grupos
    Gere backups do banco periodicamente executando `python manage.py backupdb`.
   Utilize a API REST em `/api/` para integrar outras aplicações. O ranking financeiro pode ser obtido em `/api/ranking/`.
 
+## Documentacao
+
+- Documentacao centralizada em `docs/`.
+- Indice principal: `docs/README.md`.
+- Versao e release:
+  - `docs/VERSION`
+  - `docs/CHANGELOG.md`
+  - `docs/release/`
+
 ## Docker
 
 1. Copie o arquivo `.env.example` para `.env` e ajuste as variáveis.
