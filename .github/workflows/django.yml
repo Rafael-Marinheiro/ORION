@@ -13,13 +13,20 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Check for migration conflicts
+          pip install -r requirements-dev.txt
+      - name: Check for pending migrations
         run: |
           cd simulador_operacional
-          python manage.py makemigrations --check --dry-run --settings=simulador_operacional.settings_test
-      - name: Run tests
+          python manage.py makemigrations --check --dry-run
+      - name: Run tests with coverage
         run: |
           cd simulador_operacional
-          python manage.py test app --settings=simulador_operacional.settings_test
+          coverage run --rcfile=../.coveragerc manage.py test app --settings=simulador_operacional.settings_test
+          coverage report --rcfile=../.coveragerc --fail-under=85
+          coverage xml --rcfile=../.coveragerc -o ../coverage.xml
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
 
