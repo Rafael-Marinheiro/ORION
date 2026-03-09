@@ -1,38 +1,26 @@
-from collections import defaultdict
+﻿from collections import defaultdict
 from decimal import Decimal
 from django.db.models import Sum
 
-from app.models import Grupo, Distribuicao, ResultadoFinanceiro
+from app.models import Grupo, Distribuicao
 
 
 def calcular_ranking():
-    """Calcula o ranking dos grupos com base em múltiplos critérios.
-
-    Critérios considerados:
-        - Eficiência operacional (vendas realizadas / quantidade enviada)
-        - Desempenho financeiro (lucro total)
-        - Demanda atendida (market share médio)
-        - Sustentabilidade (inverso das penalidades)
-
-    Desempates:
-        - Maior saldo de caixa final
-        - Menor desperdício (quantidade não vendida)
-    """
+    """Calcula ranking por eficiencia, desempenho financeiro e desempates."""
     grupos = Grupo.objects.annotate(
         desempenho_financeiro=Sum("resultados__lucro"),
         total_penalidades=Sum("resultados__penalidades"),
     )
 
-    # Total de vendas por rodada para cálculo do market share
     totais_por_rodada = {
         d["rodada"]: d["total"]
         for d in Distribuicao.objects.values("rodada").annotate(
-            total=Sum("vendas_realizadas")
+            total=Sum("quantidade_vendida")
         )
     }
 
     vendas_por_grupo = Distribuicao.objects.values("grupo_id", "rodada").annotate(
-        total=Sum("vendas_realizadas"),
+        total=Sum("quantidade_vendida"),
         quantidade=Sum("quantidade"),
     )
 
@@ -59,9 +47,7 @@ def calcular_ranking():
             sum(shares[g.id]) / len(shares[g.id]) if shares[g.id] else 0
         )
         ultimo_rf = g.resultados.order_by("-rodada").first()
-        g.saldo_caixa_final = (
-            ultimo_rf.saldo_caixa if ultimo_rf else g.capital
-        )
+        g.saldo_caixa_final = ultimo_rf.saldo_caixa if ultimo_rf else g.capital
         g.desempenho_financeiro = g.desempenho_financeiro or Decimal("0")
         penalidades = g.total_penalidades or Decimal("0")
         g.sustentabilidade = 1 / (1 + float(penalidades))

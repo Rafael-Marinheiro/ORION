@@ -1,0 +1,25 @@
+[run]
+branch = True
+source = app
+omit =
+    */migrations/*
+    */migrations_ci/*
+    */tests/*
+    */settings.py
+    */settings_test.py
+    */settings_ci.py
+    */wsgi.py
+    */asgi.py
+    */management/commands/*
+    */views.py
+    */urls.py
+    */admin.py
+
+[report]
+show_missing = True
+skip_covered = True
+fail_under = 85
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError

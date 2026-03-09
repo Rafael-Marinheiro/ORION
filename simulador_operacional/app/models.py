@@ -590,7 +590,6 @@ class Investimento(models.Model):
     ]
 
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name="investimentos")
-    cidade = models.ForeignKey(Cidade, on_delete=models.CASCADE, null=True, blank=True, related_name="investimentos")
     rodada = models.PositiveIntegerField(default=1)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
     cidade = models.ForeignKey(
@@ -609,6 +608,9 @@ class Investimento(models.Model):
     )
     quantidade = models.PositiveIntegerField(default=1)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
+    roi = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    tempo_maturacao = models.PositiveIntegerField(default=1)
+    retorno_aplicado = models.BooleanField(default=False)
     operacao_financeira = models.CharField(
         max_length=20,
         choices=OPERACAO_FINANCEIRA_CHOICES,

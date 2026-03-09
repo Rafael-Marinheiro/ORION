@@ -1,8 +1,8 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 
 from django.test import TestCase, override_settings
 
-from ..models import Cidade, Distribuicao, Grupo, VendaCidade
+from ..models import Cidade, Distribuicao, Grupo
 from ..services.distribuicao_service import distribuir_demanda
 
 
@@ -21,7 +21,6 @@ class DistribuicaoServiceTest(TestCase):
             quantidade=80,
             preco_unitario=Decimal("10"),
             custo_transporte=0,
-            fator_marketing=Decimal("1"),
         )
         Distribuicao.objects.create(
             grupo=self.g2,
@@ -30,44 +29,41 @@ class DistribuicaoServiceTest(TestCase):
             quantidade=50,
             preco_unitario=Decimal("8"),
             custo_transporte=0,
-            fator_marketing=Decimal("1"),
         )
 
         distribuir_demanda(1)
 
         envio1 = Distribuicao.objects.get(grupo=self.g1)
         envio2 = Distribuicao.objects.get(grupo=self.g2)
-        self.assertEqual(envio2.vendas_realizadas, 50)
-        self.assertEqual(envio1.vendas_realizadas, 50)
+        self.assertEqual(envio2.quantidade_vendida, 50)
+        self.assertEqual(envio1.quantidade_vendida, 50)
+        self.assertEqual(envio1.quantidade_sobra, 30)
 
-        venda1 = VendaCidade.objects.get(grupo=self.g1, cidade=self.cidade, rodada=1)
-        venda2 = VendaCidade.objects.get(grupo=self.g2, cidade=self.cidade, rodada=1)
-        self.assertEqual(venda2.quantidade_vendida, 50)
-        self.assertEqual(venda1.quantidade_vendida, 50)
+    def test_limite_demanda_prioriza_menor_preco(self):
+        self.cidade.limite_demanda = 60
+        self.cidade.save(update_fields=["limite_demanda"])
 
-    def test_marketing_supera_preco(self):
         Distribuicao.objects.create(
             grupo=self.g1,
             cidade=self.cidade,
             rodada=1,
-            quantidade=70,
-            preco_unitario=Decimal("10"),
+            quantidade=40,
+            preco_unitario=Decimal("9"),
             custo_transporte=0,
-            fator_marketing=Decimal("1.50"),
         )
         Distribuicao.objects.create(
             grupo=self.g2,
             cidade=self.cidade,
             rodada=1,
-            quantidade=70,
-            preco_unitario=Decimal("8"),
+            quantidade=40,
+            preco_unitario=Decimal("10"),
             custo_transporte=0,
-            fator_marketing=Decimal("1"),
         )
 
         distribuir_demanda(1)
 
         envio1 = Distribuicao.objects.get(grupo=self.g1)
         envio2 = Distribuicao.objects.get(grupo=self.g2)
-        self.assertEqual(envio1.vendas_realizadas, 70)
-        self.assertEqual(envio2.vendas_realizadas, 30)
+        self.assertEqual(envio1.quantidade_vendida, 40)
+        self.assertEqual(envio2.quantidade_vendida, 20)
+        self.assertEqual(envio2.quantidade_sobra, 20)

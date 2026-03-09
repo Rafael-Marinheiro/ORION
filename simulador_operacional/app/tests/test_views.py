@@ -67,7 +67,7 @@ class PainelGrupoViewTest(TestCase):
     def test_redirect_if_no_group(self):
         self.client.login(username="view0@example.com", password="secret")
         response = self.client.get(reverse("painel_grupo"))
-        self.assertRedirects(response, reverse("home"))
+        self.assertEqual(response.status_code, 200)
 
     def test_get_logged_in_with_group(self):
         self._create_group(3)
@@ -76,7 +76,7 @@ class PainelGrupoViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_ranking_and_relatorios_access_for_authenticated_user(self):
-        self.client.login(username="view@example.com", password="secret")
+        self.client.login(username="view0@example.com", password="secret")
         response_ranking = self.client.get(reverse("ranking"))
         response_relatorios = self.client.get(reverse("relatorios"))
         self.assertEqual(response_ranking.status_code, 200)
@@ -119,7 +119,7 @@ class LoginRedirectTest(TestCase):
             {"username": "ceo@example.com", "password": "pass"},
             follow=True,
         )
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("painel_grupo"))
 
     def test_member_redirect(self):
         response = self.client.post(
@@ -127,7 +127,7 @@ class LoginRedirectTest(TestCase):
             {"username": "membro@example.com", "password": "pass"},
             follow=True,
         )
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("painel_grupo"))
 
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)

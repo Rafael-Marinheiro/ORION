@@ -1,5 +1,6 @@
 import random
 import os
+import csv
 from decimal import Decimal
 
 from django.conf import settings
@@ -468,10 +469,11 @@ def home(request):
     return render(request, "home.html")
 
 
-class RegisterView(CreateView):
+class RegisterView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     template_name = "registration/register.html"
     form_class = CustomUserCreationForm
     success_url = reverse_lazy("login")
+    raise_exception = True
 
     def test_func(self):
         return getattr(self.request.user, 'tipo_usuario', '') == 'gamemaster'
