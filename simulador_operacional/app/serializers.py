@@ -22,6 +22,7 @@ from .models import (
     IndicadorRodadaGrupo,
     Investimento,
     Jogo,
+    Mercado,
     MarketShareCidadeProduto,
     MateriaPrima,
     Producao,

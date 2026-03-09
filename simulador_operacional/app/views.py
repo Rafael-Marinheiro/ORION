@@ -1,9 +1,11 @@
 import random
+import os
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
@@ -13,14 +15,18 @@ from django.contrib.auth.views import (
     PasswordResetView,
 )
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
 from rest_framework import generics, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
 from .forms import (
     ConfigWizardStep1Form,
@@ -31,6 +37,7 @@ from .forms import (
     DistribuicaoForm,
     GameConfigForm,
     GrupoForm,
+    FeedbackForm,
     InvestimentoForm,
     ProducaoForm,
     ResultadoFilterForm,
@@ -443,7 +450,8 @@ class FeedbackView(FormView):
         if email:
             line += f" (contato: {email})"
         line += f" - {timezone.now().date()}\n"
-        roadmap_path = settings.ROADMAP_FILE
+        default_path = settings.BASE_DIR / "docs" / "roadmap.md"
+        roadmap_path = getattr(settings, "ROADMAP_FILE", default_path)
         roadmap_path.parent.mkdir(parents=True, exist_ok=True)
         with open(roadmap_path, 'a+', encoding='utf-8') as f:
             f.seek(0, os.SEEK_END)

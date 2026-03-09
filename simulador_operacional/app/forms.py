@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.forms import formset_factory
 from decimal import Decimal
 
 from .models import (
@@ -262,3 +263,12 @@ class ConfigWizardStep2Form(forms.Form):
     modulo_distribuicao = forms.BooleanField(required=False, initial=True)
     modulo_financeiro = forms.BooleanField(required=False, initial=True)
     regra_eventos = forms.JSONField(required=False)
+
+
+class FeedbackForm(forms.Form):
+    suggestion = forms.CharField(
+        label="Sugestao",
+        widget=forms.Textarea(attrs={"rows": 4}),
+        max_length=1000,
+    )
+    email = forms.EmailField(required=False, label="Email (opcional)")
