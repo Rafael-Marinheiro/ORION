@@ -1,3 +1,38 @@
+# ORION — Simulador de Gestão Empresarial
+
+[![Quality Pipeline](https://github.com/Rafael-Marinheiro/ORION/actions/workflows/django.yml/badge.svg)](https://github.com/Rafael-Marinheiro/ORION/actions/workflows/django.yml)
+
+Plataforma pedagógica em que grupos de alunos administram uma empresa simulada. A cada rodada eles decidem produção, estoque, distribuição, preço e investimentos, enfrentam eventos aleatórios e acompanham o resultado num ranking dinâmico. O objetivo é apoiar metodologias ativas de ensino em cursos de gestão e engenharia.
+
+O levantamento de requisitos e a modelagem do sistema foram publicados no **XIV Simpósio de Engenharia de Produção (SIMEP, 2026)**.
+
+## Status
+
+🚧 **Backend concluído, interface e testes em andamento.**
+
+## Stack
+
+- **API:** Python 3.11, Django 4.2, Django REST Framework, autenticação JWT e documentação com Swagger (drf-yasg)
+- **Qualidade:** testes com pytest e cobertura mínima de 85% nos módulos críticos, verificada no CI
+- **Entrega:** Docker, Gunicorn e GitHub Actions
+
+## Como rodar
+
+```bash
+git clone https://github.com/Rafael-Marinheiro/ORION.git
+cd ORION
+cp .env.example .env   # ajuste DJANGO_SECRET_KEY
+docker compose up --build
+```
+
+A API sobe em `http://localhost:8000`.
+
+## Autoria
+
+Implementação e desenvolvimento: **Rafael Marinheiro**.
+Concepção didática: **Pio Marinheiro de Souza Neto**.
+
+---
 # Simulador Operacional
 
 ## Descrição
