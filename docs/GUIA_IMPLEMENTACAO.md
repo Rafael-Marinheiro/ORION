@@ -82,6 +82,87 @@ própria documentação. As evidências:
   únicos marcados "Pronto" no nome do arquivo; não há verificação aritmética.
   Reverter é barato se o autor da especificação decidir diferente.
 
+### Fórmulas do §12, recuperadas das imagens do .docx
+
+As fórmulas de classificação **não existem como texto em lugar nenhum**: no
+`.docx` elas são 11 imagens PNG coladas, e por isso sumiram na conversão
+para `.txt`, deixando linhas em branco onde deveriam estar. Foram lidas das
+imagens e transcritas aqui, para não dependerem mais de abrir o Word.
+
+```
+Pontuação Total (%) = (EO × P₁) + (DF × P₂) + (EE × P₃) + (SD × P₄) + (DS × P₅)
+
+EO = (Produção Líquida / Capacidade Utilizada) × F₁
+   + (Produtos Vendidos / Produtos Disponíveis) × F₂
+   + (1 − Perdas Totais / (MP + Produtos)) × F₃          F₁=0,4 F₂=0,4 F₃=0,2
+
+DF = (IL × W₁) + (IR × W₂) + (IE × W₃)                    W₁=0,4 W₂=0,3 W₃=0,3
+  IL = (Lucro Líquido / Receita Bruta) × 100
+  IR = (Lucro Líquido / Ativos Totais Médios) × 100
+  IE = (Custo das Vendas / Estoque Médio) × 100
+
+EE = (Custo das Vendas / Estoque Médio Operacional) × 100
+     Estoque Médio = (Estoque Inicial + Estoque Final) / 2
+
+SD = SEM FÓRMULA NO DOCUMENTO  (ver B8)
+
+DS = (DS₁ × S₁) + (DS₂ × S₂) + (DS₃ × S₃)                 S₁=0,5 S₂=0,3 S₃=0,2
+  DS₁ = 1 − (Perdas Totais / (MP + Produtos))
+  DS₂ = 1 − (Distância Média das Compras / Distância Máxima Teórica)
+  DS₃ = (Produtos Enviados para praças ≤ 1.000 km) / Total Enviado
+```
+
+Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
+
+#### Problemas que a leitura das fórmulas revelou
+
+- **B8 · SD não tem fórmula.** A seção §12.3.4 se chama "Satisfação da
+  Demanda (SD)", mas o corpo dela define **DS** (Sustentabilidade): a fórmula
+  é `DS = (DS₁×S₁)+(DS₂×S₂)+(DS₃×S₃)` e os subcomponentes são redução de
+  perdas, proximidade logística das compras e foco regional das entregas —
+  todos indicadores ambientais, nenhum de atendimento de demanda. Parece erro
+  de edição: o conteúdo de um §12.3.5 (Sustentabilidade) que nunca existiu
+  foi colado dentro do §12.3.4. **Resultado: o eixo SD, que vale 0,20 — o
+  segundo maior peso —, não tem definição.** Precisa ser criado.
+- **B9 · EE é contado duas vezes.** `IE = Custo das Vendas / Estoque Médio`
+  (dentro de DF, peso 0,3 × 0,25 = 7,5%) e `EE = Custo das Vendas / Estoque
+  Médio Operacional` (eixo próprio, 15%) são praticamente a mesma razão. Cerca
+  de 22,5% da nota final mede giro de estoque. Pode ser intencional, mas vale
+  ratificar.
+- **B10 · O limiar de 1.000 km em DS₃ perdeu sentido na base regional.** Com a
+  sede em Currais Novos, a praça mais distante é Fortaleza, a 470 km. Todas as
+  cidades cumprem o critério, então DS₃ = 1 sempre e o subindicador vira
+  constante. O limiar precisa ser recalibrado para a nova geografia — algo
+  como 200 km separaria o Seridó das capitais.
+- **EE não é limitado a 100.** Sendo uma razão de giro, passa de 100 com
+  facilidade — a própria tabela de exemplo do §12.6 traz EE de 110 e 105. A
+  soma ponderada precisa saber lidar com isso.
+
+### Critérios de desempate: existem, e são dois
+
+A documentação **já traz** critérios, em dois lugares, ambos dizendo valer
+para "empate na pontuação final":
+
+| §12.5 (doc "Pronto") | RN-12 (doc "Semi-Pronto") |
+|---|---|
+| 1. Maior Eficiência Operacional | 1. Maior lucro acumulado |
+| 2. Maior Satisfação da Demanda | 2. Maior market share médio |
+| 3. Maior Desempenho em Sustentabilidade | 3. Maior saldo de caixa no fim |
+| 4. Maior Receita Bruta | 4. Menor número de penalidades |
+| 5. Ordem alfabética | 5. Ordem alfabética |
+
+Decisão B5 mantida no **§12.5**, agora com três apoios em vez de um:
+
+1. o documento 12 é um dos dois únicos marcados "Pronto" no nome do arquivo;
+2. o §12.5 desempata pelos mesmos eixos que compõem a nota — quando a soma
+   ponderada empata, vence quem foi melhor no eixo de maior prioridade. O
+   RN-12 desempata por métricas que não entram na nota;
+3. com a fórmula de DS recuperada, o critério 3 do §12.5 deixou de ser
+   inimplementável.
+
+**Mas o critério 2 do §12.5 depende de SD, que não tem fórmula (B8).** Até
+isso ser resolvido, o desempate só roda do critério 1 ao 5 pulando o 2.
+
 ### D9 · Desvios deliberados da especificação
 
 Decisões do dono do projeto que **contrariam a documentação de propósito**.
