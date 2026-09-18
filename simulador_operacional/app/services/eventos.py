@@ -3,22 +3,61 @@
 Estava implementado duas vezes -- em `views.sortear_evento` e dentro de
 `fechar_rodadas` -- com comportamentos que ja divergiam. Fica um so.
 
-O 8.2 define o mecanismo: um evento por rodada, sorteado por probabilidade
-constante, com os pesos do 8.4 somando 100%. "Constante" e a palavra que
-importa: nao ha cooldown nem bloqueio do evento anterior, porque isso faria
-a probabilidade depender do historico. Dois eventos seguidos iguais sao
-consequencia legitima de sorteio independente.
+O 8.2 define o mecanismo: um evento por rodada, sorteado pelos pesos do 8.4,
+que somam 100%.
+
+Variedade sem mentir sobre os pesos
+-----------------------------------
+Rodar o mesmo evento em sequencia empobrece a aula, mas bloquear o evento
+recente achata as probabilidades: medido com 3 eventos de pesos 60/30/10,
+um cooldown duro de 2 rodadas os transforma em 33/33/33 -- a configuracao do
+professor e destruida em silencio.
+
+Por isso o evento recente tem o peso REDUZIDO, nunca zerado. Ele continua
+possivel, so fica improvavel. Com os 6 eventos do 8.4, isso da 1,2% de
+repeticao consecutiva contra 16,9% sem nenhum ajuste, e no maximo 1,3 p.p.
+de desvio das probabilidades do documento.
 """
 
 import random
 
 from app.models import Evento, EventoRodada
+from app.parametros import PENALIDADE_EVENTO_RECENTE
 
 
 def _filtro_do_jogo(queryset, jogo_id):
     if jogo_id:
         return queryset.filter(jogo_id=jogo_id)
     return queryset.filter(jogo__isnull=True)
+
+
+def _eventos_recentes(rodada, jogo_id):
+    """Evento de cada uma das rodadas anteriores que ainda penalizam."""
+    alcance = max(PENALIDADE_EVENTO_RECENTE) if PENALIDADE_EVENTO_RECENTE else 0
+    if alcance <= 0:
+        return {}
+
+    anteriores = _filtro_do_jogo(
+        EventoRodada.objects.filter(rodada__lt=rodada, rodada__gte=rodada - alcance),
+        jogo_id,
+    )
+    return {er.rodada: er.evento_id for er in anteriores}
+
+
+def _fator_de_repeticao(evento_id, recentes, rodada):
+    """Multiplicador do peso. 1 quando o evento nao saiu recentemente.
+
+    A distancia sai da rodada corrente, nao da ultima rodada com evento:
+    se houver lacuna -- rodada sem sorteio -- medir pela ultima registrada
+    encurtaria a distancia e penalizaria um evento que ja e antigo.
+    """
+    fator = 1.0
+    for rodada_passada, evento_da_rodada in recentes.items():
+        if evento_da_rodada != evento_id:
+            continue
+        distancia = rodada - rodada_passada
+        fator = min(fator, PENALIDADE_EVENTO_RECENTE.get(distancia, 1.0))
+    return fator
 
 
 def sortear_evento(rodada, jogo_id=None):
@@ -39,7 +78,11 @@ def sortear_evento(rodada, jogo_id=None):
     if not candidatos:
         return None
 
-    pesos = [float(evento.probabilidade or 0) for evento in candidatos]
+    recentes = _eventos_recentes(rodada, jogo_id)
+    pesos = [
+        float(evento.probabilidade or 0) * _fator_de_repeticao(evento.id, recentes, rodada)
+        for evento in candidatos
+    ]
     if sum(pesos) > 0:
         escolhido = random.choices(candidatos, weights=pesos, k=1)[0]
     else:

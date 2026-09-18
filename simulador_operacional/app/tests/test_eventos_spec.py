@@ -115,3 +115,62 @@ class BoletimNaTelaTest(TestCase):
 
         self.assertIn("O país enfrenta uma greve geral", html)
         self.assertIn("o-boletim", html)
+
+
+class VariedadeDeEventosTest(TestCase):
+    """O evento recente fica improvavel, nunca impossivel.
+
+    Bloquear o evento recente achataria os pesos: medido com 3 eventos de
+    pesos 60/30/10, um cooldown duro de 2 rodadas os transforma em 33/33/33.
+    Reduzir o peso preserva a configuracao do professor.
+    """
+
+    def setUp(self):
+        self.provavel = Evento.objects.create(
+            nome="Provável", tipo="demanda", impacto_percentual=5, probabilidade=80
+        )
+        self.raro = Evento.objects.create(
+            nome="Raro", tipo="demanda", impacto_percentual=5, probabilidade=20
+        )
+
+    def test_evento_da_rodada_anterior_perde_peso_mas_continua_possivel(self):
+        EventoRodada.objects.create(rodada=1, evento=self.provavel)
+
+        saiu_o_provavel = 0
+        for rodada in range(2, 202):
+            EventoRodada.objects.filter(rodada=rodada).delete()
+            # cada sorteio enxerga a rodada 1 como anterior imediata
+            EventoRodada.objects.filter(rodada__gt=1).delete()
+            if sortear_evento(2).id == self.provavel.id:
+                saiu_o_provavel += 1
+
+        # sem penalidade sairia ~80%; com peso x0,05 cai para perto de 17%
+        self.assertLess(saiu_o_provavel, 80)
+        # mas nao e proibido: continua acontecendo
+        self.assertGreater(saiu_o_provavel, 0)
+
+    def test_evento_antigo_nao_sofre_penalidade(self):
+        from app.services.eventos import _fator_de_repeticao
+
+        recentes = {1: self.provavel.id}
+
+        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 2), 0.05)
+        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 3), 0.30)
+        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 4), 0.65)
+        # fora do alcance, peso cheio
+        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 9), 1.0)
+
+    def test_lacuna_de_rodada_nao_encurta_a_distancia(self):
+        """Rodada sem evento nao pode fazer um evento antigo parecer recente."""
+        from app.services.eventos import _fator_de_repeticao
+
+        recentes = {2: self.provavel.id}
+
+        # a rodada 5 esta a 3 de distancia da 2, mesmo sem evento em 3 e 4
+        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 5), 0.65)
+
+    def test_com_um_unico_evento_ele_sai_mesmo_penalizado(self):
+        self.raro.delete()
+        EventoRodada.objects.create(rodada=1, evento=self.provavel)
+
+        self.assertEqual(sortear_evento(2).id, self.provavel.id)

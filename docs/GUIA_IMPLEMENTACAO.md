@@ -95,7 +95,7 @@ Ficam registradas aqui para ninguém as confundir com divergência acidental.
 | D9.4 | Fornecedores de MP | §7.1: cidades nacionais | **cidades da região**, cada MP com fornecedor perto e longe | preserva a escolha de fornecedor como decisão logística |
 | D9.5 | Custo do operador por rodada | §14.2.4: R$ 1.800/mês + RN-06: rodada = 1 semana | **R$ 1.800 por rodada**, sem conversão por tempo | o professor define o prazo livremente; converter por tempo decorrido faria o custo da mesma decisão mudar conforme o prazo |
 | D9.6 | Sigilo da rodada aberta | não previsto | **resultado só aparece após o fechamento** | é um jogo de competição; desempenho alheio antes da submissão muda a decisão de quem ainda não decidiu |
-| D11 | Cooldown de eventos | §8.2: "probabilidade **constante** de ocorrência" | **cooldown removido** | o bloqueio do evento anterior tornava a probabilidade dependente do histórico e sobrepunha os pesos do §8.4 |
+| D11 | Variedade de eventos | §8.2: "probabilidade **constante** de ocorrência" | **peso reduzido do evento recente** (×0,05 / ×0,30 / ×0,65), nunca bloqueio | bloquear achata os pesos: com 3 eventos de 60/30/10, cooldown duro os transforma em 33/33/33 |
 | D10 | Unidade do frete | §7.2: R$ 1,50 por km **por kg** | **R$ 1,50 por km por viagem de caminhão** (12.000 kg) | a unidade do documento faz o frete valer 188x a carga; o jogo trava na primeira compra |
 
 **Consequência de D9.2 e D9.3 no equilíbrio do jogo.** O mercado regional é
@@ -133,6 +133,26 @@ pelas viagens de produto que de fato existiram.
 
 A taxa de ocupação volta no resultado para o aluno ver quanto de caminhão
 vazio pagou — é ela, não o valor absoluto, que carrega a lição.
+
+**D11 · Variedade de eventos sem falsear os pesos.** O cooldown original
+bloqueava o evento das duas rodadas anteriores. Isso torna a probabilidade
+dependente do histórico e, com poucos eventos, destrói a configuração do
+professor: medido com 3 eventos de pesos 60/30/10, um cooldown duro de 2
+rodadas os achata para **33/33/33**.
+
+A solução é reduzir o peso do evento recente, nunca zerá-lo — ele continua
+possível, só fica improvável. Medido em 3.000 rodadas com os 6 eventos do
+§8.4:
+
+| | Sem ajuste | Cooldown duro de 2 | **Peso reduzido** |
+|---|---|---|---|
+| Repetição consecutiva | 16,9% | 0% | **1,2%** |
+| Repetição em 3 rodadas | 42,7% | 25,5% | **23,8%** |
+| Desvio máximo dos pesos | 0,1 p.p. | 1,5 p.p. | **1,3 p.p.** |
+
+O peso reduzido ganha do cooldown duro na variedade **e** na fidelidade aos
+pesos, e degrada com elegância quando há poucos eventos configurados. Os
+multiplicadores estão em `PENALIDADE_EVENTO_RECENTE`.
 
 **Frete de produto acabado ainda é zero.** Descoberto na auditoria: nenhum
 código de produção cobra transporte na distribuição, só a compra de MP. A

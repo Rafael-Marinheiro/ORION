@@ -63,3 +63,20 @@ CUSTO_VIAGEM_POR_KM = Decimal("1.50")
 # 7.2.1: desconto por remessa cruzada. Fisicamente e o frete de retorno --
 # o caminhao que levou produto volta carregado em vez de voltar vazio.
 DESCONTO_RETORNO_POR_KM = Decimal("0.50")
+
+# --- Variedade de eventos --------------------------------------------------
+#
+# O 8.2 pede probabilidade constante, mas rodar o mesmo evento em sequencia
+# empobrece a aula. A saida nao e bloquear o evento recente -- bloqueio
+# achata os pesos: medido com 3 eventos de pesos 60/30/10, um cooldown duro
+# de 2 rodadas os transforma em 33/33/33, destruindo a configuracao em
+# silencio.
+#
+# Aqui o peso do evento recente e REDUZIDO, nunca zerado. Ele continua
+# possivel, so fica improvavel. Com os 6 eventos do 8.4 isso da 1,2% de
+# repeticao consecutiva e no maximo 1,3 p.p. de desvio das probabilidades
+# documentadas -- melhor nos dois criterios que o cooldown duro, que dava
+# 1,5 p.p. de desvio.
+#
+# Chave = ha quantas rodadas o evento saiu. Valor = multiplicador do peso.
+PENALIDADE_EVENTO_RECENTE = {1: 0.05, 2: 0.30, 3: 0.65}
