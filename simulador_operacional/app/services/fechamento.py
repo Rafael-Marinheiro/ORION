@@ -10,7 +10,23 @@ from reportlab.pdfgen import canvas
 from django.db.models import Sum
 
 from ..models import Grupo, Decisao, Distribuicao, EventoRodada, ResultadoFinanceiro, Rodada
+from ..parametros import PERCENTUAL_PENALIDADE_SEM_SUBMISSAO
 from .penalidade_service import aplicar_penalidade
+
+
+def _base_da_penalidade(grupo: Grupo, rodada: int) -> Decimal:
+    """Caixa do grupo ao final da rodada anterior.
+
+    O 11.2 manda multar "10% sobre o valor disponivel em caixa ao final da
+    rodada anterior". Na primeira rodada nao ha anterior, entao a base e o
+    capital corrente.
+    """
+    anterior = (
+        ResultadoFinanceiro.objects.filter(grupo=grupo, rodada__lt=rodada)
+        .order_by("-rodada")
+        .first()
+    )
+    return anterior.saldo_caixa if anterior else grupo.capital
 
 
 def _consolidar_decisoes(grupo: Grupo, rodada: int, greve: bool) -> None:
@@ -27,8 +43,7 @@ def _consolidar_decisoes(grupo: Grupo, rodada: int, greve: bool) -> None:
             ultima.save()
         return
 
-    penalidade = grupo.capital * Decimal("0.10")
-    aplicar_penalidade(grupo, rodada, penalidade)
+    aplicar_penalidade(grupo, rodada, _base_da_penalidade(grupo, rodada) * PERCENTUAL_PENALIDADE_SEM_SUBMISSAO)
     ultima = grupo.decisoes.order_by("-rodada").first()
     if ultima:
         ultima.pk = None

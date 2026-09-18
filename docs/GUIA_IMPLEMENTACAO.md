@@ -56,23 +56,54 @@ código.
 
 | # | Tema | Versão A | Versão B | O código faz hoje | Decisão |
 |---|---|---|---|---|---|
-| B1 | Composição dos produtos | §6.1: A = 120 kg MP1 + 40 MP2 + 60 MP3 + 80 MP4 | §13.2: A = 2 un MP1 + 1 un MP2 | Versão A | pendente |
-| B2 | Perecibilidade | §6.2: A não perece, B perece em 1 rodada, C não perece | §13.8: todos os produtos valem 2 rodadas | Versão A | pendente |
-| B3 | Capacidade de máquina | §13.4: 400 min por máquina por rodada | RN-06: turno único de 87 h = 5.220 min | Versão A (400) | pendente |
-| B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | Versão A (1) | pendente |
-| B5 | Critério de desempate | §12.5: EO → SD → DS → Receita bruta → alfabética | RN-12: lucro acumulado → market share → caixa → penalidades → alfabética | — | pendente |
+| B1 | Composição dos produtos | §6.1: A = 120 kg MP1 + 40 MP2 + 60 MP3 + 80 MP4 | §13.2: A = 2 un MP1 + 1 un MP2 | Versão A | **§6.1** (2026-09-18) |
+| B2 | Perecibilidade | §6.2: A não perece, B perece em 1 rodada, C não perece | §13.8: todos os produtos valem 2 rodadas | Versão A | **§6.2** (2026-09-18) |
+| B3 | Capacidade de máquina | §13.4: 400 min por máquina por rodada | RN-06: turno único de 87 h = 5.220 min | Versão A (400) | **§13.4** (2026-09-18) |
+| B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | Versão A (1) | **§8.2** (2026-09-18) |
+| B5 | Critério de desempate | §12.5: EO → SD → DS → Receita bruta → alfabética | RN-12: lucro acumulado → market share → caixa → penalidades → alfabética | — | **§12.5** (2026-09-18, confiança baixa) |
 
-Observações que ajudam a decidir:
+### Critério usado nas decisões acima
 
-- **B1 e B2**: adotar a Versão B exigiria refazer o seed, as composições e o
-  cálculo de custo de produção. A Versão A já está implementada e é a que os
-  números de custo estimado do §6.1 sustentam.
-- **B3**: existe ainda um terceiro valor solto no código — `GameConfig.capacidade_maquina`
-  tem default `100`, que não corresponde a nenhuma das duas versões e parece
-  não ser usado no cálculo real. Seja qual for a decisão, esse campo precisa
-  ser removido ou alinhado.
-- **B4**: é o Sprint 29 já conhecido. A Versão A está implementada.
-- **B5**: nenhum dos dois conjuntos está implementado como descrito; ver `ORION-C-07`.
+Política do dono do projeto, 2026-09-18: **a documentação decide**. Onde há
+duas versões escritas, vale a que é internamente consistente com o resto da
+própria documentação. As evidências:
+
+- **B1** — a composição em kg do §6.1 reproduz na vírgula os custos que o
+  próprio §6.1 declara (A R$ 2.260,00 · B R$ 2.840,00 · C R$ 3.730,00). O
+  §13.2 não tem tabela de custo que o sustente.
+- **B2** — mesmo documento verificado em B1, e dá papéis distintos aos
+  produtos: B exige produção sob demanda, A e C permitem estoque.
+- **B3** — 400 min reproduzem exatamente as capacidades declaradas no §13.5
+  (3.000 / 1.500 / 800 unidades). O RN-06 daria 13x mais e contradiria a
+  tabela do próprio documento 13.
+- **B4** — as probabilidades do §8.4 somam 100%, o que só fecha com sorteio
+  único. "Até 2" exige outro modelo probabilístico.
+- **B5** — **confiança baixa.** O único apoio é o documento 12 ser um dos dois
+  únicos marcados "Pronto" no nome do arquivo; não há verificação aritmética.
+  Reverter é barato se o autor da especificação decidir diferente.
+
+### Ainda bloqueado
+
+- **B6 · Frete de produtos acabados.** A documentação é **silenciosa** sobre a
+  taxa. A política "a documentação decide" não produz um número onde não há
+  número. O código usa R$ 0,10/km/unidade, sem origem documental.
+- **B7 · Unidade do frete de matéria-prima.** O §7.2.1 está aritmeticamente
+  correto, mas economicamente impraticável: no exemplo do próprio documento,
+  500 kg de MP3 valendo R$ 4.000 geram frete de R$ 750.000 — 188x o valor da
+  carga e 75% do capital inicial numa única compra. Implementar como está
+  escrito trava o jogo na primeira rodada. A fórmula R$ 1,50/km × kg parece ter
+  sido pensada por lote, não por quilo-quilômetro. Precisa de decisão do autor
+  da especificação.
+
+Consequências já mapeadas das decisões:
+
+- **B3** deixa solto `GameConfig.capacidade_maquina = 100`, um terceiro valor
+  que não corresponde a nenhuma versão e não entra no cálculo real. Remover
+  (`ORION-C-20`).
+- **B4** mantém o "até 2 eventos" como evolução futura (Sprint 29), com modelo
+  probabilístico próprio.
+- **B5** não está implementado como descrito em nenhuma das versões; exige os
+  5 eixos do §12.2 (`ORION-C-07`).
 
 ---
 
@@ -102,7 +133,7 @@ Observações que ajudam a decidir:
 | Produção parcial quando falta MP ou tempo | §13.7 | `CONFORME` | `fechar_rodadas` |
 | Só unidades inteiras | §6.3 | `CONFORME` | `int(minutos_total // tempo)` |
 | Custo de produção = MP consumida | §13.9 | `CONFORME` | `services/producao.py` |
-| Capacidade por máquina | §13.4 vs RN-06 | `BLOQUEADO` | ver B3 |
+| Capacidade por máquina: 400 min | §13.4 (decidido B3) | `CONFORME` | `CapacidadeProdutoGrupo.minutos_por_maquina = 400` |
 
 ### 4.3 Matéria-prima e logística
 
@@ -134,7 +165,7 @@ Observações que ajudam a decidir:
 | Máquinas ativam na rodada seguinte | §14.2.2 | `CONFORME` | `Investimento.rodada_ativacao` |
 | Aplicação financeira a 1,5% por rodada, juros compostos | §14.4 | `CONFORME` | `TAXA_APLICACAO_FINANCEIRA_RODADA` |
 | Fator de marketing logarítmico, teto +20%, satura em R$ 10.000 | §14.1.1 | `DIVERGENTE` | `views.calcular_fator_marketing` usa modelo linear por `ganho_por_base` |
-| Salário do operador R$ 1.800/mês | §14.2.4, §14.3 | `DIVERGENTE` | `CUSTO_OPERADOR_POR_RODADA = 2000` |
+| Salário do operador R$ 1.800/mês | §14.2.4, §14.3 | `CONFORME` | convertido pró-rata semanal (rodada = 1 semana, RN-06) |
 | Custo da máquina R$ 8.000 | §14.2.4 | `NAO_VERIFICADO` | — |
 | Limite de expansão de +50% sobre as máquinas iniciais | §14.2.1 | `AUSENTE` | sem validação |
 
@@ -148,7 +179,7 @@ Observações que ajudam a decidir:
 | Probabilidades 15 / 20 / 20 / 15 / 15 / 15 | §8.4 | `DIVERGENTE` | seed aplica **probabilidade igual** a todos |
 | Impactos específicos por evento (ex.: greve retém 30% das entregas) | §8.4 | `DIVERGENTE` | impactos genéricos |
 | Frase indicativa por evento | §8.5 | `AUSENTE` | campo não existe no modelo |
-| Até 2 eventos simultâneos | RN-10 | `BLOQUEADO` | ver B4 |
+| Até 2 eventos simultâneos | RN-10 | `AUSENTE` | decidido B4: 1 por rodada. "Até 2" fica como Sprint 29 |
 
 ### 4.7 Fechamento, financeiro e ranking
 
@@ -161,7 +192,7 @@ Observações que ajudam a decidir:
 | Consolidado persistido por grupo e rodada | §11.3d | `CONFORME` | `ConsolidadoRodadaGrupo` |
 | Ranking multicritério de 5 eixos (EO, DF, EE, SD, DS) | §12.2 | `DIVERGENTE` | implementa 4 eixos: lucro 0,4 · market share 0,3 · atendimento 0,2 · estoque 0,1. **Sustentabilidade não existe** |
 | Pesos 0,30 / 0,25 / 0,15 / 0,20 / 0,10 | §12.4 | `DIVERGENTE` | ver acima |
-| Critérios de desempate | §12.5 vs RN-12 | `BLOQUEADO` | ver B5 |
+| Critérios de desempate | §12.5 (decidido B5) | `AUSENTE` | nenhum dos dois conjuntos implementado; ver `ORION-C-07` |
 | Restrição de investimento após 2 rodadas de caixa negativo | RN-09 | `AUSENTE` | — |
 
 ### 4.8 Telas (§10)
@@ -193,9 +224,12 @@ antigos do `docs/BACKLOG.md`.
 
 ### P0 — decisões que destravam o resto
 
-- `ORION-C-01` `BLOQUEADO` — Ratificar B1 a B5 com o Dr. Pio e registrar a
-  decisão na seção 3. Nenhum item abaixo que dependa de B1–B5 deve ser
-  iniciado antes.
+- `ORION-C-01` `CONCLUIDO` (2026-09-18) — B1 a B5 decididos pela política "a
+  documentação decide"; ver seção 3. **B5 tem confiança baixa** e vale ratificar
+  com o Dr. Pio.
+- `ORION-C-26` `BLOQUEADO` — B6 e B7 (frete de produtos acabados e unidade do
+  frete de MP) seguem sem decisão. Nenhum trabalho de logística deve começar
+  antes: o §7.2.1, como escrito, torna a primeira compra inviável.
 - `ORION-C-02` `AUSENTE` — Unificar o desconto logístico cruzado. Hoje há duas
   implementações divergentes da mesma regra; a de `services/materias_primas.py`
   é a que segue a especificação. Remover a outra.

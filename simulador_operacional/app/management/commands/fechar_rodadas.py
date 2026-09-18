@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Sum
 from django.utils import timezone
 
+from app.parametros import CUSTO_OPERADOR_POR_RODADA
 from app.models import (
     AplicacaoFinanceiraGrupo,
     CapacidadeProdutoGrupo,
@@ -30,7 +31,6 @@ from app.models import (
 
 logger = logging.getLogger("agendamentos")
 EVENTO_COOLDOWN_RODADAS = 2
-CUSTO_OPERADOR_POR_RODADA = Decimal("2000")
 RETENCAO_PADRAO_PERCENT = Decimal("50")
 
 

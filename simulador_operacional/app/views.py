@@ -31,6 +31,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_RODADA
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
     ConfigWizardStep1Form,
@@ -117,8 +118,6 @@ MATERIA_PRIMA_FORNECEDORES = {
 }
 EVENTO_COOLDOWN_RODADAS = 2
 CAPACIDADE_PADRAO_POR_CODIGO = {"A": 15, "B": 15, "C": 10}
-TAXA_APLICACAO_FINANCEIRA_RODADA = Decimal("0.015")
-CUSTO_OPERADOR_POR_RODADA = Decimal("2000")
 FATOR_DESCONTO_LOGISTICO_CRUZADO = Decimal("0.10")
 FATOR_KG_EQUIVALENTE_ENVIO = Decimal("1")
 

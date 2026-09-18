@@ -106,3 +106,6 @@ _documenta*/DOC/*.rar
 
 # Smoke automation reports
 docs/reports/smoke_*.md
+
+# Relatorios gerados pelo fechamento de rodada
+simulador_operacional/relatorios/
