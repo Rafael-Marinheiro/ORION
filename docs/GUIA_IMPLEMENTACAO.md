@@ -82,6 +82,32 @@ própria documentação. As evidências:
   únicos marcados "Pronto" no nome do arquivo; não há verificação aritmética.
   Reverter é barato se o autor da especificação decidir diferente.
 
+### Extração legível da especificação
+
+`_documentação/MD/` traz os 15 documentos reextraídos do `.docx` por script,
+com as tabelas preservadas como tabelas — no `.txt` elas viravam texto
+corrido ilegível (`CritérioSiglaPeso (P)Eficiência OperacionalEO0,30...`).
+
+**23 imagens coladas** foram lidas e transcritas nos arquivos: as 11 fórmulas
+do §12, o fator de marketing do §14, o DER do §4 e os mockups do §10. A fonte
+de verdade continua sendo o `.docx`; a extração existe para o conteúdo ser
+pesquisável e versionado.
+
+Os mockups do §10 ficam como registro, não como direção de interface — a
+decisão do dono do projeto é manter o layout atual.
+
+Fora do §12, a recuperação trouxe uma fórmula que estava perdida:
+
+```
+Mc = 1 + 0,20 · ln(1 + Ic) / ln(1 + 10000)          §14.1.1
+```
+
+Esse é o fator de marketing do `ORION-C-06`, hoje implementado como modelo
+linear. **Atenção:** a tabela de exemplo do próprio §14.1.3 não bate com a
+fórmula — ela mostra Mc = 1,038 para Ic = 1.000, enquanto a fórmula dá 1,150.
+Os valores intermediários da tabela seguem outra regra e só o teto de 20%
+coincide. Vale conferir qual das duas vale antes de implementar.
+
 ### Fórmulas do §12, recuperadas das imagens do .docx
 
 As fórmulas de classificação **não existem como texto em lugar nenhum**: no
@@ -413,7 +439,7 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | Máquinas ativam na rodada seguinte | §14.2.2 | `CONFORME` | `Investimento.rodada_ativacao` |
 | Aplicação financeira a 1,5% por rodada, juros compostos | §14.4 | `CONFORME` | `TAXA_APLICACAO_FINANCEIRA_RODADA` |
-| Fator de marketing logarítmico, teto +20%, satura em R$ 10.000 | §14.1.1 | `DIVERGENTE` | `views.calcular_fator_marketing` usa modelo linear por `ganho_por_base` |
+| Fator de marketing: `Mc = 1 + 0,20 · ln(1+Ic) / ln(1+10000)` | §14.1.1 | `DIVERGENTE` | `views.calcular_fator_marketing` usa modelo linear por `ganho_por_base`; a fórmula estava em imagem, recuperada em 2026-09-18 (`ORION-C-06`) |
 | Salário do operador R$ 1.800/mês | §14.2.4, §14.3 | `CONFORME` | convertido pró-rata semanal (rodada = 1 semana, RN-06) |
 | Custo da máquina R$ 8.000 | §14.2.4 | `NAO_VERIFICADO` | — |
 | Limite de expansão de +50% sobre as máquinas iniciais | §14.2.1 | `AUSENTE` | sem validação |
