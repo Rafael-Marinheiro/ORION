@@ -32,6 +32,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_RODADA
+from .services.logistica import calcular_frete, peso_do_envio, viagens_necessarias
 from .services.perecibilidade import resumo_vencimento
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
@@ -124,8 +125,6 @@ MATERIA_PRIMA_FORNECEDORES = {
 }
 EVENTO_COOLDOWN_RODADAS = 2
 CAPACIDADE_PADRAO_POR_CODIGO = {"A": 15, "B": 15, "C": 10}
-FATOR_DESCONTO_LOGISTICO_CRUZADO = Decimal("0.10")
-FATOR_KG_EQUIVALENTE_ENVIO = Decimal("1")
 
 
 def obter_ip_origem(request):
@@ -190,27 +189,24 @@ def calcular_fator_marketing(grupo, cidade, rodada_numero):
     return min(fator, max_fator)
 
 
-def calcular_desconto_logistico_cruzado(grupo, cidade, rodada_numero, quantidade_kg, custo_base):
-    envios_relacionados = Distribuicao.objects.filter(
-        grupo=grupo,
-        cidade=cidade,
-        rodada=rodada_numero,
-    ).aggregate(total=Sum("quantidade"))
-    quantidade_envio = Decimal(envios_relacionados.get("total") or 0)
-    if quantidade_envio <= 0 or custo_base <= 0:
-        return Decimal("0")
-    config = GameConfig.objects.order_by("id").first()
-    regras = config.regra_eventos if config and isinstance(config.regra_eventos, dict) else {}
-    fator_kg = Decimal(str(regras.get("desconto_logistico_kg_equivalente", FATOR_KG_EQUIVALENTE_ENVIO)))
-    percentual = Decimal(str(regras.get("desconto_logistico_percentual", FATOR_DESCONTO_LOGISTICO_CRUZADO)))
+def viagens_com_carga_de_retorno(grupo, cidade, rodada_numero):
+    """Quantas viagens ate `cidade` podem voltar carregadas.
 
-    limite_kg = quantidade_envio * fator_kg
-    base_desconto = min(Decimal(quantidade_kg), limite_kg)
-    if base_desconto <= 0:
-        return Decimal("0")
-    fracao = base_desconto / Decimal(quantidade_kg)
-    desconto = custo_base * fracao * percentual
-    return min(desconto, custo_base)
+    O 7.2.1 da desconto quando o grupo compra materia-prima na mesma cidade
+    para onde mandou produto. Fisicamente e o frete de retorno: o caminhao
+    que levou produto volta com a MP em vez de voltar vazio.
+
+    O desconto e limitado pelas viagens de produto que de fato existiram --
+    nao da para aproveitar retorno de caminhao que nunca foi.
+    """
+    envios = Distribuicao.objects.filter(
+        grupo=grupo, cidade=cidade, rodada=rodada_numero
+    ).select_related("produto")
+    peso_enviado = sum(
+        (peso_do_envio(envio.produto, envio.quantidade) for envio in envios),
+        Decimal("0"),
+    )
+    return viagens_necessarias(peso_enviado)
 
 
 def obter_aplicacao_financeira_grupo(grupo):
@@ -926,20 +922,15 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     return redirect("painel_grupo")
 
                 custo_insumo = compra.quantidade_kg * compra.preco_unitario
-                compra.custo_logistico = (
-                    compra.quantidade_kg
-                    * Decimal(compra.cidade_fornecedora.distancia_km)
-                    * Decimal("1.5")
+                frete = calcular_frete(
+                    distancia_km=compra.cidade_fornecedora.distancia_km,
+                    peso_kg=compra.quantidade_kg,
+                    viagens_com_retorno=viagens_com_carga_de_retorno(
+                        grupo, compra.cidade_fornecedora, rodada_ativa.numero
+                    ),
                 )
-                desconto_logistico = calcular_desconto_logistico_cruzado(
-                    grupo=grupo,
-                    cidade=compra.cidade_fornecedora,
-                    rodada_numero=rodada_ativa.numero,
-                    quantidade_kg=compra.quantidade_kg,
-                    custo_base=compra.custo_logistico,
-                )
-                compra.desconto_logistico = desconto_logistico
-                compra.custo_logistico = max(compra.custo_logistico - desconto_logistico, Decimal("0"))
+                compra.desconto_logistico = frete["desconto_retorno"]
+                compra.custo_logistico = frete["custo"]
                 compra.valor_total = custo_insumo + compra.custo_logistico
 
                 if grupo.capital < compra.valor_total:

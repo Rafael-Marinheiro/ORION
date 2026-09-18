@@ -329,6 +329,18 @@ class Produto(models.Model):
             total += item.quantidade_por_unidade * item.materia_prima.preco_unitario
         return total
 
+    @property
+    def peso_unitario_kg(self):
+        """Peso de uma unidade, em kg.
+
+        E a coluna "Total (kg)" do 6.1 -- 300 para A, 630 para B, 650 para C --
+        que nada mais e que a soma da composicao, ja expressa em kg.
+        """
+        return sum(
+            (item.quantidade_por_unidade for item in self.composicoes.all()),
+            Decimal("0"),
+        )
+
 
 class ComposicaoProduto(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="composicoes")

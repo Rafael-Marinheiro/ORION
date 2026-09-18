@@ -46,3 +46,20 @@ FATOR_DEMANDA_POR_HABITANTE = 0.00207
 # vira um destino onde o grupo envia e nao vende nada -- mercado quebrado,
 # nao mercado pequeno.
 DEMANDA_MINIMA_POR_PRACA = 50
+
+# --- Logistica -------------------------------------------------------------
+#
+# O 7.2 diz "R$ 1,50 por quilometro rodado, multiplicado pela quantidade
+# adquirida (em kg)". Essa unidade nao fecha: no exemplo do proprio 7.2.1,
+# 500 kg de MP3 valendo R$ 4.000 geram R$ 750.000 de frete, 188x a carga.
+#
+# A unidade passa a ser por VIAGEM de caminhao (decisao D10 do guia). Os
+# numeros do documento sao mantidos; o que muda e o que eles multiplicam.
+# O caminhao indivisivel e o que torna o modelo didatico: consolidar pedido
+# fica barato por quilo, comprar em migalhas fica caro.
+CAPACIDADE_CAMINHAO_KG = 12000
+CUSTO_VIAGEM_POR_KM = Decimal("1.50")
+
+# 7.2.1: desconto por remessa cruzada. Fisicamente e o frete de retorno --
+# o caminhao que levou produto volta carregado em vez de voltar vazio.
+DESCONTO_RETORNO_POR_KM = Decimal("0.50")

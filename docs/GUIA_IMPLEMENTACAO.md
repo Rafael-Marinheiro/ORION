@@ -95,6 +95,7 @@ Ficam registradas aqui para ninguém as confundir com divergência acidental.
 | D9.4 | Fornecedores de MP | §7.1: cidades nacionais | **cidades da região**, cada MP com fornecedor perto e longe | preserva a escolha de fornecedor como decisão logística |
 | D9.5 | Custo do operador por rodada | §14.2.4: R$ 1.800/mês + RN-06: rodada = 1 semana | **R$ 1.800 por rodada**, sem conversão por tempo | o professor define o prazo livremente; converter por tempo decorrido faria o custo da mesma decisão mudar conforme o prazo |
 | D9.6 | Sigilo da rodada aberta | não previsto | **resultado só aparece após o fechamento** | é um jogo de competição; desempenho alheio antes da submissão muda a decisão de quem ainda não decidiu |
+| D10 | Unidade do frete | §7.2: R$ 1,50 por km **por kg** | **R$ 1,50 por km por viagem de caminhão** (12.000 kg) | a unidade do documento faz o frete valer 188x a carga; o jogo trava na primeira compra |
 
 **Consequência de D9.2 e D9.3 no equilíbrio do jogo.** O mercado regional é
 cerca de 5x menor que o nacional, e a capacidade produtiva não mudou:
@@ -109,6 +110,33 @@ curva de sensibilidade a preço e o investimento em marketing, que estavam
 praticamente inertes enquanto a demanda superava a oferta. Se ficar punitivo
 demais, o ajuste indicado é **reduzir as máquinas iniciais**, não inflar a
 demanda — inflar quebraria a proporcionalidade com a população.
+
+**D10 · O modelo de frete e o que ele ensina.** O caminhão é indivisível, e é
+daí que vem a lição. Pedido de MP1 vindo de Mossoró (190 km):
+
+| Pedido | Viagens | Ocupação | Frete | Frete / carga |
+|---|---|---|---|---|
+| 500 kg | 1 | 4% | R$ 285,00 | **19,0%** |
+| 6.000 kg | 1 | 50% | R$ 285,00 | 1,6% |
+| 12.000 kg | 1 | 100% | R$ 285,00 | **0,8%** |
+| 12.001 kg | 2 | 50% | R$ 570,00 | 1,6% |
+
+O frete de 500 kg e o de 12.000 kg é o mesmo: 24x de diferença no custo por
+quilo, só por consolidar. Pedir 1 kg além do caminhão dobra a conta. A
+distância continua pesando, mas sem dominar: o mesmo pedido cheio custa 0,3%
+da carga vindo de Caicó e 2,0% vindo de Fortaleza.
+
+O desconto do §7.2.1 vira frete de retorno: as viagens que levaram produto
+para aquela cidade podem voltar carregadas com a matéria-prima, limitado
+pelas viagens de produto que de fato existiram.
+
+A taxa de ocupação volta no resultado para o aluno ver quanto de caminhão
+vazio pagou — é ela, não o valor absoluto, que carrega a lição.
+
+**Frete de produto acabado ainda é zero.** Descoberto na auditoria: nenhum
+código de produção cobra transporte na distribuição, só a compra de MP. A
+distância da praça é inerte na decisão de distribuir (`ORION-C-28`). O
+service e o peso por unidade já existem para fechar isso.
 
 As distâncias e populações da tabela regional são aproximadas e devem ser
 conferidas contra IBGE e rota real antes do uso em sala (`ORION-C-27`).
