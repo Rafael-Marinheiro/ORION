@@ -80,8 +80,12 @@ AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LANGUAGE_CODE = 'pt-br'
-TIME_ZONE = 'UTC'
+# Currais Novos/RN. Nao use America/Sao_Paulo: as duas estao em UTC-3 hoje,
+# mas se o horario de verao voltar, Sao Paulo vai para UTC-2 no verao e o
+# Nordeste continua em UTC-3.
+TIME_ZONE = 'America/Fortaleza'
 USE_I18N = True
+# Continua gravando em UTC no banco; TIME_ZONE governa entrada e exibicao.
 USE_TZ = True
 
 STATIC_URL = 'static/'
