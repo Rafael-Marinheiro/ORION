@@ -154,10 +154,22 @@ O peso reduzido ganha do cooldown duro na variedade **e** na fidelidade aos
 pesos, e degrada com elegância quando há poucos eventos configurados. Os
 multiplicadores estão em `PENALIDADE_EVENTO_RECENTE`.
 
-**Frete de produto acabado ainda é zero.** Descoberto na auditoria: nenhum
-código de produção cobra transporte na distribuição, só a compra de MP. A
-distância da praça é inerte na decisão de distribuir (`ORION-C-28`). O
-service e o peso por unidade já existem para fechar isso.
+**Frete de produto acabado** também usa o caminhão. Correção de uma
+afirmação errada da auditoria de 2026-09-18: dizia que a distribuição não
+cobrava frete nenhum. Ela cobrava — inline em `views.py`, com a taxa de
+R$ 0,10/km/unidade. O erro veio de procurar o cálculo em `fechar_rodadas.py`
+e no `economia_service`, quando ele estava na view.
+
+O problema real era outro: a taxa não tinha origem documental e era
+**linear**, então sair de 40 para 41 unidades mudava o frete em 2% e não
+havia lição de planejamento de carga. Com o caminhão, dobra:
+
+| Envio para Natal (172 km) | Frete antigo | Frete novo |
+|---|---|---|
+| 40 unidades de A (1 caminhão cheio) | R$ 688,00 | R$ 258,00 |
+| 41 unidades de A (2 caminhões, 51%) | R$ 705,20 | **R$ 516,00** |
+
+A mensagem de confirmação passa a dizer quantas viagens e qual a ocupação.
 
 As distâncias e populações da tabela regional são aproximadas e devem ser
 conferidas contra IBGE e rota real antes do uso em sala (`ORION-C-27`).
@@ -225,7 +237,7 @@ Consequências já mapeadas das decisões:
 | Armazenagem de MP a 2% do valor de compra | §7.4 | `CONFORME` | `fechar_rodadas` |
 | Fornecedores por cidade | §7.1 | `CONFORME` | `views.MATERIA_PRIMA_FORNECEDORES` |
 | Desconto logístico cruzado de R$ 0,50/km | §7.2.1 | `DIVERGENTE` | **duas implementações conflitantes**: `services/materias_primas.py` usa R$ 0,50/km (correto), `views.FATOR_DESCONTO_LOGISTICO_CRUZADO` usa 10% |
-| Frete de produtos acabados | §9.2a | `DIVERGENTE` | `economia_service` usa R$ 0,10/km/unidade — taxa que não consta em nenhum documento |
+| Frete de produtos acabados | §9.2a (decidido D10) | `CONFORME` | mesmo modelo de caminhão da compra de MP |
 
 ### 4.4 Comercialização e demanda
 

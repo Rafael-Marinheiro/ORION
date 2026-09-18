@@ -1047,7 +1047,15 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     )
                     return redirect("painel_grupo")
 
-                custo = Decimal(envio.cidade.distancia_km) * envio.quantidade * Decimal("0.1")
+                # Mesmo modelo de caminhao da compra de materia-prima: o
+                # frete vai por viagem, nao por unidade. A taxa anterior de
+                # R$ 0,10/km/unidade nao vinha de documento nenhum e tornava
+                # a distancia quase irrelevante na decisao de distribuir.
+                frete = calcular_frete(
+                    distancia_km=envio.cidade.distancia_km,
+                    peso_kg=peso_do_envio(envio.produto, envio.quantidade),
+                )
+                custo = frete["custo"]
                 if evento and evento.modo_aplicacao == "percentual" and evento.tipo == "custo_transporte":
                     custo *= Decimal(1 + evento.impacto_percentual / 100)
 
@@ -1068,7 +1076,16 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
 
                 messages.success(
                     request,
-                    "Distribuicao registrada. A venda sera calculada no fechamento da rodada.",
+                    (
+                        "Distribuicao registrada: {viagens} viagem(ns) ate {cidade}, "
+                        "{ocupacao:.0f}% da capacidade do caminhao, frete de {custo}. "
+                        "A venda sera calculada no fechamento da rodada."
+                    ).format(
+                        viagens=frete["viagens"],
+                        cidade=envio.cidade.nome,
+                        ocupacao=frete["ocupacao_percentual"],
+                        custo=custo.quantize(Decimal("0.01")),
+                    ),
                 )
                 return redirect("painel_grupo")
 
