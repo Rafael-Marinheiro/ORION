@@ -32,6 +32,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_RODADA
+from .services.perecibilidade import resumo_vencimento
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
     ConfigWizardStep1Form,
@@ -110,11 +111,16 @@ from .serializers import (
     RodadaSerializer,
 )
 
+# Fornecedores por materia-prima, nas pracas da regiao (sede em Currais
+# Novos/RN). O 7.1 lista fornecedores nacionais; a troca para a regiao e
+# decisao do dono do projeto, registrada no guia (D9). Cada MP tem ao menos
+# um fornecedor perto e um longe, para a escolha continuar sendo uma decisao
+# logistica e nao um detalhe.
 MATERIA_PRIMA_FORNECEDORES = {
-    "MP1": {"Fortaleza", "Maceio"},
-    "MP2": {"Recife", "Porto Alegre"},
-    "MP3": {"Rio de Janeiro", "Aracaju", "Belem"},
-    "MP4": {"Sao Paulo", "Joao Pessoa", "Goiania"},
+    "MP1": {"Caico", "Mossoro"},
+    "MP2": {"Campina Grande", "Recife"},
+    "MP3": {"Assu", "Natal", "Fortaleza"},
+    "MP4": {"Patos", "Joao Pessoa"},
 }
 EVENTO_COOLDOWN_RODADAS = 2
 CAPACIDADE_PADRAO_POR_CODIGO = {"A": 15, "B": 15, "C": 10}
@@ -673,6 +679,23 @@ class RodadaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return response
 
 
+def numeros_de_rodadas_fechadas(jogo_id=None, sem_jogo=False):
+    """Numeros das rodadas ja encerradas.
+
+    Resultado de rodada aberta e informacao competitiva: enquanto o prazo
+    corre, saber o desempenho alheio muda a decisao de quem ainda nao
+    submeteu. Hoje indicadores e consolidados so nascem no fechamento, mas
+    as telas nao dependem disso -- filtram por rodada fechada, para a regra
+    valer mesmo que algum codigo futuro passe a gravar antes.
+    """
+    rodadas = Rodada.objects.filter(fechada=True)
+    if jogo_id:
+        rodadas = rodadas.filter(jogo_id=jogo_id)
+    elif sem_jogo:
+        rodadas = rodadas.filter(jogo__isnull=True)
+    return list(rodadas.values_list("numero", flat=True))
+
+
 class RankingView(LoginRequiredMixin, TemplateView):
     template_name = "ranking.html"
 
@@ -687,6 +710,7 @@ class RankingView(LoginRequiredMixin, TemplateView):
             elif grupo:
                 indicadores = indicadores.filter(grupo__jogo__isnull=True)
 
+        indicadores = indicadores.filter(rodada__in=numeros_de_rodadas_fechadas())
         rodada_referencia = indicadores.order_by("-rodada").values_list("rodada", flat=True).first()
         if rodada_referencia:
             ranking = list(
@@ -843,6 +867,9 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "saldos_produto": saldos_produto,
             "capacidades_produto": capacidades,
             "aplicacao_financeira": aplicacao_financeira,
+            "vencimento_proximo": resumo_vencimento(
+                grupo, rodada_ativa.numero if rodada_ativa else None
+            ),
             "rodada_filtro": rodada_filtro or "",
         }
 
@@ -1536,7 +1563,9 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
             if form.cleaned_data.get("grupo"):
                 resultados = resultados.filter(grupo=form.cleaned_data["grupo"])
                 consolidados = consolidados.filter(grupo=form.cleaned_data["grupo"])
-        consolidados = consolidados.order_by("-rodada", "grupo__nome")
+        fechadas = numeros_de_rodadas_fechadas()
+        resultados = resultados.filter(rodada__in=fechadas)
+        consolidados = consolidados.filter(rodada__in=fechadas).order_by("-rodada", "grupo__nome")
         contexto = {
             "resultados": resultados.order_by("-rodada", "grupo__nome"),
             "consolidados": consolidados,

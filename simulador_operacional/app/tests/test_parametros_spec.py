@@ -28,11 +28,16 @@ class ParametrosDaEspecificacaoTest(TestCase):
         # 14.2.4: "Salario por funcionario: R$ 1.800,00/mes"
         self.assertEqual(SALARIO_OPERADOR_MENSAL, Decimal("1800"))
 
-    def test_custo_por_rodada_sai_do_salario_mensal_a_pro_rata_semanal(self):
-        # RN-06: "Cada rodada representa uma semana de producao"
-        self.assertEqual(CUSTO_OPERADOR_POR_RODADA, Decimal("415.38"))
-        # o valor anterior, R$ 2.000, cobrava 4,8x o que a especificacao manda
-        self.assertLess(CUSTO_OPERADOR_POR_RODADA, Decimal("2000"))
+    def test_a_rodada_fecha_uma_folha_sem_converter_por_tempo(self):
+        """A rodada e o periodo de competencia, nao um numero de semanas.
+
+        O professor define a data de encerramento livremente, entao converter
+        o salario por tempo decorrido faria o custo da mesma decisao mudar
+        conforme o prazo da rodada.
+        """
+        self.assertEqual(CUSTO_OPERADOR_POR_RODADA, SALARIO_OPERADOR_MENSAL)
+        # o valor anterior, R$ 2.000, nao vinha de documento nenhum
+        self.assertNotEqual(CUSTO_OPERADOR_POR_RODADA, Decimal("2000"))
 
     def test_demais_parametros(self):
         self.assertEqual(TAXA_APLICACAO_FINANCEIRA_RODADA, Decimal("0.015"))  # 14.4.1

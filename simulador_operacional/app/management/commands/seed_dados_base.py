@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 
+from app.parametros import DEMANDA_MINIMA_POR_PRACA, FATOR_DEMANDA_POR_HABITANTE
 from app.models import (
     Cidade,
     ComposicaoProduto,
@@ -100,19 +101,37 @@ class Command(BaseCommand):
                 defaults={"quantidade_por_unidade": quantidade},
             )
 
+        # Sede da fabrica: Currais Novos/RN. As pracas sao cidades da regiao,
+        # nao as capitais nacionais do 9.1 -- decisao do dono do projeto
+        # registrada no guia de implementacao (D9).
+        #
+        # A demanda nao e digitada: sai da populacao pelo fator extraido da
+        # propria tabela do 9.1, onde demanda/populacao fica em 0,207% em
+        # media nas 10 cidades listadas. Assim a regra "demanda proporcional
+        # a populacao" fica explicita e auditavel.
+        #
+        # Distancias rodoviarias e populacoes sao aproximadas e devem ser
+        # conferidas contra IBGE e rota real antes do uso em sala.
         cidades = [
-            ("Sao Paulo", 2896, 27000),
-            ("Rio de Janeiro", 2588, 15000),
-            ("Recife", 290, 4000),
-            ("Joao Pessoa", 181, 2000),
-            ("Aracaju", 782, 1000),
-            ("Fortaleza", 527, 6000),
-            ("Goiania", 1949, 3000),
-            ("Belem", 1952, 3000),
-            ("Maceio", 542, 2000),
-            ("Porto Alegre", 4034, 3000),
+            # (nome, distancia_km desde Currais Novos, populacao estimada)
+            ("Currais Novos", 0, 45000),
+            ("Acari", 23, 11000),
+            ("Caico", 75, 68000),
+            ("Santa Cruz", 95, 40000),
+            ("Patos", 135, 108000),
+            ("Assu", 140, 58000),
+            ("Natal", 172, 751000),
+            ("Campina Grande", 190, 419000),
+            ("Mossoro", 190, 265000),
+            ("Joao Pessoa", 300, 833000),
+            ("Recife", 420, 1488000),
+            ("Fortaleza", 470, 2428000),
         ]
-        for nome, distancia, demanda in cidades:
+        for nome, distancia, populacao in cidades:
+            demanda = max(
+                DEMANDA_MINIMA_POR_PRACA,
+                int(round(populacao * FATOR_DEMANDA_POR_HABITANTE / 50.0) * 50),
+            )
             Cidade.objects.update_or_create(
                 nome=nome,
                 defaults={"distancia_km": distancia, "demanda": demanda},

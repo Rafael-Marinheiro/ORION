@@ -82,6 +82,37 @@ própria documentação. As evidências:
   únicos marcados "Pronto" no nome do arquivo; não há verificação aritmética.
   Reverter é barato se o autor da especificação decidir diferente.
 
+### D9 · Desvios deliberados da especificação
+
+Decisões do dono do projeto que **contrariam a documentação de propósito**.
+Ficam registradas aqui para ninguém as confundir com divergência acidental.
+
+| # | Tema | O que a spec diz | O que vale | Motivo |
+|---|---|---|---|---|
+| D9.1 | Sede da fábrica | §9: Natal/RN | **Currais Novos/RN** | contexto real da turma |
+| D9.2 | Praças de venda | §9.1: 10 capitais nacionais | **12 cidades da região** (Seridó, RN, PB, PE, CE) | idem |
+| D9.3 | Demanda por praça | §9.1: tabela digitada | **derivada da população** pelo fator 0,207%, extraído da própria tabela do §9.1 | regra explícita e auditável no lugar de número por cidade |
+| D9.4 | Fornecedores de MP | §7.1: cidades nacionais | **cidades da região**, cada MP com fornecedor perto e longe | preserva a escolha de fornecedor como decisão logística |
+| D9.5 | Custo do operador por rodada | §14.2.4: R$ 1.800/mês + RN-06: rodada = 1 semana | **R$ 1.800 por rodada**, sem conversão por tempo | o professor define o prazo livremente; converter por tempo decorrido faria o custo da mesma decisão mudar conforme o prazo |
+| D9.6 | Sigilo da rodada aberta | não previsto | **resultado só aparece após o fechamento** | é um jogo de competição; desempenho alheio antes da submissão muda a decisão de quem ainda não decidiu |
+
+**Consequência de D9.2 e D9.3 no equilíbrio do jogo.** O mercado regional é
+cerca de 5x menor que o nacional, e a capacidade produtiva não mudou:
+
+| Cenário | Capacidade de A (5 grupos) | Demanda de A | Razão |
+|---|---|---|---|
+| Nacional (§9.1) | 15.000 | 33.000 | 0,45x — falta capacidade |
+| Regional (D9.2) | 15.000 | 6.750 | 2,2x — sobra capacidade |
+
+O recurso escasso deixa de ser produção e passa a ser demanda. Isso ativa a
+curva de sensibilidade a preço e o investimento em marketing, que estavam
+praticamente inertes enquanto a demanda superava a oferta. Se ficar punitivo
+demais, o ajuste indicado é **reduzir as máquinas iniciais**, não inflar a
+demanda — inflar quebraria a proporcionalidade com a população.
+
+As distâncias e populações da tabela regional são aproximadas e devem ser
+conferidas contra IBGE e rota real antes do uso em sala (`ORION-C-27`).
+
 ### Ainda bloqueado
 
 - **B6 · Frete de produtos acabados.** A documentação é **silenciosa** sobre a
