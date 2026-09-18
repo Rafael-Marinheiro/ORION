@@ -1,151 +1,176 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relatórios financeiros — ORION{% endblock %}
 
 {% block content %}
-<h2>Resultados Financeiros</h2>
-<form method="get">
+<div class="o-head">
+    <div class="o-head__row">
+        <div>
+            <h1>Relatórios financeiros</h1>
+            <p class="o-head__sub">Receita, custos e lucro por rodada e por grupo.</p>
+        </div>
+        <div class="o-head__actions">
+            <a class="o-btn o-btn--ghost" href="{% url 'export_resultados_pdf' %}?rodada={{ form.rodada.value }}&grupo={{ form.grupo.value }}">Exportar PDF</a>
+            <a class="o-btn o-btn--ghost" href="{% url 'export_resultados_excel' %}?rodada={{ form.rodada.value }}&grupo={{ form.grupo.value }}">Exportar Excel</a>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="o-panel o-filters" style="margin-bottom: var(--o-5);">
     {{ form.as_p }}
-    <button type="submit" class="btn">Filtrar</button>
+    <button type="submit" class="o-btn">Filtrar</button>
 </form>
-<p>
-    <a href="{% url 'export_resultados_pdf' %}?rodada={{ form.rodada.value }}&grupo={{ form.grupo.value }}">Exportar PDF</a> |
-    <a href="{% url 'export_resultados_excel' %}?rodada={{ form.rodada.value }}&grupo={{ form.grupo.value }}">Exportar Excel</a>
-</p>
 
-<h3>Consolidado por Rodada/Grupo</h3>
-<div class="table-wrap">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Rodada</th>
-                <th>Grupo</th>
-                <th>Receita Vendas</th>
-                <th>Custos Operacionais</th>
-                <th>Penalidade</th>
-                <th>Perda Pereciveis</th>
-                <th>Arm. MP</th>
-                <th>Arm. Produtos</th>
-                <th>Custos Totais</th>
-                <th>Lucro</th>
-                <th>Score</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for c in consolidados %}
-            <tr>
-                <td>{{ c.rodada }}</td>
-                <td>{{ c.grupo.nome }}</td>
-                <td>{{ c.receita_vendas }}</td>
-                <td>{{ c.custos_operacionais }}</td>
-                <td>{{ c.penalidade_sem_submissao }}</td>
-                <td>{{ c.perda_pereciveis }}</td>
-                <td>{{ c.custo_armazenagem_mp }}</td>
-                <td>{{ c.custo_armazenagem_produtos }}</td>
-                <td>{{ c.custos_totais }}</td>
-                <td>{{ c.lucro_rodada }}</td>
-                <td>{{ c.score_multicriterio }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="11">Nenhum consolidado encontrado para o filtro.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="o-stack">
+    <section>
+        <h2>Evolução por rodada</h2>
+        <div class="o-panel">
+            <div class="o-chart"><canvas id="graficoLucro"></canvas></div>
+            <p id="graficoFallback" class="o-muted" hidden>Gráfico indisponível: a biblioteca externa não carregou. Os números seguem nas tabelas abaixo.</p>
+        </div>
+    </section>
+
+    <section>
+        <h2>Consolidado por rodada e grupo</h2>
+        <div class="o-tablewrap">
+            <table class="o-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Rodada</th>
+                        <th scope="col">Grupo</th>
+                        <th scope="col" class="num">Receita de vendas</th>
+                        <th scope="col" class="num">Custos operacionais</th>
+                        <th scope="col" class="num">Penalidade</th>
+                        <th scope="col" class="num">Perda de perecíveis</th>
+                        <th scope="col" class="num">Armazenagem MP</th>
+                        <th scope="col" class="num">Armazenagem produtos</th>
+                        <th scope="col" class="num">Custos totais</th>
+                        <th scope="col" class="num">Lucro</th>
+                        <th scope="col" class="num">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in consolidados %}
+                    <tr>
+                        <th scope="row">R{{ c.rodada }}</th>
+                        <td>{{ c.grupo.nome }}</td>
+                        <td class="num">{{ c.receita_vendas }}</td>
+                        <td class="num">{{ c.custos_operacionais }}</td>
+                        <td class="num">{{ c.penalidade_sem_submissao }}</td>
+                        <td class="num">{{ c.perda_pereciveis }}</td>
+                        <td class="num">{{ c.custo_armazenagem_mp }}</td>
+                        <td class="num">{{ c.custo_armazenagem_produtos }}</td>
+                        <td class="num">{{ c.custos_totais }}</td>
+                        <td class="num">{{ c.lucro_rodada }}</td>
+                        <td class="num">{{ c.score_multicriterio }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11">
+                            <div class="o-empty o-empty--center">
+                                {% include 'partials/empty.svg.html' %}
+                                <p>Nenhum consolidado para este filtro.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>Resultado financeiro base</h2>
+        <div class="o-tablewrap">
+            <table class="o-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Rodada</th>
+                        <th scope="col">Grupo</th>
+                        <th scope="col" class="num">Receita</th>
+                        <th scope="col" class="num">Custos</th>
+                        <th scope="col" class="num">Lucro líquido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in resultados %}
+                    <tr>
+                        <th scope="row">R{{ r.rodada }}</th>
+                        <td>{{ r.grupo.nome }}</td>
+                        <td class="num">{{ r.receita }}</td>
+                        <td class="num">{{ r.custos }}</td>
+                        <td class="num">{{ r.lucro }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="o-empty o-empty--center">
+                                {% include 'partials/empty.svg.html' %}
+                                <p>Nenhum resultado para este filtro.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>Investimentos</h2>
+        <div class="o-tablewrap">
+            <table class="o-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Grupo</th>
+                        <th scope="col">Categoria</th>
+                        <th scope="col" class="num">Valor</th>
+                        <th scope="col" class="num">Retorno projetado</th>
+                        <th scope="col" class="num">Retorno efetivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in investimentos %}
+                    <tr>
+                        <th scope="row">{{ inv.grupo.nome }}</th>
+                        <td>{{ inv.get_categoria_display }}</td>
+                        <td class="num">{{ inv.valor }}</td>
+                        <td class="num">{{ inv.retorno_projetado }}</td>
+                        <td class="num">{{ inv.retorno_efetivo }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="o-empty o-empty--center">
+                                {% include 'partials/empty.svg.html' %}
+                                <p>Nenhum investimento registrado.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
+{% endblock %}
 
-<h3>Resultado Financeiro Base</h3>
-<div class="table-wrap">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Rodada</th>
-                <th>Grupo</th>
-                <th>Receita</th>
-                <th>Custos</th>
-                <th>Lucro Liquido</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in resultados %}
-            <tr>
-                <td>{{ r.rodada }}</td>
-                <td>{{ r.grupo.nome }}</td>
-                <td>{{ r.receita }}</td>
-                <td>{{ r.custos }}</td>
-                <td>{{ r.lucro }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5">Nenhum resultado encontrado para o filtro.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<canvas id="graficoLucro"></canvas>
-<p id="graficoFallback" style="display:none;">Grafico indisponivel no momento (script externo nao carregado).</p>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="{% static 'js/charts.js' %}" defer></script>
 <script>
-    const data = {
+    window.orionCharts = window.orionCharts || [];
+    window.orionCharts.push({
+        canvas: 'graficoLucro',
+        fallback: 'graficoFallback',
+        type: 'bar',
         labels: [{% for r in resultados %}'Rodada {{ r.rodada }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
-        datasets: [
-            {
-                label: 'Receita',
-                backgroundColor: 'rgba(75,192,192,0.5)',
-                borderColor: 'rgba(75,192,192,1)',
-                data: [{% for r in resultados %}{{ r.receita }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-            },
-            {
-                label: 'Custos',
-                backgroundColor: 'rgba(255,99,132,0.5)',
-                borderColor: 'rgba(255,99,132,1)',
-                data: [{% for r in resultados %}{{ r.custos }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-            },
-            {
-                label: 'Lucro',
-                backgroundColor: 'rgba(54,162,235,0.5)',
-                borderColor: 'rgba(54,162,235,1)',
-                data: [{% for r in resultados %}{{ r.lucro }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-            }
+        series: [
+            { label: 'Receita', data: [{% for r in resultados %}{{ r.receita }}{% if not forloop.last %}, {% endif %}{% endfor %}] },
+            { label: 'Custos', data: [{% for r in resultados %}{{ r.custos }}{% if not forloop.last %}, {% endif %}{% endfor %}] },
+            { label: 'Lucro', data: [{% for r in resultados %}{{ r.lucro }}{% if not forloop.last %}, {% endif %}{% endfor %}] }
         ]
-    };
-
-    if (window.Chart) {
-        new Chart(
-            document.getElementById('graficoLucro'),
-            {
-                type: 'bar',
-                data: data,
-            }
-        );
-    } else {
-        document.getElementById('graficoLucro').style.display = 'none';
-        document.getElementById('graficoFallback').style.display = 'block';
-    }
+    });
 </script>
-
-<h3>Investimentos</h3>
-<table>
-    <thead>
-        <tr>
-            <th>Grupo</th>
-            <th>Categoria</th>
-            <th>Valor</th>
-            <th>Retorno Projetado</th>
-            <th>Retorno Efetivo</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for inv in investimentos %}
-        <tr>
-            <td>{{ inv.grupo.nome }}</td>
-            <td>{{ inv.get_categoria_display }}</td>
-            <td>{{ inv.valor }}</td>
-            <td>{{ inv.retorno_projetado }}</td>
-            <td>{{ inv.retorno_efetivo }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5">Nenhum investimento registrado.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
 {% endblock %}

@@ -1,32 +1,50 @@
 {% extends 'base.html' %}
+
+{% block title %}Classificação final — ORION{% endblock %}
+
 {% block content %}
-<h2>Classificação Final</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Posição</th>
-            <th>Grupo</th>
-            <th>Eficiência Operacional</th>
-            <th>Desempenho Financeiro</th>
-            <th>Demanda Atendida</th>
-            <th>Sustentabilidade</th>
-            <th>Saldo de Caixa</th>
-            <th>Desperdício</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for g in grupos %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ g.nome }}</td>
-            <td>{{ g.eficiencia_operacional|floatformat:2 }}</td>
-            <td>{{ g.desempenho_financeiro|floatformat:2 }}</td>
-            <td>{{ g.demanda_atendida|floatformat:2 }}</td>
-            <td>{{ g.sustentabilidade|floatformat:2 }}</td>
-            <td>{{ g.saldo_caixa_final|floatformat:2 }}</td>
-            <td>{{ g.desperdicio_total }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="o-head">
+    <h1>Classificação final</h1>
+    <p class="o-head__sub">Resultado consolidado da simulação, somando os critérios de todas as rodadas.</p>
+</div>
+
+<div class="o-tablewrap">
+    <table class="o-table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Grupo</th>
+                <th scope="col" class="num">Eficiência operacional</th>
+                <th scope="col" class="num">Desempenho financeiro</th>
+                <th scope="col" class="num">Demanda atendida</th>
+                <th scope="col" class="num">Sustentabilidade</th>
+                <th scope="col" class="num">Saldo de caixa</th>
+                <th scope="col" class="num">Desperdício</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for g in grupos %}
+            <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
+                <td class="rank">{{ forloop.counter }}</td>
+                <th scope="row">{{ g.nome }}</th>
+                <td class="num">{{ g.eficiencia_operacional|floatformat:2 }}</td>
+                <td class="num">{{ g.desempenho_financeiro|floatformat:2 }}</td>
+                <td class="num">{{ g.demanda_atendida|floatformat:2 }}</td>
+                <td class="num">{{ g.sustentabilidade|floatformat:2 }}</td>
+                <td class="num">{{ g.saldo_caixa_final|floatformat:2 }}</td>
+                <td class="num">{{ g.desperdicio_total }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="8">
+                    <div class="o-empty o-empty--center">
+                        {% include 'partials/empty.svg.html' %}
+                        <p>A classificação final sai quando a simulação for encerrada.</p>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

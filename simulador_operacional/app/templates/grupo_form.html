@@ -1,10 +1,20 @@
 {% extends 'base.html' %}
 
+{% block title %}{% if form.instance.pk %}Editar grupo{% else %}Novo grupo{% endif %} — ORION{% endblock %}
+
 {% block content %}
-<h2>{% if form.instance.pk %}Editar Grupo{% else %}Novo Grupo{% endif %}</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Salvar</button>
-</form>
+<div class="o-head">
+    <h1>{% if form.instance.pk %}Editar grupo{% else %}Novo grupo{% endif %}</h1>
+</div>
+
+<div class="o-form-panel o-panel">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="o-btnrow">
+            <button type="submit" class="o-btn o-btn--primary">Salvar grupo</button>
+            <a href="{% url 'lista_grupos' %}" class="o-btn o-btn--ghost">Cancelar</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

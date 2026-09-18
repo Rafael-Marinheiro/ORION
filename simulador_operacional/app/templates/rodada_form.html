@@ -1,10 +1,18 @@
 {% extends 'base.html' %}
 
+{% block title %}Abrir rodada — ORION{% endblock %}
+
 {% block content %}
-<h2>Abrir Rodada</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Abrir</button>
-</form>
+<div class="o-head">
+    <h1>Abrir rodada</h1>
+    <p class="o-head__sub">Ao abrir, as equipes passam a registrar decisões até o horário de fechamento.</p>
+</div>
+
+<div class="o-form-panel o-panel">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="o-btn o-btn--primary">Abrir rodada</button>
+    </form>
+</div>
 {% endblock %}

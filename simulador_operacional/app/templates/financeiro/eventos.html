@@ -1,12 +1,28 @@
 {% extends 'base.html' %}
 
+{% block title %}Eventos da rodada — ORION{% endblock %}
+
 {% block content %}
-<h2>Evento Aleatório</h2>
+<div class="o-head">
+    <h1>Eventos da rodada</h1>
+    <p class="o-head__sub">Choques de mercado sorteados automaticamente. Todas as equipes são atingidas igualmente.</p>
+</div>
+
 {% if eventos %}
+<div class="o-grid">
     {% for e in eventos %}
-        <p><strong>{{ e.nome }}</strong>: {{ e.descricao }}</p>
+    <article class="o-panel">
+        <h2 class="o-panel__title">{{ e.nome }}</h2>
+        <p>{{ e.descricao }}</p>
+    </article>
     {% endfor %}
+</div>
 {% else %}
-    <p>Nenhum evento foi sorteado.</p>
+<div class="o-panel">
+    <div class="o-empty o-empty--center">
+        {% include 'partials/empty.svg.html' %}
+        <p>Nenhum evento foi sorteado nesta rodada.</p>
+    </div>
+</div>
 {% endif %}
 {% endblock %}

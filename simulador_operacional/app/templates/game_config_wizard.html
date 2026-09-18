@@ -1,43 +1,61 @@
 {% extends 'base.html' %}
 
+{% block title %}Assistente de configuração — ORION{% endblock %}
+
 {% block content %}
-<h2>Wizard de Configuracao do Jogo</h2>
-<p>Etapa {{ step }} de 3</p>
+<div class="o-head">
+    <h1>Assistente de configuração</h1>
+    <p class="o-head__sub">Três etapas para preparar a simulação.</p>
+</div>
 
+<ol class="o-steps" aria-label="Progresso da configuração">
+    <li {% if step == 1 %}aria-current="step"{% endif %} data-done="{% if step > 1 %}true{% else %}false{% endif %}">Parâmetros base</li>
+    <li {% if step == 2 %}aria-current="step"{% endif %} data-done="{% if step > 2 %}true{% else %}false{% endif %}">Módulos e regras</li>
+    <li {% if step == 3 %}aria-current="step"{% endif %} data-done="false">Revisão</li>
+</ol>
+
+<div class="o-form-panel o-panel">
 {% if step == 1 %}
-<h3>Etapa 1 - Parametros Base</h3>
-<form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="step" value="1">
-    {{ form.as_p }}
-    <button type="submit" class="btn">Avancar</button>
-</form>
+    <h2>Parâmetros base</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="1">
+        {{ form.as_p }}
+        <button type="submit" class="o-btn o-btn--primary">Avançar</button>
+    </form>
 {% elif step == 2 %}
-<h3>Etapa 2 - Modulos e Regras</h3>
-<form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="step" value="2">
-    {{ form.as_p }}
-    <button type="submit" name="voltar" class="btn">Voltar</button>
-    <button type="submit" class="btn">Avancar</button>
-</form>
+    <h2>Módulos e regras</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="2">
+        {{ form.as_p }}
+        <div class="o-btnrow">
+            <button type="submit" name="voltar" class="o-btn o-btn--ghost">Voltar</button>
+            <button type="submit" class="o-btn o-btn--primary">Avançar</button>
+        </div>
+    </form>
 {% else %}
-<h3>Etapa 3 - Revisao Final</h3>
-<p><strong>Capital inicial:</strong> {{ dados_step1.capital_inicial }}</p>
-<p><strong>Estoque inicial:</strong> {{ dados_step1.estoque_inicial }}</p>
-<p><strong>Maquinas iniciais:</strong> {{ dados_step1.maquinas_iniciais }}</p>
-<p><strong>Capacidade por maquina:</strong> {{ dados_step1.capacidade_maquina }}</p>
-<p><strong>Produtos habilitados:</strong> {{ dados_step2.produtos_habilitados }}</p>
-<p><strong>Modulo Producao:</strong> {{ dados_step2.modulo_producao }}</p>
-<p><strong>Modulo Distribuicao:</strong> {{ dados_step2.modulo_distribuicao }}</p>
-<p><strong>Modulo Financeiro:</strong> {{ dados_step2.modulo_financeiro }}</p>
-<p><strong>Regras de eventos:</strong> {{ dados_step2.regra_eventos }}</p>
+    <h2>Revisão</h2>
+    <p class="o-panel__hint">Confira antes de salvar. Você ainda pode voltar e ajustar.</p>
 
-<form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="step" value="3">
-    <button type="submit" name="voltar" class="btn">Voltar</button>
-    <button type="submit" name="confirmar" class="btn btn-primary">Confirmar e Salvar</button>
-</form>
+    <dl class="o-summary">
+        <dt>Capital inicial</dt><dd class="o-num">{{ dados_step1.capital_inicial }}</dd>
+        <dt>Estoque inicial</dt><dd class="o-num">{{ dados_step1.estoque_inicial }}</dd>
+        <dt>Produtos habilitados</dt><dd>{{ dados_step2.produtos_habilitados }}</dd>
+        <dt>Módulo de produção</dt><dd>{{ dados_step2.modulo_producao }}</dd>
+        <dt>Módulo de distribuição</dt><dd>{{ dados_step2.modulo_distribuicao }}</dd>
+        <dt>Módulo financeiro</dt><dd>{{ dados_step2.modulo_financeiro }}</dd>
+        <dt>Regras de eventos</dt><dd>{{ dados_step2.regra_eventos }}</dd>
+    </dl>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="3">
+        <div class="o-btnrow">
+            <button type="submit" name="voltar" class="o-btn o-btn--ghost">Voltar</button>
+            <button type="submit" name="confirmar" class="o-btn o-btn--primary">Salvar configuração</button>
+        </div>
+    </form>
 {% endif %}
+</div>
 {% endblock %}

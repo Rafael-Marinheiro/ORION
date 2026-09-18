@@ -1,159 +1,222 @@
 {% extends 'base.html' %}
 
+{% block title %}Painel do grupo — ORION{% endblock %}
+
 {% block content %}
-<h2>Painel do Grupo{% if grupo %} {{ grupo.nome }}{% endif %}</h2>
-
 {% if sem_grupo %}
-<p>Seu usuario nao esta vinculado a um grupo. Solicite vinculacao ao administrador.</p>
+    <div class="o-head">
+        <h1>Painel do grupo</h1>
+    </div>
+    <div class="o-panel">
+        <div class="o-empty o-empty--center">
+            {% include 'partials/empty.svg.html' %}
+            <p>Seu usuário ainda não está vinculado a um grupo.</p>
+            <p class="o-muted">Peça ao professor para incluir você em uma equipe. O painel abre assim que o vínculo existir.</p>
+        </div>
+    </div>
 {% else %}
-<div class="painel-kpi">
-    <div><strong>Capital:</strong> {{ grupo.capital }}</div>
-    <div><strong>Estoque:</strong> {{ grupo.estoque }}</div>
-    <div><strong>Rodada ativa:</strong> {% if rodada_ativa %}{{ rodada_ativa.numero }}{% else %}--{% endif %}</div>
-    <div><strong>CEO da rodada:</strong> {% if ceo_rodada %}{{ ceo_rodada.nome_usuario }}{% else %}Nao definido{% endif %}</div>
-</div>
+    <div class="o-head">
+        <div class="o-head__row">
+            <div>
+                <h1>Painel do grupo{% if grupo %} · {{ grupo.nome }}{% endif %}</h1>
+                <p class="o-head__sub">Registre as decisões da equipe e envie a submissão oficial antes do fechamento da rodada.</p>
+            </div>
+            <form method="get" class="o-filters" role="search">
+                <p>
+                    <label for="rodada">Ver rodada</label>
+                    <input id="rodada" type="number" name="rodada" value="{{ rodada_filtro }}" min="1" inputmode="numeric">
+                </p>
+                <div class="o-btnrow">
+                    <button type="submit" class="o-btn">Aplicar</button>
+                    <a href="{% url 'painel_grupo' %}" class="o-btn o-btn--ghost">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
 
-{% if rodada_ativa %}
-<p><strong>Encerramento:</strong> {{ rodada_ativa.fim|date:'d/m/Y H:i' }}</p>
-{% else %}
-<p><strong>Nao ha rodada ativa no momento.</strong></p>
-{% endif %}
-{% if evento %}
-<p><strong>Evento da rodada:</strong> {{ evento.nome }} - {{ evento.descricao }}</p>
-{% endif %}
-{% if notificacao %}<p><strong>{{ notificacao }}</strong></p>{% endif %}
-{% if alerta %}<p><strong>{{ alerta }}</strong></p>{% endif %}
-{% if not pode_submeter %}<p><strong>Modo leitura:</strong> apenas o CEO da rodada pode submeter decisoes.</p>{% endif %}
-{% if submissao_realizada %}<p><strong>Submissao oficial enviada para esta rodada. Edicao bloqueada.</strong></p>{% endif %}
+    <div class="o-kpis">
+        <div class="o-kpi">
+            <span class="o-kpi__label">Capital</span>
+            <span class="o-kpi__value">{{ grupo.capital }}</span>
+        </div>
+        <div class="o-kpi">
+            <span class="o-kpi__label">Estoque</span>
+            <span class="o-kpi__value">{{ grupo.estoque }}</span>
+        </div>
+        <div class="o-kpi">
+            <span class="o-kpi__label">CEO da rodada</span>
+            <span class="o-kpi__value o-kpi__value--text">
+                {% if ceo_rodada %}{{ ceo_rodada.nome_usuario }}{% else %}Não definido{% endif %}
+            </span>
+        </div>
+        <div class="o-kpi">
+            <span class="o-kpi__label">Saldo aplicado</span>
+            <span class="o-kpi__value">{% if aplicacao_financeira %}{{ aplicacao_financeira.saldo_aplicado }}{% else %}0{% endif %}</span>
+            <span class="o-kpi__foot">Rende 1,5% por rodada</span>
+        </div>
+    </div>
 
-<form method="get" class="painel-card mb-3">
-    <label for="rodada">Filtro por rodada</label>
-    <input id="rodada" type="number" name="rodada" value="{{ rodada_filtro }}" min="1">
-    <button type="submit" class="btn">Aplicar filtro</button>
-    <a href="{% url 'painel_grupo' %}" class="btn">Limpar</a>
-</form>
+    {% if evento or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
+    <ul class="o-notes">
+        {% if not rodada_ativa %}
+            <li class="o-note o-note--warning">Nenhuma rodada aberta no momento. As decisões voltam a aceitar envio quando o professor abrir a próxima.</li>
+        {% endif %}
+        {% if evento %}
+            <li class="o-note o-note--warning"><strong>{{ evento.nome }}</strong> — {{ evento.descricao }}</li>
+        {% endif %}
+        {% if submissao_realizada %}
+            <li class="o-note o-note--success">Submissão oficial enviada nesta rodada. A edição está encerrada.</li>
+        {% endif %}
+        {% if not pode_submeter %}
+            <li class="o-note o-note--info">Você está em modo leitura. Apenas o CEO da rodada envia a submissão oficial.</li>
+        {% endif %}
+        {% if notificacao %}<li class="o-note o-note--info">{{ notificacao }}</li>{% endif %}
+        {% if alerta %}<li class="o-note o-note--error">{{ alerta }}</li>{% endif %}
+    </ul>
+    {% endif %}
 
-<div class="painel-grid">
-    <section class="painel-card">
-        <h3>1) Compra de Materia-Prima (D+1)</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ compra_mp_form.as_p }}
-            <button type="submit" name="enviar_compra_mp" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Compra de MP</button>
-        </form>
-        <h4>Saldo de Materias-Primas</h4>
-        <ul>
-            {% for s in saldos_mp %}
-            <li>{{ s.materia_prima.codigo }} - {{ s.quantidade_kg }} kg</li>
-            {% empty %}
-            <li>Nenhum saldo de materia-prima registrado.</li>
-            {% endfor %}
-        </ul>
-    </section>
+    <div class="o-grid">
+        <section class="o-panel o-panel--step">
+            <h2 class="o-panel__title" data-step="1">Compra de matéria-prima</h2>
+            <p class="o-panel__hint">O pedido chega na rodada seguinte.</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ compra_mp_form.as_p }}
+                <button type="submit" name="enviar_compra_mp" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar compra</button>
+            </form>
 
-    <section class="painel-card">
-        <h3>2) Producao por Produto</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ producao_form.as_p }}
-            <button type="submit" name="enviar_producao" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Producao</button>
-        </form>
-        <h4>Capacidade por Linha</h4>
-        <ul>
-            {% for c in capacidades_produto %}
-            <li>{{ c.produto.codigo }}: {{ c.maquinas }} maq / {{ c.operadores }} op / {{ c.capacidade_unidades_rodada }} un</li>
-            {% empty %}
-            <li>Nenhuma capacidade configurada.</li>
-            {% endfor %}
-        </ul>
-        <h4>Saldo de Produtos</h4>
-        <ul>
-            {% for s in saldos_produto %}
-            <li>{{ s.produto.codigo }} - lote R{{ s.rodada_entrada }}: {{ s.quantidade }} un</li>
-            {% empty %}
-            <li>Nenhum saldo de produto registrado.</li>
-            {% endfor %}
-        </ul>
-    </section>
+            <h3>Saldo de matérias-primas</h3>
+            <ul class="o-list">
+                {% for s in saldos_mp %}
+                <li><span class="tag">{{ s.materia_prima.codigo }}</span> <span class="num">{{ s.quantidade_kg }}</span> kg</li>
+                {% empty %}
+                <li class="o-empty">Nenhum saldo registrado.</li>
+                {% endfor %}
+            </ul>
+        </section>
 
-    <section class="painel-card">
-        <h3>3) Distribuir Produtos</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ envio_form.as_p }}
-            <button type="submit" name="enviar_envio" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Distribuicao</button>
-        </form>
-        <h4>Envios Realizados</h4>
-        <ul>
-            {% for e in envios %}
-            <li>R{{ e.rodada }} - {{ e.cidade.nome }} - enviado {{ e.quantidade }} / vendido {{ e.quantidade_vendida }} / sobra {{ e.quantidade_sobra }}</li>
-            {% empty %}
-            <li>Nenhum envio registrado.</li>
-            {% endfor %}
-        </ul>
-    </section>
+        <section class="o-panel o-panel--step">
+            <h2 class="o-panel__title" data-step="2">Produção por produto</h2>
+            <p class="o-panel__hint">A capacidade da linha limita o volume da rodada.</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ producao_form.as_p }}
+                <button type="submit" name="enviar_producao" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar produção</button>
+            </form>
 
-    <section class="painel-card">
-        <h3>4) Investimentos</h3>
-        <p class="muted">Marketing por cidade, maquinas/RH por linha (D+1) e aplicacoes financeiras (1.5%/rodada).</p>
-        <form method="post">
-            {% csrf_token %}
-            {{ investimento_form.as_p }}
-            <button type="submit" name="enviar_investimento" class="btn" {% if not permite_edicao %}disabled{% endif %}>Registrar Investimento</button>
-        </form>
-        <p><strong>Saldo aplicado:</strong> {% if aplicacao_financeira %}{{ aplicacao_financeira.saldo_aplicado }}{% else %}0{% endif %}</p>
-        <ul>
-            {% for i in investimentos %}
-            <li>R{{ i.rodada }} - {{ i.get_categoria_display }} - {{ i.valor }} - ativa em R{{ i.rodada_ativacao }} - {% if i.processado %}processado{% else %}pendente{% endif %}</li>
-            {% empty %}
-            <li>Nenhum investimento registrado.</li>
-            {% endfor %}
-        </ul>
-    </section>
+            <h3>Capacidade por linha</h3>
+            <ul class="o-list">
+                {% for c in capacidades_produto %}
+                <li><span class="tag">{{ c.produto.codigo }}</span> <span class="num">{{ c.maquinas }}</span> máq · <span class="num">{{ c.operadores }}</span> op · <span class="num">{{ c.capacidade_unidades_rodada }}</span> un</li>
+                {% empty %}
+                <li class="o-empty">Nenhuma capacidade configurada.</li>
+                {% endfor %}
+            </ul>
 
-    <section class="painel-card">
-        <h3>5) Submissao Oficial da Rodada</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" name="enviar_decisao" class="btn btn-primary" {% if not permite_edicao %}disabled{% endif %}>Enviar Submissao</button>
-        </form>
-        <h4>Historico de Submissoes</h4>
-        <ul>
-            {% for d in decisoes %}
-            <li>Rodada {{ d.rodada }} - {{ d.descricao }} ({{ d.data_criacao|date:'d/m H:i' }})</li>
-            {% empty %}
-            <li>Nenhuma submissao registrada.</li>
-            {% endfor %}
-        </ul>
-    </section>
+            <h3>Saldo de produtos</h3>
+            <ul class="o-list">
+                {% for s in saldos_produto %}
+                <li><span class="tag">{{ s.produto.codigo }}</span> lote R{{ s.rodada_entrada }} · <span class="num">{{ s.quantidade }}</span> un</li>
+                {% empty %}
+                <li class="o-empty">Nenhum saldo registrado.</li>
+                {% endfor %}
+            </ul>
+        </section>
 
-    <section class="painel-card">
-        <h3>6) Financeiro</h3>
-        <ul>
-            {% for c in compras_mp %}
-            <li>Compra R{{ c.rodada_pedido }} - {{ c.materia_prima.codigo }} - total {{ c.valor_total }} (desc. log {{ c.desconto_logistico }})</li>
-            {% empty %}
-            <li>Nenhuma compra de materia-prima registrada.</li>
-            {% endfor %}
-        </ul>
-        <h4>Producoes</h4>
-        <ul>
-            {% for p in producoes %}
-            <li>R{{ p.rodada }} - {{ p.produto.nome }} - {{ p.quantidade_produzida }} un - custo {{ p.custo_total }}</li>
-            {% empty %}
-            <li>Nenhuma producao registrada.</li>
-            {% endfor %}
-        </ul>
-        <h4>Resultados Financeiros</h4>
-        <ul>
-            {% for r in resultados %}
-            <li>R{{ r.rodada }} - Receita {{ r.receita }} - Custos {{ r.custos }} - Lucro {{ r.lucro }} - Caixa {{ r.saldo_caixa }}</li>
-            {% empty %}
-            <li>Nenhum resultado registrado.</li>
-            {% endfor %}
-        </ul>
-    </section>
-</div>
+        <section class="o-panel o-panel--step">
+            <h2 class="o-panel__title" data-step="3">Distribuição</h2>
+            <p class="o-panel__hint">Sobra fica parada; falta deixa demanda na mesa.</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ envio_form.as_p }}
+                <button type="submit" name="enviar_envio" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar distribuição</button>
+            </form>
+
+            <h3>Envios realizados</h3>
+            <ul class="o-list">
+                {% for e in envios %}
+                <li><span class="tag">R{{ e.rodada }}</span> {{ e.cidade.nome }} · enviado <span class="num">{{ e.quantidade }}</span> · vendido <span class="num">{{ e.quantidade_vendida }}</span> · sobra <span class="num">{{ e.quantidade_sobra }}</span></li>
+                {% empty %}
+                <li class="o-empty">Nenhum envio registrado.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="o-panel o-panel--step">
+            <h2 class="o-panel__title" data-step="4">Investimentos</h2>
+            <p class="o-panel__hint">Marketing por cidade, máquinas e pessoas entram na rodada seguinte. Aplicação financeira rende 1,5% por rodada.</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ investimento_form.as_p }}
+                <button type="submit" name="enviar_investimento" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar investimento</button>
+            </form>
+
+            <h3>Investimentos registrados</h3>
+            <ul class="o-list">
+                {% for i in investimentos %}
+                <li>
+                    <span class="tag">R{{ i.rodada }}</span> {{ i.get_categoria_display }} · <span class="num">{{ i.valor }}</span> · ativa em R{{ i.rodada_ativacao }}
+                    {% if i.processado %}
+                        <span class="o-badge o-badge--ok">processado</span>
+                    {% else %}
+                        <span class="o-badge o-badge--mute">pendente</span>
+                    {% endif %}
+                </li>
+                {% empty %}
+                <li class="o-empty">Nenhum investimento registrado.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="o-panel o-panel--step">
+            <h2 class="o-panel__title" data-step="5">Submissão oficial</h2>
+            <p class="o-panel__hint">Fecha as decisões da rodada. Sem submissão, a equipe recebe penalidade.</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" name="enviar_decisao" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Enviar submissão</button>
+            </form>
+
+            <h3>Submissões anteriores</h3>
+            <ul class="o-list">
+                {% for d in decisoes %}
+                <li><span class="tag">R{{ d.rodada }}</span> {{ d.descricao }} <span class="o-muted">{{ d.data_criacao|date:'d/m H:i' }}</span></li>
+                {% empty %}
+                <li class="o-empty">Nenhuma submissão registrada.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="o-panel">
+            <h2 class="o-panel__title">Financeiro</h2>
+
+            <h3>Compras de matéria-prima</h3>
+            <ul class="o-list">
+                {% for c in compras_mp %}
+                <li><span class="tag">R{{ c.rodada_pedido }}</span> {{ c.materia_prima.codigo }} · total <span class="num">{{ c.valor_total }}</span> · desconto <span class="num">{{ c.desconto_logistico }}</span></li>
+                {% empty %}
+                <li class="o-empty">Nenhuma compra registrada.</li>
+                {% endfor %}
+            </ul>
+
+            <h3>Produções</h3>
+            <ul class="o-list">
+                {% for p in producoes %}
+                <li><span class="tag">R{{ p.rodada }}</span> {{ p.produto.nome }} · <span class="num">{{ p.quantidade_produzida }}</span> un · custo <span class="num">{{ p.custo_total }}</span></li>
+                {% empty %}
+                <li class="o-empty">Nenhuma produção registrada.</li>
+                {% endfor %}
+            </ul>
+
+            <h3>Resultados por rodada</h3>
+            <ul class="o-list">
+                {% for r in resultados %}
+                <li><span class="tag">R{{ r.rodada }}</span> receita <span class="num">{{ r.receita }}</span> · custos <span class="num">{{ r.custos }}</span> · lucro <span class="num">{{ r.lucro }}</span> · caixa <span class="num">{{ r.saldo_caixa }}</span></li>
+                {% empty %}
+                <li class="o-empty">Nenhum resultado registrado.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
 {% endif %}
 {% endblock %}

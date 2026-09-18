@@ -1,25 +1,78 @@
 {% extends 'base.html' %}
-{% load static %}
+
+{% block title %}ORION — simulador operacional para ensino de gestão{% endblock %}
 
 {% block content %}
-<div class="row align-items-center">
-    <div class="col-md-6 text-center mb-4 mb-md-0">
-        <img src="{% static 'img/logo.png' %}" alt="Logo ORION" class="img-fluid" style="max-height: 400px;">
-    </div>
-    <div class="col-md-6">
-        <h1 class="mb-2">Bem-vindo ao ORION</h1>
-        <p class="lead">Simulador operacional gamificado para ensino de gestão</p>
-        <p>O ORION possibilita que grupos de estudantes administrem empresas simuladas em um mercado competitivo e dinâmico. A cada rodada são tomadas decisões de produção, compras, finanças, comercialização e investimentos, gerando resultados consolidados em relatórios e rankings.</p>
-        <ul>
-            <li>Interface amigável e módulos integrados.</li>
-            <li>Relatórios gerenciais, dashboards e eventos aleatórios.</li>
-            <li>Classificação entre equipes e suporte a trabalho offline temporário.</li>
-        </ul>
+<div class="o-hero">
+    <div class="o-hero__text o-prose">
+        <h1>Sua turma administra uma fábrica, uma rodada por vez.</h1>
+        <p class="o-hero__lead">
+            Cada equipe compra matéria-prima, produz, distribui para as cidades e
+            investe — com um prazo correndo e eventos que ninguém escolheu. No
+            fechamento, os números dizem quem leu o mercado melhor.
+        </p>
         {% if user.is_authenticated %}
-            <p>Você está logado como {{ user.nome_usuario }}. <a href="{% url 'painel_grupo' %}">Ir para o Painel do Grupo</a></p>
+            <div class="o-btnrow">
+                <a class="o-btn o-btn--primary" href="{% url 'painel_grupo' %}">Abrir o painel do grupo</a>
+                <a class="o-btn o-btn--ghost" href="{% url 'ranking' %}">Ver o ranking</a>
+            </div>
+            <p class="o-muted">Você entrou como {{ user.nome_usuario }}.</p>
         {% else %}
-            <p><a class="btn btn-primary" href="{% url 'login' %}">Entrar</a></p>
+            <div class="o-btnrow">
+                <a class="o-btn o-btn--primary" href="{% url 'login' %}">Entrar</a>
+                <a class="o-btn o-btn--ghost" href="{% url 'ajuda' %}">Como funciona</a>
+            </div>
         {% endif %}
     </div>
+
+    <div class="o-hero__mark" aria-hidden="true">
+        {% include 'partials/mark.svg.html' %}
+    </div>
 </div>
+
+<section class="o-loop" aria-labelledby="loop-titulo">
+    <h2 id="loop-titulo">A rodada, do início ao fechamento</h2>
+    <p class="o-muted">Toda equipe percorre as mesmas cinco decisões antes do prazo encerrar.</p>
+
+    <ol class="o-loop__steps">
+        <li>
+            <h3>Comprar matéria-prima</h3>
+            <p>O pedido chega na rodada seguinte, então é preciso antecipar a demanda. Volume cruzado rende desconto logístico.</p>
+        </li>
+        <li>
+            <h3>Produzir</h3>
+            <p>Cada linha tem máquinas e operadores. A capacidade limita o quanto sai por rodada.</p>
+        </li>
+        <li>
+            <h3>Distribuir</h3>
+            <p>Enviar demais deixa sobra parada; enviar de menos deixa demanda na mesa.</p>
+        </li>
+        <li>
+            <h3>Investir</h3>
+            <p>Marketing por cidade, máquinas e pessoas para as próximas rodadas, ou aplicação financeira a 1,5% por rodada.</p>
+        </li>
+        <li>
+            <h3>Submeter</h3>
+            <p>Só o CEO da rodada envia a submissão oficial. Depois do prazo, não há edição — e a equipe sem submissão leva penalidade.</p>
+        </li>
+    </ol>
+</section>
+
+<section class="o-facts" aria-labelledby="facts-titulo">
+    <h2 id="facts-titulo" class="o-sr">O que o simulador entrega</h2>
+    <div class="o-grid">
+        <article class="o-panel">
+            <h3>Resultados consolidados</h3>
+            <p class="o-muted">Receita, custos operacionais, armazenagem, perda de perecíveis e lucro por rodada e por grupo, com exportação em PDF e Excel.</p>
+        </article>
+        <article class="o-panel">
+            <h3>Ranking multicritério</h3>
+            <p class="o-muted">A classificação combina lucro, participação de mercado, atendimento da demanda e eficiência de estoque — não só o caixa.</p>
+        </article>
+        <article class="o-panel">
+            <h3>Eventos de mercado</h3>
+            <p class="o-muted">Greves, altas de custo e choques de demanda entram por sorteio a cada rodada e atingem todas as equipes.</p>
+        </article>
+    </div>
+</section>
 {% endblock %}

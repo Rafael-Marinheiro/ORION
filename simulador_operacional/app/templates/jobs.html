@@ -1,45 +1,74 @@
 {% extends 'base.html' %}
 
+{% block title %}Execuções de jobs — ORION{% endblock %}
+
 {% block content %}
-<h2>Execucoes de Jobs</h2>
-<form method="get">
-    <label>Comando</label>
-    <input type="text" name="comando" value="{{ request.GET.comando }}">
-    <label>Status</label>
-    <select name="status">
-        <option value="">Todos</option>
-        <option value="sucesso" {% if request.GET.status == "sucesso" %}selected{% endif %}>Sucesso</option>
-        <option value="falha" {% if request.GET.status == "falha" %}selected{% endif %}>Falha</option>
-    </select>
-    <button type="submit" class="btn">Filtrar</button>
+<div class="o-head">
+    <div class="o-head__row">
+        <div>
+            <h1>Execuções de jobs</h1>
+            <p class="o-head__sub">Histórico das rotinas agendadas: fechamento de rodadas, lembretes e sorteio de eventos.</p>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="o-panel o-filters" style="margin-bottom: var(--o-5);">
+    <p>
+        <label for="filtro-comando">Comando</label>
+        <input id="filtro-comando" type="search" name="comando" value="{{ request.GET.comando }}">
+    </p>
+    <p>
+        <label for="filtro-status">Status</label>
+        <select id="filtro-status" name="status">
+            <option value="">Todos</option>
+            <option value="sucesso" {% if request.GET.status == "sucesso" %}selected{% endif %}>Sucesso</option>
+            <option value="falha" {% if request.GET.status == "falha" %}selected{% endif %}>Falha</option>
+        </select>
+    </p>
+    <button type="submit" class="o-btn">Filtrar</button>
 </form>
 
-<div class="table-wrap">
-    <table class="table">
+<div class="o-tablewrap">
+    <table class="o-table">
         <thead>
             <tr>
-                <th>Comando</th>
-                <th>Status</th>
-                <th>Correlation ID</th>
-                <th>Rodada</th>
-                <th>Inicio</th>
-                <th>Fim</th>
-                <th>Detalhes</th>
+                <th scope="col">Comando</th>
+                <th scope="col">Status</th>
+                <th scope="col">Correlation ID</th>
+                <th scope="col" class="num">Rodada</th>
+                <th scope="col">Início</th>
+                <th scope="col">Fim</th>
+                <th scope="col">Detalhes</th>
             </tr>
         </thead>
         <tbody>
             {% for job in jobs %}
             <tr>
-                <td>{{ job.comando }}</td>
-                <td>{{ job.status }}</td>
-                <td>{{ job.correlation_id }}</td>
-                <td>{{ job.rodada }}</td>
-                <td>{{ job.iniciado_em|date:'d/m/Y H:i:s' }}</td>
-                <td>{{ job.finalizado_em|date:'d/m/Y H:i:s' }}</td>
+                <th scope="row">{{ job.comando }}</th>
+                <td>
+                    {% if job.status == "sucesso" %}
+                        <span class="o-badge o-badge--ok">sucesso</span>
+                    {% elif job.status == "falha" %}
+                        <span class="o-badge o-badge--bad">falha</span>
+                    {% else %}
+                        <span class="o-badge o-badge--mute">{{ job.status }}</span>
+                    {% endif %}
+                </td>
+                <td class="o-num">{{ job.correlation_id }}</td>
+                <td class="num">{{ job.rodada }}</td>
+                <td class="o-num">{{ job.iniciado_em|date:'d/m/Y H:i:s' }}</td>
+                <td class="o-num">{{ job.finalizado_em|date:'d/m/Y H:i:s' }}</td>
                 <td>{{ job.detalhes }}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="7">Nenhuma execucao encontrada.</td></tr>
+            <tr>
+                <td colspan="7">
+                    <div class="o-empty o-empty--center">
+                        {% include 'partials/empty.svg.html' %}
+                        <p>Nenhuma execução encontrada para este filtro.</p>
+                    </div>
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>

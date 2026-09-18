@@ -1,21 +1,32 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Painel do professor — ORION{% endblock %}
 
 {% block content %}
-<h2>Dashboard Gamemaster</h2>
-<canvas id="gmChart"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="o-head">
+    <h1>Painel do professor</h1>
+    <p class="o-head__sub">Visão geral do andamento da simulação.</p>
+</div>
+
+<div class="o-panel">
+    <h2 class="o-panel__title">Evolução por rodada</h2>
+    <div class="o-chart"><canvas id="gmChart"></canvas></div>
+    <p id="gmFallback" class="o-muted" hidden>Gráfico indisponível: a biblioteca externa não carregou.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="{% static 'js/charts.js' %}" defer></script>
 <script>
-const ctx = document.getElementById('gmChart').getContext('2d');
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ['Rodada 1','Rodada 2','Rodada 3'],
-        datasets: [{
-            label: 'Exemplo',
-            data: [10,20,30],
-            backgroundColor: 'rgba(54, 162, 235, 0.5)'
-        }]
-    }
-});
+    window.orionCharts = window.orionCharts || [];
+    window.orionCharts.push({
+        canvas: 'gmChart',
+        fallback: 'gmFallback',
+        type: 'bar',
+        labels: ['Rodada 1', 'Rodada 2', 'Rodada 3'],
+        series: [{ label: 'Exemplo', data: [10, 20, 30] }]
+    });
 </script>
 {% endblock %}

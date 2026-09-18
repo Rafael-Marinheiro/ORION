@@ -1,10 +1,18 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
+{% block title %}Enviar sugestão — ORION{% endblock %}
 
 {% block content %}
-<h1>Envie sua sugestão</h1>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Enviar</button>
-</form>
+<div class="o-head">
+    <h1>Enviar sugestão</h1>
+    <p class="o-head__sub">Conte o que atrapalhou ou o que faltou. As sugestões entram no roadmap do projeto.</p>
+</div>
+
+<div class="o-form-panel o-panel">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="o-btn o-btn--primary">Enviar sugestão</button>
+    </form>
+</div>
 {% endblock %}

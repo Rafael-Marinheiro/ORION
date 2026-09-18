@@ -1,18 +1,25 @@
 {% extends 'base.html' %}
 
+{% block title %}Configuração do jogo — ORION{% endblock %}
+
 {% block content %}
-<h2>Configuração do Jogo</h2>
-<form method="post">
-    {% csrf_token %}
-    {% for field in form %}
-    <p>
-        {{ field.label_tag }}
-        {{ field }}
-        {% for error in field.errors %}
-        <strong>{{ error }}</strong>
+<div class="o-head">
+    <h1>Configuração do jogo</h1>
+    <p class="o-head__sub">Parâmetros base da simulação. Valem para as próximas rodadas.</p>
+</div>
+
+<div class="o-form-panel o-panel">
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <p>
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+            {% if field.errors %}<span class="o-fielderror">{{ field.errors|join:" " }}</span>{% endif %}
+        </p>
         {% endfor %}
-    </p>
-    {% endfor %}
-    <button type="submit" class="btn">Salvar</button>
-</form>
+        <button type="submit" class="o-btn o-btn--primary">Salvar configuração</button>
+    </form>
+</div>
 {% endblock %}

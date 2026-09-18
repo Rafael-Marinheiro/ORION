@@ -1,19 +1,44 @@
 {% extends 'base.html' %}
+
+{% block title %}Encerramento da rodada — ORION{% endblock %}
+
 {% block content %}
-<h2>Resumo do Encerramento</h2>
-{% if rodada %}
-<p>Rodada encerrada: {{ rodada.numero }} - {{ rodada.fim|date:'d/m/Y H:i' }}</p>
-{% if resultado %}
-<ul>
-  <li>Receita: {{ resultado.receita }}</li>
-  <li>Custos: {{ resultado.custos }}</li>
-  <li>Lucro: {{ resultado.lucro }}</li>
-  <li>Saldo em Caixa: {{ resultado.saldo_caixa }}</li>
-</ul>
+<div class="o-head">
+    <h1>Encerramento da rodada</h1>
+    {% if rodada %}
+    <p class="o-head__sub">Rodada {{ rodada.numero }}, fechada em {{ rodada.fim|date:'d/m/Y H:i' }}.</p>
+    {% endif %}
+</div>
+
+{% if rodada and resultado %}
+<div class="o-kpis">
+    <div class="o-kpi">
+        <span class="o-kpi__label">Receita</span>
+        <span class="o-kpi__value">{{ resultado.receita }}</span>
+    </div>
+    <div class="o-kpi">
+        <span class="o-kpi__label">Custos</span>
+        <span class="o-kpi__value">{{ resultado.custos }}</span>
+    </div>
+    <div class="o-kpi">
+        <span class="o-kpi__label">Lucro</span>
+        <span class="o-kpi__value">{{ resultado.lucro }}</span>
+    </div>
+    <div class="o-kpi">
+        <span class="o-kpi__label">Saldo em caixa</span>
+        <span class="o-kpi__value">{{ resultado.saldo_caixa }}</span>
+    </div>
+</div>
 {% else %}
-<p>Sem resultado registrado para a rodada.</p>
-{% endif %}
-{% else %}
-<p>Nenhuma rodada encerrada.</p>
+<div class="o-panel">
+    <div class="o-empty o-empty--center">
+        {% include 'partials/empty.svg.html' %}
+        {% if rodada %}
+        <p>Esta rodada ainda não tem resultado registrado.</p>
+        {% else %}
+        <p>Nenhuma rodada foi encerrada até agora.</p>
+        {% endif %}
+    </div>
+</div>
 {% endif %}
 {% endblock %}

@@ -1,35 +1,50 @@
 {% extends 'base.html' %}
+
+{% block title %}Ranking — ORION{% endblock %}
+
 {% block content %}
-<h2>Ranking de Grupos</h2>
-{% if rodada_referencia %}
-<p>Rodada de referencia: {{ rodada_referencia }}</p>
-{% endif %}
-<div class="table-wrap">
-    <table class="table">
+<div class="o-head">
+    <h1>Ranking de grupos</h1>
+    <p class="o-head__sub">
+        A posição combina lucro, participação de mercado, atendimento da demanda e
+        eficiência de estoque{% if rodada_referencia %}, com base na rodada {{ rodada_referencia }}{% endif %}.
+    </p>
+</div>
+
+<div class="o-tablewrap">
+    <table class="o-table">
+        <caption class="o-sr">Classificação dos grupos por score multicritério</caption>
         <thead>
             <tr>
-                <th>Posicao</th>
-                <th>Grupo</th>
-                <th>Score</th>
-                <th>Lucro Rodada</th>
-                <th>Market Share (%)</th>
-                <th>Atendimento (%)</th>
-                <th>Eficiencia Estoque (%)</th>
+                <th scope="col">#</th>
+                <th scope="col">Grupo</th>
+                <th scope="col" class="num">Score</th>
+                <th scope="col" class="num">Lucro da rodada</th>
+                <th scope="col" class="num">Mercado (%)</th>
+                <th scope="col" class="num">Atendimento (%)</th>
+                <th scope="col" class="num">Eficiência de estoque (%)</th>
             </tr>
         </thead>
         <tbody>
             {% for item in ranking %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{% if item.grupo %}{{ item.grupo.nome }}{% else %}{{ item.nome }}{% endif %}</td>
-                <td>{{ item.score_multicriterio|default:"0" }}</td>
-                <td>{{ item.lucro_rodada|default:"0" }}</td>
-                <td>{{ item.market_share_percent|default:"0" }}</td>
-                <td>{{ item.atendimento_demanda_percent|default:"0" }}</td>
-                <td>{{ item.eficiencia_estoque_percent|default:"0" }}</td>
+            <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
+                <td class="rank">{{ forloop.counter }}</td>
+                <th scope="row">{% if item.grupo %}{{ item.grupo.nome }}{% else %}{{ item.nome }}{% endif %}</th>
+                <td class="num">{{ item.score_multicriterio|default:"0" }}</td>
+                <td class="num">{{ item.lucro_rodada|default:"0" }}</td>
+                <td class="num">{{ item.market_share_percent|default:"0" }}</td>
+                <td class="num">{{ item.atendimento_demanda_percent|default:"0" }}</td>
+                <td class="num">{{ item.eficiencia_estoque_percent|default:"0" }}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="7">Sem dados de ranking.</td></tr>
+            <tr>
+                <td colspan="7">
+                    <div class="o-empty o-empty--center">
+                        {% include 'partials/empty.svg.html' %}
+                        <p>O ranking aparece depois do primeiro fechamento de rodada.</p>
+                    </div>
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>

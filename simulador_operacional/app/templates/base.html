@@ -1,68 +1,139 @@
-<!DOCTYPE html>
-{% load static %}
-<html>
+{% load static %}<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
 <head>
-    <title>Simulador Operacional</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>{% block title %}ORION{% endblock %}</title>
+    <meta name="description" content="ORION - simulador operacional gamificado para ensino de gestao empresarial.">
+    <meta name="color-scheme" content="dark light">
+    {# tema antes da pintura, senao a pagina pisca no tema errado #}
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('orion-theme');
+                if (t !== 'light' && t !== 'dark') {
+                    t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                }
+                document.documentElement.dataset.theme = t;
+            } catch (e) { /* storage bloqueado: fica no escuro */ }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block head_extra %}{% endblock %}
 </head>
-<body data-theme="dark">
-    <nav id="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">ORION</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+<body>
+<a class="o-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header>
+    <nav class="o-nav" aria-label="Principal">
+        <div class="o-shell o-nav__inner">
+            <a class="o-brand" href="{% url 'home' %}">
+                {% include 'partials/mark.svg.html' with mark_label="ORION" %}
+                <span>ORION</span>
+            </a>
+
+            <button class="o-nav__toggle" type="button" aria-expanded="false" aria-controls="nav-links" data-nav-toggle>
+                Menu
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Inicio</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'painel_grupo' %}">Painel</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'ranking' %}">Ranking</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'relatorios' %}">Relatorios</a></li>
-                        {% if user.is_staff %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'game_config' %}">Configuracao</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'game_config_wizard' %}">Wizard Config</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'abrir_rodada' %}">Abrir Rodada</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'lista_grupos' %}">Grupos</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'jobs' %}">Jobs</a></li>
-                        {% endif %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'ajuda' %}">Ajuda</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'feedback' %}">Feedback</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Sair</a></li>
-                    {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'ajuda' %}">Ajuda</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'feedback' %}">Feedback</a></li>
+
+            <ul class="o-nav__links" id="nav-links" data-nav-links>
+                {% if user.is_authenticated %}
+                    <li><a class="o-nav__link" href="{% url 'painel_grupo' %}" {% if nav == 'painel' %}aria-current="page"{% endif %}>Painel</a></li>
+                    <li><a class="o-nav__link" href="{% url 'ranking' %}" {% if nav == 'ranking' %}aria-current="page"{% endif %}>Ranking</a></li>
+                    <li><a class="o-nav__link" href="{% url 'relatorios' %}" {% if nav == 'relatorios' %}aria-current="page"{% endif %}>Relatórios</a></li>
+                    {% if user.is_staff %}
+                    <li class="o-menu" data-menu>
+                        <button class="o-menu__toggle" type="button" aria-expanded="false" data-menu-toggle>Gestão</button>
+                        <ul class="o-menu__panel">
+                            <li><a class="o-nav__link" href="{% url 'abrir_rodada' %}">Abrir rodada</a></li>
+                            <li><a class="o-nav__link" href="{% url 'lista_grupos' %}">Grupos</a></li>
+                            <li><a class="o-nav__link" href="{% url 'game_config' %}">Configuração</a></li>
+                            <li><a class="o-nav__link" href="{% url 'game_config_wizard' %}">Assistente de configuração</a></li>
+                            <li><a class="o-nav__link" href="{% url 'jobs' %}">Execuções de jobs</a></li>
+                        </ul>
+                    </li>
                     {% endif %}
-                </ul>
-                <select id="theme-select" class="form-select form-select-sm w-auto ms-lg-3">
-                    <option value="dark">Modo Escuro</option>
-                    <option value="light">Modo Claro</option>
+                    <li><a class="o-nav__link" href="{% url 'ajuda' %}" {% if nav == 'ajuda' %}aria-current="page"{% endif %}>Ajuda</a></li>
+                    <li><a class="o-nav__link" href="{% url 'feedback' %}" {% if nav == 'feedback' %}aria-current="page"{% endif %}>Feedback</a></li>
+                {% else %}
+                    <li><a class="o-nav__link" href="{% url 'ajuda' %}" {% if nav == 'ajuda' %}aria-current="page"{% endif %}>Ajuda</a></li>
+                    <li><a class="o-nav__link" href="{% url 'feedback' %}" {% if nav == 'feedback' %}aria-current="page"{% endif %}>Feedback</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="o-nav__end">
+                <label class="o-sr" for="theme-select">Tema</label>
+                <select id="theme-select" class="o-btn o-btn--sm" data-theme-select>
+                    <option value="dark">Escuro</option>
+                    <option value="light">Claro</option>
                 </select>
+                {% if user.is_authenticated %}
+                    <a class="o-btn o-btn--sm o-btn--ghost" href="{% url 'logout' %}">Sair</a>
+                {% else %}
+                    <a class="o-btn o-btn--sm o-btn--primary" href="{% url 'login' %}">Entrar</a>
+                {% endif %}
             </div>
         </div>
     </nav>
 
-    <div class="container">
+    {% if user.is_authenticated and mostrar_trilho %}
+    <div class="o-rail">
+        <div class="o-shell o-rail__inner">
+            {% if rodada_corrente %}
+                <p class="o-rail__round">Rodada <b>{{ rodada_corrente.numero }}</b></p>
+                <p class="o-rail__clock"
+                   data-deadline="{{ rodada_corrente.fim|date:'c' }}"
+                   data-state="normal">
+                    <span>Fecha em</span>
+                    <time datetime="{{ rodada_corrente.fim|date:'c' }}" data-countdown>{{ rodada_corrente.fim|date:'d/m H:i' }}</time>
+                </p>
+                <span class="o-sr" role="status" data-countdown-status></span>
+            {% else %}
+                <p class="o-rail__round">Nenhuma rodada aberta</p>
+            {% endif %}
+
+            <span class="o-rail__spacer"></span>
+
+            <span class="o-rail__facts">
+                {% if evento_corrente %}
+                    <span class="o-badge o-badge--warn">Evento: {{ evento_corrente.nome }}</span>
+                {% endif %}
+                {% if submissao_realizada %}
+                    <span class="o-badge o-badge--ok">Submissão enviada</span>
+                {% elif rodada_corrente %}
+                    <span class="o-badge o-badge--mute">Sem submissão</span>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    {% endif %}
+</header>
+
+<main id="conteudo" tabindex="-1">
+    <div class="o-shell">
         {% if messages %}
-        <ul class="messages list-unstyled">
+        <ul class="o-notes">
             {% for m in messages %}
-            <li class="alert alert-{{ m.tags }}">{{ m }}</li>
+            <li class="o-note o-note--{{ m.tags|default:'info' }}">{{ m }}</li>
             {% endfor %}
         </ul>
         {% endif %}
-        {% block content %}
-        {% endblock %}
+
+        {% block content %}{% endblock %}
     </div>
+</main>
 
-    <footer class="text-center">
-        <small>&copy; {% now "Y" %} ORION - Desenvolvido por Rafael Marinheiro e Dr. Pio Marinheiro</small>
-    </footer>
+<footer class="o-foot">
+    <div class="o-shell o-foot__inner">
+        <span>ORION · Simulador Operacional</span>
+        <span>&copy; {% now "Y" %} Rafael Marinheiro e Dr. Pio Marinheiro</span>
+    </div>
+</footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static 'js/theme.js' %}"></script>
+<script src="{% static 'js/theme.js' %}" defer></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>
