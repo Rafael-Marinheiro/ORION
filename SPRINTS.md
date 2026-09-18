@@ -1,5 +1,9 @@
 Este documento resume as funcionalidades previstas para cada sprint de desenvolvimento. Ele se baseia no arquivo de documentação `Sprints de programação.docx` localizado em `_documentação/DOC/`.
 
+> **Histórico — não use para decidir escopo.**
+> Desatualizado. Fonte de verdade atual:
+> [`docs/GUIA_IMPLEMENTACAO.md`](docs/GUIA_IMPLEMENTACAO.md).
+
 ## Sprint 0 – Preparação
 - Revisar documentação e criar backlog inicial.
 - Configurar ambiente de desenvolvimento e versionamento.

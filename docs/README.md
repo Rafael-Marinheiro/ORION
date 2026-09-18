@@ -3,7 +3,7 @@
 Este diretorio concentra toda a documentacao funcional, tecnica e operacional do projeto.
 
 ## Fonte canonica por assunto
-- Escopo e andamento de implementacao: `BACKLOG.md`
+- Escopo e andamento de implementacao: `GUIA_IMPLEMENTACAO.md` (fonte de verdade; `BACKLOG.md` e historico)
 - Historico de mudancas por versao: `CHANGELOG.md`
 - Versao corrente de release: `VERSION`
 - Procedimentos operacionais: `RUNBOOK_OPERACAO.md`

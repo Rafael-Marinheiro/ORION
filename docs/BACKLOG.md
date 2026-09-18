@@ -1,5 +1,11 @@
 # Backlog de Implementacao ORION
 
+> **Histórico — não use para decidir escopo.**
+> Os status `CONCLUIDO` abaixo refletem entrega de sprint, não conformidade com
+> a especificação. A auditoria de 2026-09-18 encontrou itens aqui marcados como
+> concluídos que estão divergentes da spec ou que quebravam em execução.
+> Fonte de verdade atual: [`docs/GUIA_IMPLEMENTACAO.md`](GUIA_IMPLEMENTACAO.md).
+
 ## Como ler
 - `Prioridade P0`: critico para aderencia ao escopo base do simulador.
 - `Prioridade P1`: importante para ampliar realismo e uso pedagogico.
