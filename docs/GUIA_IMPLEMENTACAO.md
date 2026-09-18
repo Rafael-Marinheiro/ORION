@@ -201,6 +201,44 @@ Decisão B5 mantida no **§12.5**, agora com três apoios em vez de um:
 **Mas o critério 2 do §12.5 depende de SD, que não tem fórmula (B8).** Até
 isso ser resolvido, o desempate só roda do critério 1 ao 5 pulando o 2.
 
+### Quem decide o quê
+
+O Dr. Pio Marinheiro é o Product Owner e autor da especificação. **O desenho
+dele tem prioridade.** Onde a implementação se afasta do que ele escreveu, a
+mudança não é definitiva até ele ratificar — mesmo quando a motivação é boa e
+mesmo quando partiu de instrução do dono do projeto.
+
+Três categorias, com dono diferente:
+
+| Categoria | Quem decide | Exemplos |
+|---|---|---|
+| **A especificação se contradiz** | Dr. Pio | B1–B5: composição, perecibilidade, capacidade, eventos por rodada, desempate |
+| **A especificação é omissa ou não fecha** | Dr. Pio | B8 (SD sem fórmula), B9 (giro duplo), B10 (limiar de 1.000 km), frete de produto |
+| **Contexto de aplicação da turma** | Rafael | D9.1–D9.3: sede, praças regionais, demanda por população |
+
+**Pendências para o Dr. Pio, por ordem de impacto:**
+
+1. **D10 · Unidade do frete.** O §7.2 diz R$ 1,50 por km **por kg**. Os valores
+   dele foram preservados; só a unidade passou a ser por viagem de caminhão.
+   Motivo: no exemplo do próprio §7.2.1, 500 kg de MP3 valendo R$ 4.000 geram
+   R$ 750.000 de frete — 188x a carga, 75% do capital inicial numa compra. É
+   aritmética, não preferência. **Mas a correção é uma leitura minha da
+   intenção dele, e ele pode ter pensado outra coisa.**
+2. **B8 · Fórmula de SD.** A proposta registrada é invenção minha, não dele.
+   Vale 0,20 da nota. Não deve ser implementada sem ratificação.
+3. **D11 · Variedade de eventos.** O §8.2 pede probabilidade constante; a
+   redução de peso do evento recente a torna levemente dependente do
+   histórico (até 1,3 p.p. de desvio). Atende ao pedido de variedade do dono
+   do projeto, mas afasta-se da letra do documento.
+4. **D9.5 · Custo do operador.** Ele escreveu R$ 1.800/mês; a rodada virou o
+   período de competência da folha. Leitura, não transcrição.
+5. **B9 e B10.** Giro de estoque contado duas vezes e o limiar de 1.000 km,
+   que a base regional tornou inócuo.
+
+O que **não** precisa dele: correções de bug que não tocam regra de negócio
+(imports quebrados, `Decimal` na sessão, fuso horário) e escolhas internas de
+código (services, testes, unificação de duplicatas).
+
 ### D9 · Desvios deliberados da especificação
 
 Decisões do dono do projeto que **contrariam a documentação de propósito**.
