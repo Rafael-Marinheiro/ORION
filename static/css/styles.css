@@ -24,6 +24,16 @@
     --o-bad-bg:    rgba(255, 138, 138, 0.12);
     --o-star-bg:   rgba(143, 208, 255, 0.10);
 
+    /* Paleta categorica dos graficos. Separada das cores de estado de
+       proposito: o verde que diz "submissao enviada" nao pode significar
+       "armazenagem de MP". Ordem fixa e validada (CVD dE 8.4, normal 19.3
+       na superficie --o-panel); nunca cicle estes slots. */
+    --o-series-1: #3987e5;
+    --o-series-2: #d95926;
+    --o-series-3: #199e70;
+    --o-series-4: #c98500;
+    --o-series-5: #d55181;
+
     /* densidade alta: escala 4-48 */
     --o-1: 4px;  --o-2: 8px;  --o-3: 12px; --o-4: 16px;
     --o-5: 24px; --o-6: 32px; --o-7: 48px;
@@ -57,6 +67,15 @@
     --o-warn-bg:   rgba(138, 90, 0, 0.10);
     --o-bad-bg:    rgba(192, 38, 38, 0.10);
     --o-star-bg:   rgba(28, 95, 168, 0.08);
+
+    /* Mesmas matizes, degrau proprio para a superficie clara. Tres slots
+       ficam abaixo de 3:1 no branco, entao a regra de alivio se aplica: a
+       tela mantem a tabela completa dos mesmos numeros. */
+    --o-series-1: #2a78d6;
+    --o-series-2: #eb6834;
+    --o-series-3: #1baf7a;
+    --o-series-4: #eda100;
+    --o-series-5: #e87ba4;
     --o-shadow:    0 1px 2px rgba(20, 30, 60, 0.06), 0 8px 24px -14px rgba(20, 30, 60, 0.22);
 
     color-scheme: light;
@@ -943,3 +962,88 @@ ul.errorlist {
 @media (pointer: coarse) {
     .o-btn--sm { min-height: 44px; }
 }
+
+/* --- 27. Painel financeiro ----------------------------------------------- */
+
+.o-section-title {
+    font-size: 1.0625rem;
+    margin-bottom: var(--o-3);
+    display: flex;
+    align-items: baseline;
+    gap: var(--o-2);
+    flex-wrap: wrap;
+}
+.o-section-title .o-muted { font-weight: 400; }
+
+.o-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--o-1);
+    margin-top: var(--o-1);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+.o-delta--ok   { color: var(--o-ok); }
+.o-delta--bad  { color: var(--o-bad); }
+.o-delta--mute { color: var(--o-ink-dim); }
+
+.o-chart--tall { height: 380px; }
+
+.o-filters--bar { margin-bottom: var(--o-5); }
+
+/* tabelas ficam disponiveis, mas sem competir com os graficos */
+.o-details {
+    margin-top: var(--o-6);
+    border-top: 1px solid var(--o-line);
+    padding-top: var(--o-4);
+}
+.o-details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--o-ink-dim);
+    padding: var(--o-2) 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: var(--o-2);
+    list-style: none;
+}
+.o-details > summary::-webkit-details-marker { display: none; }
+.o-details > summary::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 150ms ease;
+}
+.o-details[open] > summary::before { transform: rotate(45deg); }
+.o-details > summary:hover { color: var(--o-ink); }
+.o-details[open] > summary { color: var(--o-ink); margin-bottom: var(--o-4); }
+
+/* --- 28. Cadastro de integrantes ----------------------------------------- */
+
+.o-subhead {
+    font-size: 1rem;
+    margin: var(--o-5) 0 var(--o-3);
+    padding-top: var(--o-4);
+    border-top: 1px solid var(--o-line);
+}
+
+.o-members { display: grid; gap: var(--o-3); }
+
+.o-member {
+    border: 1px solid var(--o-line);
+    border-radius: var(--o-radius);
+    padding: var(--o-4);
+    margin: 0;
+    background: var(--o-panel-2);
+}
+.o-member legend {
+    padding: 0 var(--o-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--o-ink-dim);
+}
+.o-member > p:last-of-type { margin-bottom: 0; }

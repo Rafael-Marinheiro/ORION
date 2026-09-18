@@ -31,6 +31,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
     ConfigWizardStep1Form,
     ConfigWizardStep2Form,
@@ -1536,9 +1537,11 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
             if form.cleaned_data.get("grupo"):
                 resultados = resultados.filter(grupo=form.cleaned_data["grupo"])
                 consolidados = consolidados.filter(grupo=form.cleaned_data["grupo"])
+        consolidados = consolidados.order_by("-rodada", "grupo__nome")
         contexto = {
             "resultados": resultados.order_by("-rodada", "grupo__nome"),
-            "consolidados": consolidados.order_by("-rodada", "grupo__nome"),
+            "consolidados": consolidados,
+            "painel": montar_painel_financeiro(consolidados),
             "form": form,
         }
         return render(request, self.template_name, contexto)

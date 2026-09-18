@@ -1,0 +1,19 @@
+{% comment %}
+Variacao de um KPI contra a rodada anterior.
+`tom` ja vem decidido pelo service (custo subindo e ruim, receita subindo e boa).
+A seta acompanha a cor para a leitura nao depender so de cor.
+{% endcomment %}
+{% if valor is not None %}
+    <span class="o-delta o-delta--{{ tom }}">
+        {% if valor > 0 %}
+            <span aria-hidden="true">▲</span><span class="o-sr">aumento de</span>
+        {% elif valor < 0 %}
+            <span aria-hidden="true">▼</span><span class="o-sr">queda de</span>
+        {% else %}
+            <span aria-hidden="true">—</span><span class="o-sr">sem variação de</span>
+        {% endif %}
+        <span class="o-num">{{ valor|floatformat:1 }}{% if pontos %} p.p.{% else %}%{% endif %}</span>
+    </span>
+{% else %}
+    <span class="o-kpi__foot">sem rodada anterior para comparar</span>
+{% endif %}

@@ -28,9 +28,27 @@
 
     var instances = [];
 
+    /* Paleta categorica em ordem FIXA. A ordem e o mecanismo de seguranca
+       para daltonismo -- foi validada par a par nessa sequencia, entao nao
+       reordene nem cicle. Serie alem do ultimo slot vira cinza e avisa, em
+       vez de repetir uma cor e tornar o grafico ilegivel. */
     function paleta() {
-        /* ordem estavel: series 1..3 sempre com a mesma cor entre telas */
-        return [token('--o-star'), token('--o-ok'), token('--o-warn'), token('--o-bad')];
+        return [
+            token('--o-series-1'),
+            token('--o-series-2'),
+            token('--o-series-3'),
+            token('--o-series-4'),
+            token('--o-series-5')
+        ];
+    }
+
+    function corDaSerie(cores, i) {
+        if (i < cores.length) { return cores[i]; }
+        if (console && console.warn) {
+            console.warn('orion/charts: serie ' + (i + 1) + ' passa dos ' +
+                cores.length + ' slots da paleta; agrupe em "Outros" ou separe o grafico.');
+        }
+        return token('--o-ink-dim');
     }
 
     function build(spec) {
@@ -41,34 +59,70 @@
         var ink = token('--o-ink');
         var dim = token('--o-ink-dim');
         var linha = token('--o-line');
+        var superficie = token('--o-panel');
 
         var chart = new Chart(canvas, {
             type: spec.type || 'bar',
             data: {
                 labels: spec.labels || [],
                 datasets: (spec.series || []).map(function (s, i) {
-                    var cor = cores[i % cores.length];
+                    var cor = corDaSerie(cores, i);
+                    var linhaDaSerie = s.type === 'line';
+                    if (linhaDaSerie) {
+                        /* a linha fica sem preenchimento para nao competir
+                           com as barras que ela atravessa */
+                        return {
+                            label: s.label,
+                            data: s.data,
+                            type: 'line',
+                            backgroundColor: 'transparent',
+                            borderColor: cor,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointBackgroundColor: cor,
+                            pointBorderColor: superficie,
+                            pointBorderWidth: 2,
+                            tension: 0.25,
+                            fill: false
+                        };
+                    }
                     return {
                         label: s.label,
                         data: s.data,
                         backgroundColor: cor,
-                        borderColor: cor,
-                        borderWidth: 1,
-                        borderRadius: 3
+                        /* 2px da cor da superficie separam os segmentos
+                           empilhados e as barras vizinhas */
+                        borderColor: superficie,
+                        borderWidth: spec.stacked ? 2 : 1,
+                        borderRadius: 4,
+                        borderSkipped: false
                     };
                 })
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                indexAxis: spec.indexAxis || 'x',
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { labels: { color: ink, boxWidth: 12, usePointStyle: true } },
+                    legend: {
+                        display: spec.legenda !== false,
+                        labels: { color: ink, boxWidth: 12, usePointStyle: true }
+                    },
                     tooltip: { padding: 10 }
                 },
                 scales: {
-                    x: { ticks: { color: dim }, grid: { color: linha } },
-                    y: { ticks: { color: dim }, grid: { color: linha }, beginAtZero: true }
+                    x: {
+                        stacked: !!spec.stacked,
+                        ticks: { color: dim },
+                        grid: { color: linha }
+                    },
+                    y: {
+                        stacked: !!spec.stacked,
+                        ticks: { color: dim },
+                        grid: { color: linha },
+                        beginAtZero: true
+                    }
                 }
             }
         });
