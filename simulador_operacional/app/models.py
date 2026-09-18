@@ -684,6 +684,10 @@ class Evento(models.Model):
     ]
 
     nome = models.CharField(max_length=100)
+    # 8.4 traz duas colunas distintas: "Descricao", que explica o mecanismo,
+    # e "Frase Indicativa", que e a manchete lida pelo aluno na abertura da
+    # rodada. Sao textos com papeis diferentes e nao devem ser fundidos.
+    frase_indicativa = models.CharField(max_length=200, blank=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     modo_aplicacao = models.CharField(max_length=20, choices=MODO_CHOICES, default="percentual")
     efeito_estado = models.CharField(max_length=30, choices=EFEITO_ESTADO_CHOICES, blank=True)

@@ -861,63 +861,41 @@ class MateriaPrimaFlowTest(TestCase):
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
 class EventSelectionPolicyTest(TestCase):
-    def test_evento_nao_repete_ultimas_duas_rodadas(self):
+    """O 8.2 pede probabilidade CONSTANTE por evento.
+
+    Ate 2026-09-18 havia um cooldown que bloqueava o evento das duas rodadas
+    anteriores. Ele tornava a probabilidade dependente do historico -- o
+    oposto de constante -- e na pratica sobrepunha os pesos do 8.4: com o
+    cooldown ativo, um evento de 15% saia tanto quanto um de 20%, porque a
+    exclusao do concorrente pesava mais que o peso configurado.
+    """
+
+    def test_evento_pode_repetir_em_rodadas_seguidas(self):
+        repetivel = Evento.objects.create(
+            nome="Unico com peso", tipo="demanda", impacto_percentual=5, probabilidade=100
+        )
+        Evento.objects.create(
+            nome="Sem peso", tipo="demanda", impacto_percentual=5, probabilidade=0
+        )
+        EventoRodada.objects.create(rodada=1, evento=repetivel)
+        EventoRodada.objects.create(rodada=2, evento=repetivel)
+
+        # sem cooldown, o peso manda: quem tem 100% sai de novo
+        self.assertEqual(sortear_evento(3).id, repetivel.id)
+
+    def test_evento_ja_sorteado_na_rodada_nao_e_re_sorteado(self):
+        """A rodada tem um evento so, e ele nao muda a cada consulta."""
         e1 = Evento.objects.create(
-            nome="E1",
-            tipo="demanda",
-            impacto_percentual=5,
-            probabilidade=0.25,
+            nome="E1", tipo="demanda", impacto_percentual=5, probabilidade=50
         )
-        e2 = Evento.objects.create(
-            nome="E2",
-            tipo="demanda",
-            impacto_percentual=5,
-            probabilidade=0.25,
+        Evento.objects.create(
+            nome="E2", tipo="demanda", impacto_percentual=5, probabilidade=50
         )
-        e3 = Evento.objects.create(
-            nome="E3",
-            tipo="demanda",
-            impacto_percentual=5,
-            probabilidade=0.25,
-        )
-        e4 = Evento.objects.create(
-            nome="E4",
-            tipo="demanda",
-            impacto_percentual=5,
-            probabilidade=0.25,
-        )
+        EventoRodada.objects.create(rodada=4, evento=e1)
 
-        EventoRodada.objects.create(rodada=1, evento=e1)
-        EventoRodada.objects.create(rodada=2, evento=e2)
+        for _ in range(5):
+            self.assertEqual(sortear_evento(4).id, e1.id)
+        self.assertEqual(EventoRodada.objects.filter(rodada=4).count(), 1)
 
-        def escolher_candidato(candidatos):
-            ids = {c.id for c in candidatos}
-            self.assertNotIn(e1.id, ids)
-            self.assertNotIn(e2.id, ids)
-            self.assertIn(e3.id, ids)
-            self.assertIn(e4.id, ids)
-            return candidatos[0]
-
-        with patch("app.views.random.choice", side_effect=escolher_candidato):
-            evento = sortear_evento(3)
-
-        self.assertIn(evento.id, {e3.id, e4.id})
-
-    def test_fallback_quando_pool_menor_que_cooldown(self):
-        e1 = Evento.objects.create(
-            nome="EF1",
-            tipo="demanda",
-            impacto_percentual=5,
-            probabilidade=0.5,
-        )
-        e2 = Evento.objects.create(
-            nome="EF2",
-            tipo="demanda",
-            impacto_percentual=5,
-            probabilidade=0.5,
-        )
-        EventoRodada.objects.create(rodada=1, evento=e1)
-        EventoRodada.objects.create(rodada=2, evento=e2)
-
-        evento = sortear_evento(3)
-        self.assertIn(evento.id, {e1.id, e2.id})
+    def test_base_sem_eventos_devolve_none(self):
+        self.assertIsNone(sortear_evento(1))

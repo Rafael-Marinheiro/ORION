@@ -1047,3 +1047,107 @@ ul.errorlist {
     color: var(--o-ink-dim);
 }
 .o-member > p:last-of-type { margin-bottom: 0; }
+
+/* --- 29. Boletim da rodada ----------------------------------------------- */
+/* O evento chega como noticia (8.4), nao como nome de regra. Personalidade
+   Corporate, material papel: o boletim pousa, nao quica. Tres camadas --
+   o bloco entra, a regra lateral cresce depois dele, e uma unica passagem
+   de luz atravessa o papel. Anima so na primeira vez que o aluno ve a
+   rodada; noticia que reanima a cada navegacao vira ruido. */
+
+.o-boletim {
+    background: var(--o-warn-bg);
+    border-bottom: 1px solid var(--o-line);
+    overflow: hidden;
+}
+
+.o-boletim__inner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--o-3);
+    padding-block: var(--o-4);
+}
+
+.o-boletim__rule {
+    flex: none;
+    width: 3px;
+    align-self: stretch;
+    min-height: 40px;
+    border-radius: 2px;
+    background: var(--o-warn);
+    transform-origin: top center;
+    transform: scaleY(1);
+}
+
+.o-boletim__texto { min-width: 0; }
+
+.o-boletim__manchete {
+    margin: 0 0 var(--o-1);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--o-ink);
+    max-width: 68ch;
+    text-wrap: pretty;
+}
+
+.o-boletim__efeito {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--o-ink-dim);
+    max-width: 72ch;
+}
+.o-boletim__efeito strong { color: var(--o-warn); font-weight: 600; }
+
+/* --- entrada, so quando a rodada e nova para este aluno ------------------ */
+
+/* `backwards`, nunca `both`: o estado final e o do proprio elemento, nao o
+   do ultimo keyframe. Com `both`, uma animacao que nao chega a rodar --
+   aba em segundo plano no carregamento, por exemplo -- deixaria a manchete
+   parada em opacity 0. Noticia que o aluno precisa ler nao pode depender de
+   animacao para existir. */
+.o-boletim[data-novo="true"] .o-boletim__inner {
+    animation: o-boletim-entra 380ms cubic-bezier(0.05, 0.7, 0.1, 1) backwards;
+}
+
+/* camada 2: a regra lateral chega depois do bloco, como follow-through */
+.o-boletim[data-novo="true"] .o-boletim__rule {
+    animation: o-boletim-regra 300ms cubic-bezier(0.2, 0, 0, 1) 80ms backwards;
+}
+
+/* camada 3: uma unica passagem de luz pelo papel, sem repetir */
+.o-boletim[data-novo="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        100deg,
+        transparent 30%,
+        rgba(245, 183, 78, 0.16) 50%,
+        transparent 70%
+    );
+    animation: o-boletim-luz 900ms ease-out 200ms backwards;
+}
+.o-boletim[data-novo="true"] { position: relative; }
+
+@keyframes o-boletim-entra {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes o-boletim-regra {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+}
+
+@keyframes o-boletim-luz {
+    from { transform: translateX(-100%); opacity: 0; }
+    30%  { opacity: 1; }
+    to   { transform: translateX(100%); opacity: 0; }
+}
+
+@media (max-width: 640px) {
+    .o-boletim__manchete { font-size: 1rem; }
+}

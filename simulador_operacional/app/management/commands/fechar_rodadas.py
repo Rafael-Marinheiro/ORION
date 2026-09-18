@@ -9,6 +9,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from app.parametros import CUSTO_OPERADOR_POR_RODADA
+from app.services.eventos import sortear_evento
 from app.models import (
     AplicacaoFinanceiraGrupo,
     CapacidadeProdutoGrupo,
@@ -30,7 +31,6 @@ from app.models import (
 )
 
 logger = logging.getLogger("agendamentos")
-EVENTO_COOLDOWN_RODADAS = 2
 RETENCAO_PADRAO_PERCENT = Decimal("50")
 
 
@@ -40,29 +40,8 @@ class Command(BaseCommand):
 
     @staticmethod
     def obter_evento_rodada(rodada_numero, jogo_id=None):
-        base_qs = EventoRodada.objects.select_related("evento")
-        if jogo_id:
-            base_qs = base_qs.filter(jogo_id=jogo_id)
-        else:
-            base_qs = base_qs.filter(jogo__isnull=True)
-
-        existente = base_qs.filter(rodada=rodada_numero).first()
-        if existente:
-            return existente.evento
-
-        eventos = list(Evento.objects.all())
-        if not eventos:
-            return None
-
-        rodadas_bloqueadas = [
-            rodada_numero - i for i in range(1, EVENTO_COOLDOWN_RODADAS + 1) if rodada_numero - i > 0
-        ]
-        bloqueados = set(base_qs.filter(rodada__in=rodadas_bloqueadas).values_list("evento_id", flat=True))
-        candidatos = [evento for evento in eventos if evento.id not in bloqueados] or eventos
-
-        escolhido = random.choice(candidatos)
-        EventoRodada.objects.create(rodada=rodada_numero, jogo_id=jogo_id, evento=escolhido)
-        return escolhido
+        """Delega ao service, para nao existir uma segunda regra de sorteio."""
+        return sortear_evento(rodada_numero, jogo_id)
 
     @staticmethod
     def obter_evento_estado_ativo(rodada_numero, jogo_id, efeito_estado):

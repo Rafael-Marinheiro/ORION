@@ -95,6 +95,7 @@ Ficam registradas aqui para ninguém as confundir com divergência acidental.
 | D9.4 | Fornecedores de MP | §7.1: cidades nacionais | **cidades da região**, cada MP com fornecedor perto e longe | preserva a escolha de fornecedor como decisão logística |
 | D9.5 | Custo do operador por rodada | §14.2.4: R$ 1.800/mês + RN-06: rodada = 1 semana | **R$ 1.800 por rodada**, sem conversão por tempo | o professor define o prazo livremente; converter por tempo decorrido faria o custo da mesma decisão mudar conforme o prazo |
 | D9.6 | Sigilo da rodada aberta | não previsto | **resultado só aparece após o fechamento** | é um jogo de competição; desempenho alheio antes da submissão muda a decisão de quem ainda não decidiu |
+| D11 | Cooldown de eventos | §8.2: "probabilidade **constante** de ocorrência" | **cooldown removido** | o bloqueio do evento anterior tornava a probabilidade dependente do histórico e sobrepunha os pesos do §8.4 |
 | D10 | Unidade do frete | §7.2: R$ 1,50 por km **por kg** | **R$ 1,50 por km por viagem de caminhão** (12.000 kg) | a unidade do documento faz o frete valer 188x a carga; o jogo trava na primeira compra |
 
 **Consequência de D9.2 e D9.3 no equilíbrio do jogo.** O mercado regional é

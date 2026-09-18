@@ -51,6 +51,24 @@
         });
     }
 
+    /* --- boletim da rodada ---------------------------------------------- */
+    /* A noticia chega uma vez. Reanimar a cada navegacao transformaria a
+       manchete em ruido, e o aluno passaria a ignora-la -- que e o oposto
+       do que ela existe para fazer. */
+    var boletim = document.querySelector('[data-boletim]');
+
+    if (boletim) {
+        var rodada = boletim.dataset.rodada || '0';
+        var chave = 'orion-boletim-visto';
+        var visto = null;
+        try { visto = localStorage.getItem(chave); } catch (e) { /* storage bloqueado */ }
+
+        if (visto !== rodada) {
+            boletim.dataset.novo = 'true';
+            store(chave, rodada);
+        }
+    }
+
     /* --- contagem regressiva da rodada ---------------------------------- */
     /* O servidor ja entrega a data de fechamento formatada. Isto so a
        transforma em tempo restante e marca urgencia visual. */

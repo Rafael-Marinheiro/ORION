@@ -98,9 +98,6 @@
             <span class="o-rail__spacer"></span>
 
             <span class="o-rail__facts">
-                {% if evento_corrente %}
-                    <span class="o-badge o-badge--warn">Evento: {{ evento_corrente.nome }}</span>
-                {% endif %}
                 {% if submissao_realizada %}
                     <span class="o-badge o-badge--ok">Submissão enviada</span>
                 {% elif rodada_corrente %}
@@ -109,6 +106,32 @@
             </span>
         </div>
     </div>
+    {% endif %}
+
+    {% if user.is_authenticated and evento_corrente %}
+    {% comment %}
+        Boletim da rodada. O 8.4 traz a frase indicativa justamente para o
+        evento chegar como noticia, e nao como nome de regra.
+    {% endcomment %}
+    <aside class="o-boletim" data-boletim data-rodada="{{ rodada_corrente.numero|default:'0' }}"
+           aria-labelledby="boletim-titulo">
+        <div class="o-shell o-boletim__inner">
+            <span class="o-boletim__rule" aria-hidden="true"></span>
+            <div class="o-boletim__texto">
+                <p class="o-boletim__manchete" id="boletim-titulo">
+                    {% if evento_corrente.frase_indicativa %}
+                        {{ evento_corrente.frase_indicativa }}
+                    {% else %}
+                        {{ evento_corrente.nome }}
+                    {% endif %}
+                </p>
+                <p class="o-boletim__efeito">
+                    <strong>{{ evento_corrente.nome }}</strong>
+                    {% if evento_corrente.descricao %} — {{ evento_corrente.descricao }}{% endif %}
+                </p>
+            </div>
+        </div>
+    </aside>
     {% endif %}
 </header>
 

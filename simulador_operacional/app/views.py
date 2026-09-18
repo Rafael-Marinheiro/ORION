@@ -32,6 +32,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_RODADA
+from .services.eventos import sortear_evento
 from .services.logistica import calcular_frete, peso_do_envio, viagens_necessarias
 from .services.perecibilidade import resumo_vencimento
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
@@ -123,7 +124,6 @@ MATERIA_PRIMA_FORNECEDORES = {
     "MP3": {"Assu", "Natal", "Fortaleza"},
     "MP4": {"Patos", "Joao Pessoa"},
 }
-EVENTO_COOLDOWN_RODADAS = 2
 CAPACIDADE_PADRAO_POR_CODIGO = {"A": 15, "B": 15, "C": 10}
 
 
@@ -214,36 +214,6 @@ def obter_aplicacao_financeira_grupo(grupo):
         grupo=grupo,
         defaults={"saldo_aplicado": Decimal("0"), "taxa_juros_rodada": TAXA_APLICACAO_FINANCEIRA_RODADA},
     )[0]
-
-
-def sortear_evento(rodada, jogo_id=None):
-    filtro = {"rodada": rodada}
-    if jogo_id:
-        filtro["jogo_id"] = jogo_id
-    else:
-        filtro["jogo__isnull"] = True
-    existente = EventoRodada.objects.filter(**filtro).select_related("evento").first()
-    if existente:
-        return existente.evento
-
-    eventos = list(Evento.objects.all())
-    if not eventos:
-        return None
-
-    rodadas_bloqueadas = [rodada - i for i in range(1, EVENTO_COOLDOWN_RODADAS + 1) if rodada - i > 0]
-    historico = EventoRodada.objects.filter(rodada__in=rodadas_bloqueadas)
-    if jogo_id:
-        historico = historico.filter(jogo_id=jogo_id)
-    else:
-        historico = historico.filter(jogo__isnull=True)
-    eventos_bloqueados_ids = set(historico.values_list("evento_id", flat=True))
-    candidatos = [evento for evento in eventos if evento.id not in eventos_bloqueados_ids]
-    if not candidatos:
-        candidatos = eventos
-
-    escolhido = random.choice(candidatos)
-    EventoRodada.objects.create(rodada=rodada, jogo_id=jogo_id, evento=escolhido)
-    return escolhido
 
 
 def obter_grupo_do_usuario(user):

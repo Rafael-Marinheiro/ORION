@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    {% if vencimento_proximo or evento or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
+    {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
     <ul class="o-notes">
         {% if vencimento_proximo %}
             <li class="o-note o-note--warning">
@@ -74,9 +74,6 @@
         {% endif %}
         {% if not rodada_ativa %}
             <li class="o-note o-note--warning">Nenhuma rodada aberta no momento. As decisões voltam a aceitar envio quando o professor abrir a próxima.</li>
-        {% endif %}
-        {% if evento %}
-            <li class="o-note o-note--warning"><strong>{{ evento.nome }}</strong> — {{ evento.descricao }}</li>
         {% endif %}
         {% if submissao_realizada %}
             <li class="o-note o-note--success">Submissão oficial enviada nesta rodada. A edição está encerrada.</li>
