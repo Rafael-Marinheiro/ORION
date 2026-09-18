@@ -5,12 +5,42 @@
 {% block content %}
 <div class="o-head">
     <h1>{% if form.instance.pk %}Editar grupo{% else %}Novo grupo{% endif %}</h1>
+    {% if membro_formset %}
+    <p class="o-head__sub">
+        Uma equipe tem de 3 a 6 integrantes e exatamente um líder. Cada integrante
+        recebe um acesso próprio com o e-mail informado aqui.
+    </p>
+    {% endif %}
 </div>
 
 <div class="o-form-panel o-panel">
     <form method="post">
         {% csrf_token %}
+
+        {% if form.errors or membro_formset.non_form_errors %}
+        <div class="o-note o-note--error" role="alert" tabindex="-1">
+            <p><strong>Não foi possível salvar.</strong></p>
+            {% for erro in membro_formset.non_form_errors %}<p>{{ erro }}</p>{% endfor %}
+            {% if form.errors %}<p>Revise os campos marcados abaixo.</p>{% endif %}
+        </div>
+        {% endif %}
+
         {{ form.as_p }}
+
+        {% if membro_formset %}
+            {{ membro_formset.management_form }}
+
+            <h2 class="o-subhead">Integrantes</h2>
+            <div class="o-members">
+                {% for membro in membro_formset %}
+                <fieldset class="o-member">
+                    <legend>Integrante {{ forloop.counter }}</legend>
+                    {{ membro.as_p }}
+                </fieldset>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <div class="o-btnrow">
             <button type="submit" class="o-btn o-btn--primary">Salvar grupo</button>
             <a href="{% url 'lista_grupos' %}" class="o-btn o-btn--ghost">Cancelar</a>

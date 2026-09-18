@@ -1,11 +1,13 @@
 import random
 import os
 import csv
+import json
 from decimal import Decimal
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import (
     LoginView,
@@ -37,9 +39,11 @@ from .forms import (
     DecisaoForm,
     DistribuicaoForm,
     GameConfigForm,
+    GrupoCadastroForm,
     GrupoForm,
     FeedbackForm,
     InvestimentoForm,
+    MembroFormSet,
     ProducaoForm,
     ResultadoFilterForm,
     RodadaForm,
@@ -72,6 +76,7 @@ from .models import (
     Produto,
     ResultadoFinanceiro,
     Rodada,
+    User,
 )
 from .serializers import (
     AplicacaoFinanceiraGrupoSerializer,
@@ -591,7 +596,11 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
                         "dados_step2": wizard_data.get("step2", {}),
                     },
                 )
-            wizard_data[f"step{step}"] = form.cleaned_data
+            # A sessao serializa em JSON e JSON nao conhece Decimal, entao
+            # cleaned_data e normalizado aqui, no unico ponto onde entra.
+            wizard_data[f"step{step}"] = json.loads(
+                json.dumps(form.cleaned_data, cls=DjangoJSONEncoder)
+            )
             request.session[self.session_key] = wizard_data
             return redirect(f"{reverse_lazy('game_config_wizard')}?step={step+1}")
 
