@@ -1,3 +1,7 @@
+# Gate do nucleo critico: regras de negocio, modelos e servicos.
+# A medicao ([run]) cobre o app inteiro, inclusive views e comandos, para que
+# o mesmo .coverage alimente tambem o gate periferico (.coveragerc-perifericos).
+# O recorte do nucleo e feito em [report].
 [run]
 branch = True
 source = app
@@ -10,15 +14,16 @@ omit =
     */settings_ci.py
     */wsgi.py
     */asgi.py
-    */management/commands/*
-    */views.py
-    */urls.py
-    */admin.py
 
 [report]
 show_missing = True
 skip_covered = True
 fail_under = 85
+omit =
+    */management/commands/*
+    */views.py
+    */urls.py
+    */admin.py
 exclude_lines =
     pragma: no cover
     if __name__ == .__main__.:

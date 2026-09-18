@@ -1,0 +1,15 @@
+# Gate periferico: views e comandos agendados.
+# Limiar menor e deliberado -- hoje views.py esta em 59% e os comandos em 69%.
+# Serve para travar regressao nessa camada, nao para atestar qualidade dela.
+# Reaproveita o .coverage gerado pelo run do .coveragerc-critical.
+[report]
+show_missing = True
+skip_covered = True
+fail_under = 60
+include =
+    app/views.py
+    app/management/commands/*
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError

@@ -37,6 +37,7 @@ jobs:
           cd simulador_operacional
           coverage run --rcfile=../.coveragerc-critical manage.py test app --settings=simulador_operacional.settings_test
           coverage report --rcfile=../.coveragerc-critical --fail-under=85
+          coverage report --rcfile=../.coveragerc-perifericos --fail-under=60
           coverage xml --rcfile=../.coveragerc-critical -o ../coverage.xml
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
