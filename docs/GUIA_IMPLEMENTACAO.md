@@ -116,7 +116,13 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
 
 #### Problemas que a leitura das fórmulas revelou
 
-- **B8 · SD não tem fórmula.** A seção §12.3.4 se chama "Satisfação da
+- **B8 · SD não tem fórmula. Verificado na fonte, não na conversão.**
+  "Satisfação da Demanda" aparece **4 vezes em toda a especificação de 15
+  documentos**, todas no doc 12, e todas são menção — nunca definição: a lista
+  de eixos (§12.2), o título da seção (§12.3.4), a tabela de pesos (§12.4) e o
+  desempate (§12.5). Não existe `12.3.5` em documento nenhum, nenhum outro
+  documento cobre, e o `.docx` não tem notas de rodapé, comentários, caixas de
+  texto nem alterações controladas — o corpo do documento é tudo o que há. A seção §12.3.4 se chama "Satisfação da
   Demanda (SD)", mas o corpo dela define **DS** (Sustentabilidade): a fórmula
   é `DS = (DS₁×S₁)+(DS₂×S₂)+(DS₃×S₃)` e os subcomponentes são redução de
   perdas, proximidade logística das compras e foco regional das entregas —
@@ -137,6 +143,38 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
 - **EE não é limitado a 100.** Sendo uma razão de giro, passa de 100 com
   facilidade — a própria tabela de exemplo do §12.6 traz EE de 110 e 105. A
   soma ponderada precisa saber lidar com isso.
+
+### B8 · Fórmula proposta para SD — aguardando ratificação
+
+O eixo vale 0,20, o segundo maior peso, e não pode ficar indefinido. A
+proposta abaixo parte da única frase que o documento oferece sobre ele —
+"avalia o grau de atendimento ao mercado nas praças-alvo" (§12.3.4) — e evita
+sobreposição com os outros quatro eixos.
+
+```
+SD = (SD₁ × T₁) + (SD₂ × T₂)                             T₁ = 0,6  T₂ = 0,4
+
+SD₁ = Produtos Vendidos / Demanda Potencial das praças ativas
+      quanto do mercado disponível a equipe capturou
+
+SD₂ = Praças Atendidas / Praças Ativas
+      em quantos mercados a equipe se fez presente
+```
+
+Por que só dois componentes, e não três como nos demais eixos: qualquer
+terceiro candidato colide com um eixo existente. "Vendido / Enviado" é o
+segundo componente de EO. "Sobra / Enviado" é o mesmo, invertido. Giro de
+estoque já aparece duas vezes (B9). Padronizar a forma ao custo de medir a
+mesma coisa três vezes seria pior que a assimetria.
+
+**SD₂ é o que dá caráter próprio ao eixo:** pune concentrar tudo na praça
+mais rentável e ignorar o resto do mercado — decisão que hoje não tem
+consequência nenhuma na nota.
+
+**Atenção ao implementar:** o campo `atendimento_demanda_percent` que existe
+hoje **não serve** para SD. Ele calcula `vendidos / ofertados`, isto é, se o
+que a equipe enviou vendeu — métrica de oferta, não de demanda, e duplicata
+do segundo componente de EO. O nome engana.
 
 ### Critérios de desempate: existem, e são dois
 
