@@ -478,6 +478,16 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 }
 .o-table tr[data-top="true"] .rank { color: var(--o-star); font-weight: 600; }
 
+/* Linha de fechamento do DRE e do fluxo de caixa: e o numero que o aluno
+   confere contra o lucro da rodada, entao precisa se destacar da deducoes. */
+.o-table tr[data-total="true"] > * {
+    border-top: 2px solid var(--o-line);
+    font-weight: 600;
+    color: var(--o-ink);
+}
+.o-table--dre th[scope="row"] { font-weight: 400; color: var(--o-ink-dim); }
+.o-table--dre tr[data-total="true"] th[scope="row"] { font-weight: 600; color: var(--o-ink); }
+
 /* --- 11. Estados vazios -------------------------------------------------- */
 
 .o-empty {

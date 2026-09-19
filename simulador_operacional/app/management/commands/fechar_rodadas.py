@@ -8,8 +8,11 @@ from django.core.management.base import BaseCommand
 from django.db.models import Sum
 from django.utils import timezone
 
-from app.parametros import CUSTO_OPERADOR_POR_RODADA
+from app.parametros import CUSTO_OPERADOR_POR_RODADA, PESOS_EIXOS
 from app.services.eventos import sortear_evento
+from app.services.marketing import fator_marketing
+from app.services.pontuacao import calcular_eixos, coletar_insumos, pontuacao_total
+from app.services.retencao import aplicar_retencao_de_entregas
 from app.models import (
     AplicacaoFinanceiraGrupo,
     CapacidadeProdutoGrupo,
@@ -31,7 +34,6 @@ from app.models import (
 )
 
 logger = logging.getLogger("agendamentos")
-RETENCAO_PADRAO_PERCENT = Decimal("50")
 
 
 
@@ -139,12 +141,12 @@ class Command(BaseCommand):
 
     @staticmethod
     def obter_pesos_ranking(ranking_pesos):
-        padrao = {
-            "lucro": Decimal("0.4"),
-            "market_share": Decimal("0.3"),
-            "atendimento": Decimal("0.2"),
-            "eficiencia_estoque": Decimal("0.1"),
-        }
+        """Pesos dos cinco eixos do 12.4, normalizados para somar 1.
+
+        O 12.2 admite que o professor ajuste os pesos por rodada conforme o
+        foco pedagogico; `GameConfig.ranking_pesos` e onde isso entra.
+        """
+        padrao = dict(PESOS_EIXOS)
         if not isinstance(ranking_pesos, dict):
             return padrao
 
@@ -162,10 +164,14 @@ class Command(BaseCommand):
         return {chave: valor / soma for chave, valor in pesos.items()}
 
     @staticmethod
-    def normalizar_lucro(lucro, lucro_min, lucro_max):
-        if lucro_max == lucro_min:
-            return Decimal("100")
-        return (lucro - lucro_min) * Decimal("100") / (lucro_max - lucro_min)
+    def limitar(valor, teto=Decimal("99999.99")):
+        """Encaixa o percentual no campo (max_digits=7).
+
+        EE e um giro: com estoque medio quase zerado o indicador dispara, e
+        um estouro de coluna derrubaria o fechamento inteiro da rodada.
+        """
+        valor = Decimal(valor).quantize(Decimal("0.01"))
+        return max(-teto, min(teto, valor))
 
     @staticmethod
     def obter_demanda_base(cidade, produto):
@@ -173,30 +179,6 @@ class Command(BaseCommand):
         if demanda:
             return int(demanda.demanda_maxima)
         return int(cidade.demanda)
-
-    @staticmethod
-    def fator_marketing(grupo, cidade, rodada_numero):
-        total_marketing = (
-            Investimento.objects.filter(
-                grupo=grupo,
-                categoria="marketing",
-                cidade=cidade,
-                rodada_ativacao__lte=rodada_numero,
-            )
-            .aggregate(total=Sum("valor"))
-            .get("total")
-            or Decimal("0")
-        )
-        config = GameConfig.objects.order_by("id").first()
-        regras = config.regra_eventos if config and isinstance(config.regra_eventos, dict) else {}
-        marketing_cfg = regras.get("marketing", {}) if isinstance(regras.get("marketing", {}), dict) else {}
-        base_valor = Decimal(str(marketing_cfg.get("base_valor", 10000)))
-        ganho_por_base = Decimal(str(marketing_cfg.get("ganho_por_base", 0.02)))
-        max_fator = Decimal(str(marketing_cfg.get("max_fator", 1.30)))
-        if base_valor <= 0:
-            base_valor = Decimal("10000")
-        fator = Decimal("1") + (Decimal(total_marketing) / base_valor) * ganho_por_base
-        return min(fator, max_fator)
 
     def processar_investimentos_pendentes(self, grupo, rodada_numero):
         pendentes = Investimento.objects.filter(
@@ -248,11 +230,9 @@ class Command(BaseCommand):
         jogo_id = rodada.jogo_id
         MarketShareCidadeProduto.objects.filter(rodada=rodada_numero, grupo_id__in=grupos_ids).delete()
 
-        evento_retencao = self.obter_evento_estado_ativo(
-            rodada_numero=rodada_numero,
-            jogo_id=jogo_id,
-            efeito_estado="retencao_entrega",
-        )
+        # 8.4: a retencao e do evento da rodada, e um evento pode reter e
+        # encarecer ao mesmo tempo (a greve faz as duas coisas).
+        percentual_retido = int(getattr(evento, "retencao_entregas_percent", 0) or 0)
 
         envios = list(
             Distribuicao.objects.filter(
@@ -268,7 +248,11 @@ class Command(BaseCommand):
                 "vendidos_por_grupo": defaultdict(int),
                 "ofertados_por_grupo": defaultdict(int),
                 "total_vendido_rodada": 0,
+                "perdas_retencao_por_grupo": {},
             }
+
+        perdas_retencao = aplicar_retencao_de_entregas(envios, percentual_retido, rodada_numero)
+        envios = [envio for envio in envios if envio.quantidade > 0]
 
         buckets = defaultdict(list)
         ofertados_por_grupo = defaultdict(int)
@@ -289,11 +273,6 @@ class Command(BaseCommand):
                     Decimal(demanda)
                     * (Decimal("1") + Decimal(evento.impacto_percentual) / Decimal("100"))
                 )
-            if evento_retencao:
-                reducao = abs(Decimal(evento_retencao.impacto_percentual))
-                if reducao <= 0:
-                    reducao = RETENCAO_PADRAO_PERCENT
-                demanda = int(Decimal(demanda) * (Decimal("1") - reducao / Decimal("100")))
             demanda = max(demanda, 0)
 
             if demanda == 0:
@@ -324,8 +303,8 @@ class Command(BaseCommand):
             soma_scores = Decimal("0")
             for envio in itens:
                 peso_preco = self.calcular_peso_preco(envio.preco_unitario, preco_medio)
-                fator_marketing = self.fator_marketing(envio.grupo, cidade, rodada_numero)
-                score = peso_preco * Decimal(envio.quantidade) * fator_marketing
+                mc = fator_marketing(envio.grupo, cidade, rodada_numero)
+                score = peso_preco * Decimal(envio.quantidade) * mc
                 soma_scores += score
                 alocacoes.append(
                     {
@@ -429,6 +408,7 @@ class Command(BaseCommand):
             "vendidos_por_grupo": vendidos_por_grupo,
             "ofertados_por_grupo": ofertados_por_grupo,
             "total_vendido_rodada": total_vendido_rodada,
+            "perdas_retencao_por_grupo": perdas_retencao,
         }
 
     def handle(self, *args, **options):
@@ -476,6 +456,7 @@ class Command(BaseCommand):
                 vendidos_por_grupo = stats_venda["vendidos_por_grupo"]
                 ofertados_por_grupo = stats_venda["ofertados_por_grupo"]
                 total_vendido_rodada = stats_venda["total_vendido_rodada"]
+                perdas_retencao = stats_venda.get("perdas_retencao_por_grupo", {})
 
                 evento_quebra = self.obter_evento_estado_ativo(
                     rodada_numero=rodada.numero,
@@ -523,6 +504,12 @@ class Command(BaseCommand):
                         custos_extras += perda_quebra_estoque
                         motivos.append("quebra de estoque por evento")
 
+                    # 8.4: o perecivel retido na estrada e perdido
+                    perda_retencao = perdas_retencao.get(grupo.id, Decimal("0"))
+                    if perda_retencao > 0:
+                        custos_extras += perda_retencao
+                        motivos.append("perecivel perdido em entrega retida")
+
                     custo_armazenagem_mp = self.calcular_custo_armazenagem_mp(grupo)
                     if custo_armazenagem_mp > 0:
                         custos_extras += custo_armazenagem_mp
@@ -566,19 +553,32 @@ class Command(BaseCommand):
                         if ofertados > 0
                         else Decimal("0")
                     )
-                    eficiencia = (
-                        Decimal(vendidos) * Decimal("100") / Decimal(vendidos + grupo.estoque)
-                        if (vendidos + grupo.estoque) > 0
-                        else Decimal("0")
-                    )
                     lucro_rodada = rf.lucro
+
+                    anterior = (
+                        ConsolidadoRodadaGrupo.objects.filter(
+                            grupo=grupo, rodada__lt=rodada.numero
+                        )
+                        .order_by("-rodada")
+                        .first()
+                    )
+                    insumos = coletar_insumos(
+                        grupo=grupo,
+                        rodada=rodada.numero,
+                        perdas=perda_pereciveis + perda_quebra_estoque + perda_retencao,
+                        lucro=rf.lucro,
+                        receita=rf.receita,
+                        saldo_caixa=rf.saldo_caixa,
+                        valor_estoques_anterior=anterior.valor_estoques if anterior else None,
+                    )
+                    eixos = calcular_eixos(insumos)
 
                     metricas[grupo.id] = {
                         "grupo": grupo,
                         "receita_rodada": receita_vendas + receita_financeira,
                         "custos_operacionais": custos_operacionais,
                         "penalidade_sem_submissao": penalidade_sem_submissao,
-                        "perda_pereciveis": perda_pereciveis + perda_quebra_estoque,
+                        "perda_pereciveis": perda_pereciveis + perda_quebra_estoque + perda_retencao,
                         "custo_armazenagem_mp": custo_armazenagem_mp,
                         "custo_armazenagem_produtos": custo_armazenagem_produtos + custo_rh_recorrente,
                         "custos_totais": rf.custos,
@@ -588,7 +588,8 @@ class Command(BaseCommand):
                         "lucro_rodada": lucro_rodada,
                         "market_share": market_share,
                         "atendimento": atendimento,
-                        "eficiencia": eficiencia,
+                        "eixos": eixos,
+                        "valor_estoques": insumos["valor_estoques"],
                     }
 
                     if motivos:
@@ -603,18 +604,10 @@ class Command(BaseCommand):
                         )
 
                 if metricas:
-                    lucros = [dados["lucro_rodada"] for dados in metricas.values()]
-                    lucro_min = min(lucros)
-                    lucro_max = max(lucros)
-
                     for dados in metricas.values():
-                        lucro_norm = self.normalizar_lucro(dados["lucro_rodada"], lucro_min, lucro_max)
-                        score = (
-                            lucro_norm * pesos["lucro"]
-                            + dados["market_share"] * pesos["market_share"]
-                            + dados["atendimento"] * pesos["atendimento"]
-                            + dados["eficiencia"] * pesos["eficiencia_estoque"]
-                        )
+                        eixos = dados["eixos"]
+                        # pesos podem vir ajustados pelo professor (12.2)
+                        score = self.limitar(pontuacao_total(eixos, pesos))
 
                         IndicadorRodadaGrupo.objects.update_or_create(
                             grupo=dados["grupo"],
@@ -623,7 +616,7 @@ class Command(BaseCommand):
                                 "lucro_rodada": dados["lucro_rodada"],
                                 "market_share_percent": dados["market_share"],
                                 "atendimento_demanda_percent": dados["atendimento"],
-                                "eficiencia_estoque_percent": dados["eficiencia"],
+                                "eficiencia_estoque_percent": self.limitar(eixos["EE"]),
                                 "score_multicriterio": score,
                             },
                         )
@@ -631,6 +624,11 @@ class Command(BaseCommand):
                             grupo=dados["grupo"],
                             rodada=rodada.numero,
                             defaults={
+                                "eo_percent": self.limitar(eixos["EO"]),
+                                "df_percent": self.limitar(eixos["DF"]),
+                                "sd_percent": self.limitar(eixos["SD"]),
+                                "ds_percent": self.limitar(eixos["DS"]),
+                                "valor_estoques": dados["valor_estoques"],
                                 "receita_vendas": dados["receita_rodada"],
                                 "custos_operacionais": dados["custos_operacionais"],
                                 "penalidade_sem_submissao": dados["penalidade_sem_submissao"],
@@ -644,7 +642,7 @@ class Command(BaseCommand):
                                 "total_vendido": dados["vendidos"],
                                 "market_share_percent": dados["market_share"],
                                 "atendimento_demanda_percent": dados["atendimento"],
-                                "eficiencia_estoque_percent": dados["eficiencia"],
+                                "eficiencia_estoque_percent": self.limitar(eixos["EE"]),
                                 "score_multicriterio": score,
                             },
                         )

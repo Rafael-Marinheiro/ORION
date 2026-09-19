@@ -6,39 +6,44 @@
 <div class="o-head">
     <h1>Ranking de grupos</h1>
     <p class="o-head__sub">
-        A posição combina lucro, participação de mercado, atendimento da demanda e
-        eficiência de estoque{% if rodada_referencia %}, com base na rodada {{ rodada_referencia }}{% endif %}.
+        A pontuação combina cinco eixos — eficiência operacional, desempenho
+        financeiro, eficiência de estoques, satisfação da demanda e
+        sustentabilidade{% if rodada_referencia %}, com base na rodada {{ rodada_referencia }}{% endif %}.
     </p>
 </div>
 
 <div class="o-tablewrap">
     <table class="o-table">
-        <caption class="o-sr">Classificação dos grupos por score multicritério</caption>
+        <caption class="o-sr">Classificação dos grupos por pontuação multicritério</caption>
         <thead>
             <tr>
                 <th scope="col">#</th>
                 <th scope="col">Grupo</th>
-                <th scope="col" class="num">Score</th>
+                <th scope="col" class="num">Pontuação</th>
+                <th scope="col" class="num" title="Eficiência Operacional (peso 0,30)">EO</th>
+                <th scope="col" class="num" title="Desempenho Financeiro (peso 0,25)">DF</th>
+                <th scope="col" class="num" title="Eficiência de Estoques (peso 0,15)">EE</th>
+                <th scope="col" class="num" title="Satisfação da Demanda (peso 0,20)">SD</th>
+                <th scope="col" class="num" title="Sustentabilidade (peso 0,10)">DS</th>
                 <th scope="col" class="num">Lucro da rodada</th>
-                <th scope="col" class="num">Mercado (%)</th>
-                <th scope="col" class="num">Atendimento (%)</th>
-                <th scope="col" class="num">Eficiência de estoque (%)</th>
             </tr>
         </thead>
         <tbody>
             {% for item in ranking %}
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
                 <td class="rank">{{ forloop.counter }}</td>
-                <th scope="row">{% if item.grupo %}{{ item.grupo.nome }}{% else %}{{ item.nome }}{% endif %}</th>
-                <td class="num">{{ item.score_multicriterio|default:"0" }}</td>
-                <td class="num">{{ item.lucro_rodada|default:"0" }}</td>
-                <td class="num">{{ item.market_share_percent|default:"0" }}</td>
-                <td class="num">{{ item.atendimento_demanda_percent|default:"0" }}</td>
-                <td class="num">{{ item.eficiencia_estoque_percent|default:"0" }}</td>
+                <th scope="row">{{ item.grupo.nome }}</th>
+                <td class="num">{{ item.pontuacao|floatformat:2 }}</td>
+                <td class="num">{{ item.EO|floatformat:1 }}</td>
+                <td class="num">{{ item.DF|floatformat:1 }}</td>
+                <td class="num">{{ item.EE|floatformat:1 }}</td>
+                <td class="num">{{ item.SD|floatformat:1 }}</td>
+                <td class="num">{{ item.DS|floatformat:1 }}</td>
+                <td class="num">{{ item.lucro_rodada|floatformat:2 }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7">
+                <td colspan="9">
                     <div class="o-empty o-empty--center">
                         {% include 'partials/empty.svg.html' %}
                         <p>O ranking aparece depois do primeiro fechamento de rodada.</p>
@@ -49,4 +54,9 @@
         </tbody>
     </table>
 </div>
+
+<p class="o-note">
+    Empate na pontuação é resolvido, nesta ordem, por maior EO, maior SD,
+    maior DS, maior receita bruta e ordem alfabética do nome do grupo.
+</p>
 {% endblock %}

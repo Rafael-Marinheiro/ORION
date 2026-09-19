@@ -516,27 +516,63 @@ antigos do `docs/BACKLOG.md`.
   `frase_indicativa` e migração.
 - `ORION-C-04` — Substituir a probabilidade igual pelo sorteio ponderado pelas
   probabilidades fixas.
-- `ORION-C-05` — Implementar os impactos específicos por evento (retenção de
-  30% e 20% das entregas, +30% e −20% no custo de MP, +15% na demanda).
-- `ORION-C-06` — Trocar o fator de marketing linear pela fórmula logarítmica do
-  §14.1.1, com teto de +20% e saturação em R$ 10.000.
-- `ORION-C-07` — Ranking multicritério com os 5 eixos e pesos do §12.4,
-  incluindo o eixo de Sustentabilidade, que hoje não existe. Depende de B5
-  para os desempates.
+- `ORION-C-05` `CONCLUIDO` (2026-09-18) — Retenção de entregas em
+  `services/retencao.py`. Os impactos percentuais (custo de MP, custo
+  logístico, demanda) já existiam; o que faltava era a retenção, e ela estava
+  modelada como **queda de demanda na cidade** — a carga chegava, o mercado é
+  que comprava menos, e na rodada seguinte não voltava nada. Agora a entrega é
+  de fato retida: reaparece como envio da rodada seguinte sem cobrar frete de
+  novo (o caminhão já saiu), e o perecível retido é perdido, como o §8.4 manda.
+  Vale também para matéria-prima.
+  `Evento` ganhou `retencao_entregas_percent` porque a greve tem **dois**
+  efeitos (+30% no custo logístico *e* 30% retido) e `impacto_percentual`
+  só comporta um.
+- `ORION-C-06` `CONCLUIDO` (2026-09-18) — Fator de marketing logarítmico do
+  §14.1.1 em `services/marketing.py`, com teto de +20% e saturação em
+  R$ 10.000. A curva linear anterior estava duplicada em `views.py` e em
+  `fechar_rodadas.py` e era inerte: o teto documental (R$ 10.000) rendia 1,02.
+  A tabela de exemplo do §14.1.3 **não** reproduz a fórmula (declara 1,038 onde
+  a fórmula dá 1,150, e salta de 1,051 para 1,200 entre R$ 5.000 e R$ 10.000,
+  degrau que nenhuma curva logarítmica produz); vale a fórmula, que é contínua
+  e bate nos dois extremos declarados.
+- `ORION-C-07` `CONCLUIDO` (2026-09-18) — Ranking multicritério dos 5 eixos em
+  `services/pontuacao.py`, com os pesos do §12.4 e o desempate do §12.5. O
+  score anterior combinava quatro métricas que não existem em documento algum
+  e Sustentabilidade não era calculada em lugar nenhum. `RankingView` passou a
+  ler `ConsolidadoRodadaGrupo`, que é onde os eixos e a receita bruta vivem —
+  sem eles não há como aplicar o desempate. A tabela de exemplo do §12.6 não
+  reproduz a fórmula do §12.2 com os pesos do §12.4 (G1 daria 77,9 e a tabela
+  declara 75,35); vale a parte normativa, fórmula e pesos.
 - `ORION-C-08` — Corrigir o custo do operador para R$ 1.800 e definir a
   conversão mês/rodada.
-- `ORION-C-09` — Limite de expansão de +50% sobre as máquinas iniciais.
+- `ORION-C-09` `CONCLUIDO` (2026-09-18) — Teto de +50% sobre o parque inicial
+  (§14.2.1), em `services/investimentos.py`. O limite é sobre o parque do
+  grupo, não por linha de produto — o §14.2.1 justifica o teto por "restrições
+  físicas do espaço industrial", e o que acaba é o galpão. Compra ainda não
+  processada já consome o limite, senão bastava parcelar para furá-lo. O painel
+  mostra quanto resta.
 - `ORION-C-10` — Documentar ou corrigir a taxa de frete de produtos acabados
   (hoje R$ 0,10/km/unidade, sem origem documental).
-- `ORION-C-11` — Validar número de rodadas entre 3 e 12.
-- `ORION-C-12` — Restrição de investimento após duas rodadas de caixa negativo
-  (RN-09).
+- `ORION-C-11` `CONCLUIDO` — `GameConfig.numero_rodadas` já carrega
+  `MinValueValidator(3)` e `MaxValueValidator(12)`, e o formulário de
+  configuração é `ModelForm`, então a validação roda. Item era falso alarme.
+- `ORION-C-12` `CONCLUIDO` (2026-09-18) — RN-09 em
+  `services/investimentos.py`: dois fechamentos consecutivos com caixa
+  negativo bloqueiam novos investimentos. **Resgate de aplicação financeira
+  fica de fora** — é justamente o caminho de quem precisa de caixa, e a regra
+  restringe investir, não desinvestir.
 
 ### P2 — telas que faltam
 
 - `ORION-C-13` — Tela de Encerramento da Rodada (template pronto).
 - `ORION-C-14` — Relatórios Comparativos entre grupos (templates prontos).
-- `ORION-C-15` — DRE e Fluxo de Caixa por grupo e rodada.
+- `ORION-C-15` `CONCLUIDO` (2026-09-18) — DRE e Fluxo de Caixa em
+  `services/dre.py`, apresentados na própria tela de Relatórios Financeiros,
+  como o §10.3 descreve (uma tela, não duas). Os dois fecham: o DRE soma
+  exatamente o lucro gravado e cada linha do fluxo soma exatamente o saldo
+  gravado. A linha "Compras e investimentos" é o resíduo entre o caixa e o
+  resultado — é ela que mostra ao aluno para onde o dinheiro foi antes de
+  virar receita.
 - `ORION-C-16` — Classificação final (template pronto).
 - `ORION-C-17` — Ranking com destaques da rodada e evolução do grupo.
 - `ORION-C-18` — Gerenciamento do jogo: monitoramento de participação por grupo.
@@ -586,6 +622,36 @@ Outros:
   professor, exigindo nenhum 5xx.
 
 Estado da suíte ao final: **102 testes**, núcleo 91%, periférico 71%.
+
+### Sessão seguinte — classificação, marketing e relatórios contábeis
+
+- `ORION-C-07`: os cinco eixos do §12 (`services/pontuacao.py`), com os pesos
+  do §12.4 e o desempate do §12.5. `ConsolidadoRodadaGrupo` ganhou
+  `eo/df/sd/ds_percent` e `valor_estoques`; `eficiencia_estoque_percent` passou
+  a guardar o EE documentado em vez de uma métrica caseira.
+- `ORION-C-06`: fator de marketing logarítmico, única implementação para a
+  tela do aluno e para o fechamento.
+- `ORION-C-15`: DRE e Fluxo de Caixa na tela de Relatórios Financeiros.
+- `default_ranking_pesos` passou a devolver os cinco eixos; as quatro chaves
+  antigas não correspondiam a nada da especificação.
+- `ORION-C-09` e `ORION-C-12`: teto de expansão do parque e bloqueio de
+  investimento por caixa negativo, as duas regras que existiam na
+  especificação e em lugar nenhum do código.
+- `ORION-C-05`: retenção de entregas de verdade, no lugar do corte de demanda
+  que fingia representá-la.
+- `ORION-C-23` e `ORION-C-24`: cobertura de `export_resultados_pdf`/`excel` e
+  dos caminhos de erro de `PainelGrupoView.post` (capital, estoque e escopo).
+  Seguem sem teste o bloqueio de produção por evento de estado e os
+  multiplicadores percentuais de evento sobre custo.
+
+Duas decisões que ficaram registradas como divergência, não como erro: as
+tabelas de exemplo do §12.6 e do §14.1.3 não reproduzem as próprias fórmulas
+que ilustram. Em ambos os casos vale a fórmula.
+
+Ponto em aberto para o Rafael: grupo que não opera na rodada tira DS = 80 e
+EO = 20, porque "não teve perdas" e "não comprou longe" são verdade quando não
+houve operação. É a fórmula do §12.3 ao pé da letra. Se isso for exploração
+indevida, o caminho é zerar os eixos sem atividade.
 
 ---
 

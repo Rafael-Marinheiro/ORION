@@ -32,9 +32,14 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_RODADA
+from .services.dre import montar_dre, montar_fluxo_de_caixa, resumo_do_fluxo
 from .services.eventos import sortear_evento
+from .services.investimentos import impedimento_para_investir, limite_de_expansao
 from .services.logistica import calcular_frete, peso_do_envio, viagens_necessarias
+from .services.marketing import fator_marketing
 from .services.perecibilidade import resumo_vencimento
+from .services.pontuacao import ordenar_classificacao
+from .services.retencao import aplicar_retencao_de_materia_prima
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
     ConfigWizardStep1Form,
@@ -170,23 +175,8 @@ def obter_demanda_cidade_produto(cidade, produto):
 
 
 def calcular_fator_marketing(grupo, cidade, rodada_numero):
-    investimentos = Investimento.objects.filter(
-        grupo=grupo,
-        categoria="marketing",
-        cidade=cidade,
-        rodada_ativacao__lte=rodada_numero,
-    )
-    total = investimentos.aggregate(total=Sum("valor")).get("total") or Decimal("0")
-    config = GameConfig.objects.order_by("id").first()
-    regras = config.regra_eventos if config and isinstance(config.regra_eventos, dict) else {}
-    marketing_cfg = regras.get("marketing", {}) if isinstance(regras.get("marketing", {}), dict) else {}
-    base_valor = Decimal(str(marketing_cfg.get("base_valor", 10000)))
-    ganho_por_base = Decimal(str(marketing_cfg.get("ganho_por_base", 0.02)))
-    max_fator = Decimal(str(marketing_cfg.get("max_fator", 1.30)))
-    if base_valor <= 0:
-        base_valor = Decimal("10000")
-    fator = Decimal("1") + (total / base_valor) * ganho_por_base
-    return min(fator, max_fator)
+    """Mc do 14.1.1. Fica em `services.marketing`, unico para view e fechamento."""
+    return fator_marketing(grupo, cidade, rodada_numero)
 
 
 def viagens_com_carga_de_retorno(grupo, cidade, rodada_numero):
@@ -266,17 +256,24 @@ def processar_recebimentos_materia_prima(grupo, rodada_numero):
         recebida=False,
         rodada_recebimento__lte=rodada_numero,
     ).select_related("materia_prima")
+    # 8.4: greve e enchentes retem "entregas de MP e produtos". A parcela
+    # retida chega na rodada seguinte -- e quem planejou a producao contando
+    # com ela descobre o buraco agora.
+    evento_rodada = sortear_evento(rodada_numero, grupo.jogo_id)
+    percentual_retido = int(getattr(evento_rodada, "retencao_entregas_percent", 0) or 0)
+
     for compra in pendentes:
         if evento_atraso and compra.rodada_recebimento <= rodada_numero:
             compra.rodada_recebimento = rodada_numero + 1
             compra.save(update_fields=["rodada_recebimento"])
             continue
+        recebido = aplicar_retencao_de_materia_prima(compra, percentual_retido, rodada_numero)
         estoque, _ = EstoqueMateriaPrima.objects.get_or_create(
             grupo=grupo,
             materia_prima=compra.materia_prima,
             defaults={"quantidade_kg": Decimal("0")},
         )
-        estoque.quantidade_kg += compra.quantidade_kg
+        estoque.quantidade_kg += recebido
         estoque.save(update_fields=["quantidade_kg"])
         compra.recebida = True
         compra.save(update_fields=["recebida"])
@@ -667,7 +664,9 @@ class RankingView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        indicadores = IndicadorRodadaGrupo.objects.select_related("grupo", "grupo__jogo")
+        # Consolidado, nao Indicador: o desempate do 12.5 precisa de EO, SD,
+        # DS e receita bruta, que so existem la.
+        indicadores = ConsolidadoRodadaGrupo.objects.select_related("grupo", "grupo__jogo")
 
         if not self.request.user.is_staff:
             grupo = obter_grupo_do_usuario(self.request.user)
@@ -679,8 +678,22 @@ class RankingView(LoginRequiredMixin, TemplateView):
         indicadores = indicadores.filter(rodada__in=numeros_de_rodadas_fechadas())
         rodada_referencia = indicadores.order_by("-rodada").values_list("rodada", flat=True).first()
         if rodada_referencia:
-            ranking = list(
-                indicadores.filter(rodada=rodada_referencia).order_by("-score_multicriterio")
+            ranking = ordenar_classificacao(
+                [
+                    {
+                        "grupo": c.grupo,
+                        "pontuacao": c.score_multicriterio,
+                        "EO": c.eo_percent,
+                        "DF": c.df_percent,
+                        "EE": c.eficiencia_estoque_percent,
+                        "SD": c.sd_percent,
+                        "DS": c.ds_percent,
+                        "receita": c.receita_vendas,
+                        "lucro_rodada": c.lucro_rodada,
+                        "nome": c.grupo.nome,
+                    }
+                    for c in indicadores.filter(rodada=rodada_referencia)
+                ]
             )
         else:
             ranking = []
@@ -697,10 +710,12 @@ class RankingView(LoginRequiredMixin, TemplateView):
                 ranking.append(
                     {
                         "grupo": grupo,
-                        "score_multicriterio": Decimal("0"),
-                        "market_share_percent": Decimal("0"),
-                        "atendimento_demanda_percent": Decimal("0"),
-                        "eficiencia_estoque_percent": Decimal("0"),
+                        "pontuacao": Decimal("0"),
+                        "EO": Decimal("0"),
+                        "DF": Decimal("0"),
+                        "EE": Decimal("0"),
+                        "SD": Decimal("0"),
+                        "DS": Decimal("0"),
                         "lucro_rodada": Decimal("0"),
                     }
                 )
@@ -818,6 +833,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "producao_form": producao_form or ProducaoForm(),
             "compra_mp_form": compra_mp_form or CompraMateriaPrimaForm(),
             "investimento_form": investimento_form or InvestimentoForm(),
+            "limite_maquinas": limite_de_expansao(grupo) if grupo else None,
             "alerta": alerta,
             "evento": evento,
             "notificacao": notificacao,
@@ -1096,6 +1112,11 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 investimento.grupo = grupo
                 investimento.rodada = rodada_ativa.numero
                 investimento.processado = False
+
+                impedimento = impedimento_para_investir(grupo, investimento)
+                if impedimento:
+                    messages.error(request, impedimento)
+                    return redirect("painel_grupo")
 
                 if investimento.categoria in {"maquinas", "rh"}:
                     investimento.rodada_ativacao = rodada_ativa.numero + 1
@@ -1544,11 +1565,32 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
         fechadas = numeros_de_rodadas_fechadas()
         resultados = resultados.filter(rodada__in=fechadas)
         consolidados = consolidados.filter(rodada__in=fechadas).order_by("-rodada", "grupo__nome")
+        # DRE e fluxo de caixa sao por grupo (10.3): so fazem sentido quando ha
+        # um grupo em foco -- o filtro, ou o grupo do proprio aluno.
+        grupo_foco = form.cleaned_data.get("grupo") if form.is_valid() else None
+        if not grupo_foco and not request.user.is_staff:
+            grupo_foco = obter_grupo_do_usuario(request.user)
+
+        dre_linhas = []
+        fluxo = []
+        dre_consolidado = None
+        if grupo_foco:
+            do_grupo = list(consolidados.filter(grupo=grupo_foco))
+            fluxo = montar_fluxo_de_caixa(do_grupo)
+            dre_consolidado = max(do_grupo, key=lambda c: c.rodada, default=None)
+            if dre_consolidado:
+                dre_linhas = montar_dre(dre_consolidado)
+
         contexto = {
             "resultados": resultados.order_by("-rodada", "grupo__nome"),
             "consolidados": consolidados,
             "painel": montar_painel_financeiro(consolidados),
             "form": form,
+            "grupo_foco": grupo_foco,
+            "dre_consolidado": dre_consolidado,
+            "dre_linhas": dre_linhas,
+            "fluxo": fluxo,
+            "fluxo_resumo": resumo_do_fluxo(fluxo),
         }
         return render(request, self.template_name, contexto)
 

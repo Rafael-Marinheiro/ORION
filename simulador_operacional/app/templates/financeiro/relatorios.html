@@ -107,6 +107,74 @@
     </div>
 {% endif %}
 
+{% if dre_linhas %}
+<section class="o-stack">
+    <h2>Demonstrativo de resultados — {{ grupo_foco.nome }}, rodada {{ dre_consolidado.rodada }}</h2>
+    <div class="o-tablewrap">
+        <table class="o-table o-table--dre">
+            <caption class="o-sr">DRE da rodada {{ dre_consolidado.rodada }}</caption>
+            <tbody>
+                {% for linha in dre_linhas %}
+                <tr{% if linha.tipo == 'total' %} data-total="true"{% endif %}>
+                    <th scope="row">{{ linha.rotulo }}</th>
+                    <td class="num">{{ linha.valor|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+{% if fluxo %}
+<section class="o-stack">
+    <h2>Fluxo de caixa por rodada — {{ grupo_foco.nome }}</h2>
+    <div class="o-tablewrap">
+        <table class="o-table">
+            <caption class="o-sr">Movimento de caixa rodada a rodada</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Rodada</th>
+                    <th scope="col" class="num">Saldo inicial</th>
+                    <th scope="col" class="num">Entradas</th>
+                    <th scope="col" class="num">Saídas</th>
+                    <th scope="col" class="num" title="Compras, investimentos e aplicações feitas durante a rodada">Compras e investimentos</th>
+                    <th scope="col" class="num">Saldo final</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for linha in fluxo %}
+                <tr>
+                    <th scope="row">R{{ linha.rodada }}</th>
+                    <td class="num">{{ linha.saldo_inicial|floatformat:2 }}</td>
+                    <td class="num">{{ linha.entradas|floatformat:2 }}</td>
+                    <td class="num">-{{ linha.saidas|floatformat:2 }}</td>
+                    <td class="num">{{ linha.outras_movimentacoes|floatformat:2 }}</td>
+                    <td class="num">{{ linha.saldo_final|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% if fluxo_resumo %}
+            <tfoot>
+                <tr data-total="true">
+                    <th scope="row">Total</th>
+                    <td class="num"></td>
+                    <td class="num">{{ fluxo_resumo.entradas|floatformat:2 }}</td>
+                    <td class="num">-{{ fluxo_resumo.saidas|floatformat:2 }}</td>
+                    <td class="num">{{ fluxo_resumo.outras_movimentacoes|floatformat:2 }}</td>
+                    <td class="num">{{ fluxo_resumo.saldo_final|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</section>
+{% elif grupo_foco %}
+<p class="o-note">O DRE e o fluxo de caixa aparecem depois do primeiro fechamento de rodada.</p>
+{% else %}
+<p class="o-note">Filtre por um grupo para ver o DRE e o fluxo de caixa dele.</p>
+{% endif %}
+
 <details class="o-details">
     <summary>Ver os números em tabela</summary>
 

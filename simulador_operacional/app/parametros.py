@@ -80,3 +80,56 @@ DESCONTO_RETORNO_POR_KM = Decimal("0.50")
 #
 # Chave = ha quantas rodadas o evento saiu. Valor = multiplicador do peso.
 PENALIDADE_EVENTO_RECENTE = {1: 0.05, 2: 0.30, 3: 0.65}
+
+# --- Classificacao multicriterio (12) --------------------------------------
+#
+# Pesos dos cinco eixos, tabela 12.4. Somam 1.
+PESOS_EIXOS = {
+    "EO": Decimal("0.30"),
+    "DF": Decimal("0.25"),
+    "EE": Decimal("0.15"),
+    "SD": Decimal("0.20"),
+    "DS": Decimal("0.10"),
+}
+
+# Pesos internos: 12.3.1 (F), 12.3.2 (W) e 12.3.4 (S).
+PESOS_EO = (Decimal("0.4"), Decimal("0.4"), Decimal("0.2"))
+PESOS_DF = (Decimal("0.4"), Decimal("0.3"), Decimal("0.3"))
+PESOS_DS = (Decimal("0.5"), Decimal("0.3"), Decimal("0.2"))
+
+# O 12.3.4 se intitula "Satisfacao da Demanda (SD)" mas o corpo define DS --
+# a formula do SD nao existe em nenhum dos 15 documentos. Decisao do projeto
+# (autorizada por Rafael em 2026-09-18): profundidade + cobertura.
+#   SD = (vendido / demanda potencial das pracas-alvo) x 0,6
+#      + (pracas atendidas / pracas ativas) x 0,4
+# Nao reaproveita `atendimento_demanda_percent`, que e vendido/ofertado --
+# metrica de oferta, e duplicata do segundo componente do EO.
+PESOS_SD = (Decimal("0.6"), Decimal("0.4"))
+
+# O DS3 do 12.3.4 premia entregas ate 1.000 km. No mapa regional a praca mais
+# distante esta a 470 km, entao o limiar do documento daria 100% para todo
+# mundo -- indicador inerte. Recalibrado para a escala do mapa que usamos.
+DISTANCIA_REGIONAL_KM = 200
+
+# --- Marketing (14.1) ------------------------------------------------------
+#
+# Mc = 1 + 0,20 x ln(1 + Ic) / ln(1 + 10000), com Ic limitado ao teto:
+# "Investimentos superiores a R$ 10.000,00 nao geram aumento adicional".
+#
+# A tabela de exemplo do 14.1.3 nao reproduz essa formula (declara 1,038 para
+# R$ 1.000 onde a formula da 1,150) e ainda salta de 1,051 para 1,200 entre
+# R$ 5.000 e R$ 10.000 -- degrau que nenhuma curva logaritmica produz. Vale a
+# formula, que e continua e bate nos dois extremos declarados (1,000 e 1,200).
+INVESTIMENTO_MARKETING_TETO = Decimal("10000")
+GANHO_MAXIMO_MARKETING = Decimal("0.20")
+
+# --- Investimentos: limites (14.2.1 e RN-09) -------------------------------
+#
+# 14.2.1: "ate 50% sobre a quantidade inicial instalada", por restricao fisica
+# do espaco industrial, "fixo durante toda a simulacao". O limite e sobre o
+# parque do grupo, nao por linha de produto -- o que acaba e o galpao.
+LIMITE_EXPANSAO_MAQUINAS = Decimal("0.5")
+
+# RN-09 (5): "Saldo negativo (fluxo de caixa negativo) por duas rodadas
+# consecutivas implica na restricao de investimento."
+RODADAS_CAIXA_NEGATIVO_PARA_RESTRICAO = 2

@@ -156,6 +156,14 @@
         <section class="o-panel o-panel--step">
             <h2 class="o-panel__title" data-step="4">Investimentos</h2>
             <p class="o-panel__hint">Marketing por cidade, máquinas e pessoas entram na rodada seguinte. Aplicação financeira rende 1,5% por rodada.</p>
+            {% if limite_maquinas %}
+            <p class="o-panel__hint">
+                Expansão do parque: {{ limite_maquinas.compradas }} de
+                {{ limite_maquinas.teto }} máquinas adicionais já adquiridas
+                (restam {{ limite_maquinas.restante }}). O limite é físico e vale
+                para toda a simulação.
+            </p>
+            {% endif %}
             <form method="post">
                 {% csrf_token %}
                 {{ investimento_form.as_p }}

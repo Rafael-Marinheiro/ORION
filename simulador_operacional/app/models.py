@@ -6,12 +6,8 @@ from django.db import models
 
 
 def default_ranking_pesos():
-    return {
-        "lucro": 0.4,
-        "market_share": 0.3,
-        "atendimento": 0.2,
-        "eficiencia_estoque": 0.1,
-    }
+    """Pesos dos cinco eixos do 12.4. O professor pode ajusta-los por rodada."""
+    return {"EO": 0.30, "DF": 0.25, "EE": 0.15, "SD": 0.20, "DS": 0.10}
 
 
 class UserManager(BaseUserManager):
@@ -541,7 +537,15 @@ class ConsolidadoRodadaGrupo(models.Model):
     total_vendido = models.PositiveIntegerField(default=0)
     market_share_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     atendimento_demanda_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    # eficiencia_estoque_percent guarda o eixo EE do 12.3.3 (giro de estoque).
     eficiencia_estoque_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    # Os outros quatro eixos do 12.2; EE mora no campo acima.
+    eo_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    df_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    sd_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    ds_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
+    # Guardado para a rodada seguinte calcular estoque medio (12.3.3).
+    valor_estoques = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     score_multicriterio = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     data_registro = models.DateTimeField(auto_now_add=True)
 
@@ -693,6 +697,10 @@ class Evento(models.Model):
     efeito_estado = models.CharField(max_length=30, choices=EFEITO_ESTADO_CHOICES, blank=True)
     duracao_rodadas = models.PositiveIntegerField(default=1)
     impacto_percentual = models.IntegerField()
+    # 8.4: a greve de caminhoneiros tem DOIS efeitos -- +30% no custo logistico
+    # e 30% das entregas retidas. `impacto_percentual` so cabe um, entao a
+    # retencao ganha campo proprio em vez de disputar o mesmo numero.
+    retencao_entregas_percent = models.PositiveIntegerField(default=0)
     probabilidade = models.FloatField(default=0)
     descricao = models.TextField(blank=True)
 
