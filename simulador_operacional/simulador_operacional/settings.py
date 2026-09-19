@@ -65,6 +65,10 @@ DATABASES = {
     }
 }
 
+# A trilha histórica em app/migrations contém ramificações que recriam tabelas.
+# Para bancos novos, a aplicação usa a sequência consolidada e verificada.
+MIGRATION_MODULES = {"app": "app.migrations_ci"}
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

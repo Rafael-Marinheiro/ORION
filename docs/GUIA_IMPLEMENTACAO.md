@@ -600,8 +600,9 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-21` `CONCLUIDO` (2026-09-19) — Removido `services/vendas.py` e seu
   teste isolado: contrariavam a alocação competitiva entre grupos definida na
   §9.2(c) e já implementada em `fechar_rodadas.py`.
-- `ORION-C-22` — Consertar a trilha principal de migrations, hoje inconsistente
-  (`no such column: CONFIG.ranking_pesos`). Só `migrations_ci` sobe limpa.
+- `ORION-C-22` `CONCLUIDO` (2026-09-19) — A aplicação passou a usar por padrão
+  a trilha consolidada `migrations_ci`, que sobe limpa. A sequência antiga em
+  `migrations/` permanece apenas como histórico e não é mais executada.
 - `ORION-C-23` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `export_resultados_pdf` e `export_resultados_excel`
   com teste (52 linhas sem execução; CSV e JSON já têm).
 - `ORION-C-24` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução). Seguem sem teste o bloqueio de produção por evento de estado e os multiplicadores percentuais de evento sobre custo.
