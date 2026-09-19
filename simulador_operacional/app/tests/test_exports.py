@@ -15,6 +15,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from openpyxl import load_workbook
 from io import BytesIO
+from unittest.mock import patch
 
 from app.models import ConsolidadoRodadaGrupo, GameConfig, Grupo, Jogo
 
@@ -58,20 +59,22 @@ class ExportResultadosTest(TestCase):
         self.assertTrue(response.content.startswith(b"%PDF"))
 
     def test_export_pdf_filtra_por_rodada(self):
-        response = self.client.get(reverse("export_resultados_pdf"), {"rodada": 1})
+        with patch("app.views.canvas.Canvas") as canvas:
+            response = self.client.get(reverse("export_resultados_pdf"), {"rodada": 1})
 
         self.assertEqual(response.status_code, 200)
-        # O PDF e binario, mas o nome do grupo aparece como texto simples
-        # dentro do stream do reportlab -- suficiente para provar o filtro.
-        self.assertIn(b"Equipe Um", response.content)
-        self.assertNotIn(b"Equipe Dois", response.content)
+        linhas = [chamada.args[2] for chamada in canvas.return_value.drawString.call_args_list]
+        self.assertTrue(any("Equipe Um" in linha for linha in linhas))
+        self.assertFalse(any("Equipe Dois" in linha for linha in linhas))
 
     def test_export_pdf_filtra_por_grupo(self):
-        response = self.client.get(reverse("export_resultados_pdf"), {"grupo": self.grupo2.id})
+        with patch("app.views.canvas.Canvas") as canvas:
+            response = self.client.get(reverse("export_resultados_pdf"), {"grupo": self.grupo2.id})
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Equipe Dois", response.content)
-        self.assertNotIn(b"Equipe Um", response.content)
+        linhas = [chamada.args[2] for chamada in canvas.return_value.drawString.call_args_list]
+        self.assertTrue(any("Equipe Dois" in linha for linha in linhas))
+        self.assertFalse(any("Equipe Um" in linha for linha in linhas))
 
     def test_export_pdf_sem_dados_ainda_devolve_200(self):
         response = self.client.get(reverse("export_resultados_pdf"), {"rodada": 999})
