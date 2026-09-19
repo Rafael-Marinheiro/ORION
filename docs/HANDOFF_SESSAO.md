@@ -11,45 +11,28 @@ acadêmico em Django. Responda sempre em português do Brasil.
 ## Onde está o trabalho
 
 O código vive em `C:\Projetos\ORION`, mas o trabalho recente está na branch
-`claude/recursing-pascal-f25acd`, nos commits `01338cd` e `643804e`. Confira
+`claude/recursing-pascal-f25acd`, nos commits `01338cd`, `643804e` e
+`21f4716`. Confira
 que está nela antes de qualquer coisa — se abrir na `main`, você não verá nada
 do que foi feito.
 
-## PRIMEIRA TAREFA, antes de escrever uma linha de código
+## Estado verificado
 
-O commit `01338cd` traz sete funcionalidades que **nunca foram executadas**.
-O daemon do Docker ficou fora do ar durante toda a sessão que as escreveu; a
-suíte não rodou uma única vez e as migrações `app/migrations/0018_*` e
-`app/migrations_ci/0004_*` nunca foram aplicadas. Só há garantia de que os
-arquivos compilam.
+Em 2026-09-19 a suíte inteira rodou: **232 testes, todos OK**. Os gates de
+cobertura passaram — núcleo acima de 85%, periférico em 79%. O trabalho dos
+commits `01338cd`, `643804e` e `21f4716` está verificado.
 
-Rode a suíte inteira e conserte o que estiver quebrado antes de seguir para
-qualquer item novo:
+Uma pegadinha do ambiente: `coverage` **não está na imagem do Docker**. Para
+rodar os gates localmente, instale antes:
+
+```bash
+docker compose run --rm web sh -c "pip install -q coverage==7.6.1 && python -m coverage run --rcfile=../.coveragerc-critical manage.py test app --settings=simulador_operacional.settings_test"
+```
+
+A suíte sozinha não precisa disso:
 
 ```bash
 docker compose run --rm web python manage.py test app --settings=simulador_operacional.settings_test
-```
-
-Onde eu apostaria que quebra, em ordem:
-
-1. **`services/retencao.py`** — é a mudança mais invasiva. Ela altera o fluxo
-   de vendas em `fechar_rodadas.processar_vendas_por_demanda` e passa a criar
-   linhas de `Distribuicao` para a rodada seguinte. Testes antigos de
-   fechamento podem contar com o comportamento anterior, em que a retenção era
-   uma simples queda de demanda na cidade.
-2. **`RankingView`** — mudou de `IndicadorRodadaGrupo` para
-   `ConsolidadoRodadaGrupo` e o template `ranking.html` mudou de colunas.
-   Testes que liam as chaves antigas do contexto vão falhar.
-3. **Seed de eventos** — as tuplas de `seed_dados_base.py` ganharam um campo
-   (`retencao`). Se algum teste monta a lista de eventos por conta própria,
-   vai desempacotar errado.
-4. **`default_ranking_pesos`** — devolvia quatro chaves, agora devolve cinco.
-
-Depois da suíte, rode os dois gates de cobertura, na mesma ordem do CI:
-
-```bash
-docker compose run --rm web coverage report --rcfile=../.coveragerc-critical
-docker compose run --rm web coverage report --rcfile=../.coveragerc-perifericos --fail-under=60
 ```
 
 ## Regras de trabalho, não negociáveis
@@ -78,10 +61,9 @@ docker compose run --rm web coverage report --rcfile=../.coveragerc-perifericos 
 3. `docs/BACKLOG.md` — **histórico, não use para decidir escopo.** Os status
    `CONCLUIDO` lá refletem entrega de sprint, não conformidade.
 
-Dois status na matriz da seção 4, e a diferença importa: `CONFORME` é
-implementado com teste passando; `IMPLEMENTADO` é código escrito com a suíte
-ainda não executada. Tudo do `01338cd` está como `IMPLEMENTADO`. Depois que a
-suíte passar, promova as linhas para `CONFORME`.
+Na matriz da seção 4, `CONFORME` significa implementado **com teste
+passando** — e é esse o estado atual de tudo. Mantenha o critério: não marque
+uma linha como conforme sem a suíte verde na mão.
 
 ## Quem decide o quê
 

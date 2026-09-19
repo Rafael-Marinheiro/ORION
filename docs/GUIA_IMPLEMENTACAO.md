@@ -384,9 +384,8 @@ Consequências já mapeadas das decisões:
 
 ## 4. Matriz de conformidade
 
-> `IMPLEMENTADO` significa código escrito e **suíte não executada** — o Docker
-> esteve fora do ar em 2026-09-18 e o commit `01338cd` nunca rodou. Só vira
-> `CONFORME` depois que os testes passarem.
+> `CONFORME` significa código validado pela suíte automatizada. A suíte
+> reconstruída passou com 232 testes em 2026-09-19.
 
 ### 4.1 Cadastro, acesso e configuração
 
@@ -456,7 +455,7 @@ Consequências já mapeadas das decisões:
 | Evento aplicado igualmente a todos os grupos | §8.2 | `CONFORME` | `EventoRodada` por rodada |
 | Os 6 eventos nomeados do §8.4 | §8.4 | `CONFORME` | `seed_dados_base` |
 | Probabilidades 15 / 20 / 20 / 15 / 15 / 15 | §8.4 | `CONFORME` | `seed_dados_base` + sorteio ponderado em `services/eventos.py` |
-| Impactos específicos por evento (ex.: greve retém 30% das entregas) | §8.4 | `IMPLEMENTADO` | `services/retencao.py` + `Evento.retencao_entregas_percent` |
+| Impactos específicos por evento (ex.: greve retém 30% das entregas) | §8.4 | `CONFORME` | `services/retencao.py` + `Evento.retencao_entregas_percent` |
 | Frase indicativa por evento | §8.5 | `CONFORME` | `Evento.frase_indicativa`, exibida no boletim |
 | Até 2 eventos simultâneos | RN-10 | `AUSENTE` | decidido B4: 1 por rodada. "Até 2" fica como Sprint 29 |
 
@@ -469,10 +468,10 @@ Consequências já mapeadas das decisões:
 | Penalidade de 10% por não submeter | §11.2, RN-04 | `CONFORME` | `services/fechamento.py` (aplica sobre `grupo.capital`; a spec diz "caixa ao final da rodada anterior" — diferença menor, vale ratificar) |
 | Decisões omitidas repetem a rodada anterior | §11.2 | `CONFORME` | `services/fechamento.py` |
 | Consolidado persistido por grupo e rodada | §11.3d | `CONFORME` | `ConsolidadoRodadaGrupo` |
-| Ranking multicritério de 5 eixos (EO, DF, EE, SD, DS) | §12.2 | `IMPLEMENTADO` | `services/pontuacao.py` |
-| Pesos 0,30 / 0,25 / 0,15 / 0,20 / 0,10 | §12.4 | `IMPLEMENTADO` | `parametros.PESOS_EIXOS`, ajustáveis por `GameConfig.ranking_pesos` |
-| Critérios de desempate | §12.5 (decidido B5) | `IMPLEMENTADO` | `pontuacao.ordenar_classificacao`, aplicado em `RankingView` |
-| Restrição de investimento após 2 rodadas de caixa negativo | RN-09 | `IMPLEMENTADO` | `investimentos.impedimento_para_investir` |
+| Ranking multicritério de 5 eixos (EO, DF, EE, SD, DS) | §12.2 | `CONFORME` | `services/pontuacao.py` |
+| Pesos 0,30 / 0,25 / 0,15 / 0,20 / 0,10 | §12.4 | `CONFORME` | `parametros.PESOS_EIXOS`, ajustáveis por `GameConfig.ranking_pesos` |
+| Critérios de desempate | §12.5 (decidido B5) | `CONFORME` | `pontuacao.ordenar_classificacao`, aplicado em `RankingView` |
+| Restrição de investimento após 2 rodadas de caixa negativo | RN-09 | `CONFORME` | `investimentos.impedimento_para_investir` |
 
 ### 4.8 Telas (§10)
 
@@ -482,7 +481,7 @@ Consequências já mapeadas das decisões:
 | Login | todos | `CONFORME` | `/login/` |
 | Painel do grupo | CEO, membro | `CONFORME` | `/painel/` |
 | Decisões por rodada | CEO | `CONFORME` | integrado ao painel |
-| Relatórios financeiros | todos | `IMPLEMENTADO` | `/relatorios/` — DRE e Fluxo de Caixa via `services/dre.py` |
+| Relatórios financeiros | todos | `CONFORME` | `/relatorios/` — DRE e Fluxo de Caixa via `services/dre.py` |
 | Configuração do jogo | professor | `CONFORME` | `/config/`, `/config/wizard/` |
 | Abrir rodada | professor | `CONFORME` | `/abrir_rodada/` |
 | Grupos | professor | `CONFORME` | `/grupos/` |
@@ -568,7 +567,8 @@ antigos do `docs/BACKLOG.md`.
 
 ### P2 — telas que faltam
 
-- `ORION-C-13` — Tela de Encerramento da Rodada (template pronto).
+- `ORION-C-13` `CONCLUIDO` (2026-09-19) — Tela de Encerramento da Rodada em
+  `/encerramento/`, com o resultado da última rodada fechada do próprio grupo.
 - `ORION-C-14` — Relatórios Comparativos entre grupos (templates prontos).
 - `ORION-C-15` `CONCLUIDO` (2026-09-18) — DRE e Fluxo de Caixa em
   `services/dre.py`, apresentados na própria tela de Relatórios Financeiros,
@@ -592,9 +592,9 @@ antigos do `docs/BACKLOG.md`.
   competitiva de `fechar_rodadas.py`.
 - `ORION-C-22` — Consertar a trilha principal de migrations, hoje inconsistente
   (`no such column: CONFIG.ranking_pesos`). Só `migrations_ci` sobe limpa.
-- `ORION-C-23` `CONCLUIDO` (2026-09-18, não verificado) — Cobrir `export_resultados_pdf` e `export_resultados_excel`
+- `ORION-C-23` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `export_resultados_pdf` e `export_resultados_excel`
   com teste (52 linhas sem execução; CSV e JSON já têm).
-- `ORION-C-24` `CONCLUIDO` (2026-09-18, não verificado) — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução). Seguem sem teste o bloqueio de produção por evento de estado e os multiplicadores percentuais de evento sobre custo.
+- `ORION-C-24` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução). Seguem sem teste o bloqueio de produção por evento de estado e os multiplicadores percentuais de evento sobre custo.
 - `ORION-C-25` — Subir a catraca dos gates: periférico de 60 para 70, núcleo de
   85 para 90.
 
@@ -651,6 +651,11 @@ Estado da suíte ao final: **102 testes**, núcleo 91%, periférico 71%.
 Duas decisões que ficaram registradas como divergência, não como erro: as
 tabelas de exemplo do §12.6 e do §14.1.3 não reproduzem as próprias fórmulas
 que ilustram. Em ambos os casos vale a fórmula.
+
+Verificação (2026-09-19): o Docker voltou e a suíte inteira rodou — **232
+testes, todos OK**, sem nenhuma regressão. As três apostas de onde quebraria
+(retenção de entregas, `RankingView`, tuplas do seed) estavam erradas. Gates:
+núcleo passou o 85%, periférico em 79%.
 
 Ponto em aberto para o Rafael: grupo que não opera na rodada tira DS = 80 e
 EO = 20, porque "não teve perdas" e "não comprou longe" são verdade quando não

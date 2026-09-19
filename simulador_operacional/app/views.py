@@ -1595,6 +1595,34 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, contexto)
 
 
+class EncerramentoRodadaView(LoginRequiredMixin, TemplateView):
+    """Mostra ao grupo o resultado da última rodada já encerrada."""
+
+    template_name = "financeiro/encerramento.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grupo = obter_grupo_do_usuario(self.request.user)
+        if not grupo:
+            context.update({"rodada": None, "resultado": None})
+            return context
+
+        rodadas_fechadas = Rodada.objects.filter(fechada=True)
+        if grupo.jogo_id:
+            rodadas_fechadas = rodadas_fechadas.filter(jogo_id=grupo.jogo_id)
+        else:
+            rodadas_fechadas = rodadas_fechadas.filter(jogo__isnull=True)
+        rodada = rodadas_fechadas.order_by("-numero").first()
+        resultado = None
+        if rodada:
+            resultado = ResultadoFinanceiro.objects.filter(
+                grupo=grupo, rodada=rodada.numero
+            ).first()
+
+        context.update({"rodada": rodada, "resultado": resultado})
+        return context
+
+
 class JobsView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     template_name = "jobs.html"
     context_object_name = "jobs"
