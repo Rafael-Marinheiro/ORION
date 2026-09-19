@@ -49,16 +49,13 @@ DEMANDA_MINIMA_POR_PRACA = 50
 
 # --- Logistica -------------------------------------------------------------
 #
-# O 7.2 diz "R$ 1,50 por quilometro rodado, multiplicado pela quantidade
-# adquirida (em kg)". Essa unidade nao fecha: no exemplo do proprio 7.2.1,
-# 500 kg de MP3 valendo R$ 4.000 geram R$ 750.000 de frete, 188x a carga.
-#
-# A unidade passa a ser por VIAGEM de caminhao (decisao D10 do guia). Os
-# numeros do documento sao mantidos; o que muda e o que eles multiplicam.
-# O caminhao indivisivel e o que torna o modelo didatico: consolidar pedido
-# fica barato por quilo, comprar em migalhas fica caro.
+# MP: §7.2 define R$ 1,50 por km e por kg adquirido. Produto acabado: §9.2a
+# exige proporcionalidade a distancia e volume, sem taxa; a calibracao do
+# ORION usa referencia de carga geral da ANTT, arredondada para a aula.
 CAPACIDADE_CAMINHAO_KG = 12000
-CUSTO_VIAGEM_POR_KM = Decimal("1.50")
+CUSTO_MP_POR_KM_KG = Decimal("1.50")
+CUSTO_VIAGEM_PRODUTO_POR_KM = Decimal("5.00")
+CUSTO_CARGA_DESCARGA_PRODUTO = Decimal("500.00")
 
 # 7.2.1: desconto por remessa cruzada. Fisicamente e o frete de retorno --
 # o caminhao que levou produto volta carregado em vez de voltar vazio.

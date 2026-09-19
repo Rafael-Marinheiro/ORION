@@ -60,11 +60,17 @@ class FreteTest(TestCase):
 
         self.assertGreater(longe["custo"], perto["custo"])
 
-    def test_custo_e_viagens_vezes_distancia_vezes_taxa(self):
+    def test_custo_de_produto_tem_deslocamento_e_carga_por_viagem(self):
         frete = calcular_frete(190, CAPACIDADE_CAMINHAO_KG + 1)
 
         self.assertEqual(frete["viagens"], 2)
-        self.assertEqual(frete["custo_bruto"], Decimal("570.00"))  # 2 x 190 x 1,50
+        self.assertEqual(frete["custo_bruto"], Decimal("2900.00"))  # 2 x (190 x 5 + 500)
+
+    def test_caminhao_cheio_de_a_tem_frete_compatível_com_a_escala_do_orion(self):
+        frete = calcular_frete(172, 12000)  # 40 unidades de A, de 300 kg cada
+
+        self.assertEqual(frete["custo"], Decimal("1360.00"))
+        self.assertEqual(frete["custo"] / Decimal("40"), Decimal("34.00"))
 
     def test_desconto_de_retorno_abate_por_viagem(self):
         sem = calcular_frete(190, 5000)

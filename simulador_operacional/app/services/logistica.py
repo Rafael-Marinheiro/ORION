@@ -4,7 +4,9 @@ from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 
 from app.parametros import (
     CAPACIDADE_CAMINHAO_KG,
-    CUSTO_VIAGEM_POR_KM,
+    CUSTO_CARGA_DESCARGA_PRODUTO,
+    CUSTO_MP_POR_KM_KG,
+    CUSTO_VIAGEM_PRODUTO_POR_KM,
     DESCONTO_RETORNO_POR_KM,
 )
 
@@ -21,7 +23,7 @@ def calcular_frete_materia_prima(distancia_km, quantidade_kg, produtos_remetidos
     distancia = Decimal(str(distancia_km or 0))
     quantidade = max(Decimal("0"), Decimal(str(quantidade_kg or 0)))
     limite_desconto = min(quantidade, max(Decimal("0"), Decimal(str(produtos_remetidos or 0))))
-    custo_bruto = (distancia * quantidade * CUSTO_VIAGEM_POR_KM).quantize(CENTAVO)
+    custo_bruto = (distancia * quantidade * CUSTO_MP_POR_KM_KG).quantize(CENTAVO)
     desconto = (distancia * limite_desconto * DESCONTO_RETORNO_POR_KM).quantize(CENTAVO)
     return {
         "custo_bruto": custo_bruto,
@@ -66,7 +68,10 @@ def calcular_frete(distancia_km, peso_kg, viagens_com_retorno: int = 0) -> dict:
     capacidade_paga = Decimal(CAPACIDADE_CAMINHAO_KG) * viagens
     ocupacao = (peso / capacidade_paga * Decimal("100")).quantize(CENTAVO, ROUND_HALF_UP)
 
-    custo_bruto = (distancia * CUSTO_VIAGEM_POR_KM * viagens).quantize(CENTAVO, ROUND_HALF_UP)
+    custo_bruto = (
+        (distancia * CUSTO_VIAGEM_PRODUTO_POR_KM + CUSTO_CARGA_DESCARGA_PRODUTO)
+        * viagens
+    ).quantize(CENTAVO, ROUND_HALF_UP)
 
     com_retorno = max(0, min(int(viagens_com_retorno), viagens))
     desconto = (distancia * DESCONTO_RETORNO_POR_KM * com_retorno).quantize(CENTAVO, ROUND_HALF_UP)

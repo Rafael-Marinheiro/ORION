@@ -80,7 +80,7 @@ class FreteDaDistribuicaoTest(TestCase):
 
         envio = Distribuicao.objects.get(grupo=self.grupo)
         # 1 viagem x 172 km x R$ 1,50
-        self.assertEqual(envio.custo_transporte, Decimal("258.00"))
+        self.assertEqual(envio.custo_transporte, Decimal("1360.00"))
 
     def test_uma_unidade_a_mais_dobra_o_frete(self):
         self._estocar(41)
@@ -88,7 +88,7 @@ class FreteDaDistribuicaoTest(TestCase):
         self._enviar(41)
 
         envio = Distribuicao.objects.get(grupo=self.grupo)
-        self.assertEqual(envio.custo_transporte, Decimal("516.00"))
+        self.assertEqual(envio.custo_transporte, Decimal("2720.00"))
 
     def test_capital_do_grupo_e_debitado(self):
         self._estocar(40)
@@ -97,7 +97,7 @@ class FreteDaDistribuicaoTest(TestCase):
         self._enviar(40)
 
         self.grupo.refresh_from_db()
-        self.assertEqual(self.grupo.capital, capital_antes - Decimal("258.00"))
+        self.assertEqual(self.grupo.capital, capital_antes - Decimal("1360.00"))
 
     def test_evento_de_custo_de_transporte_encarece_o_frete(self):
         """Greve de caminhoneiros: +30% no custo logistico (8.4)."""
@@ -114,7 +114,7 @@ class FreteDaDistribuicaoTest(TestCase):
         self._enviar(40)
 
         envio = Distribuicao.objects.get(grupo=self.grupo)
-        self.assertEqual(envio.custo_transporte, Decimal("335.40"))  # 258 x 1,30
+        self.assertEqual(envio.custo_transporte, Decimal("1768.00"))  # 1.360 x 1,30
 
     def test_o_aluno_ve_a_ocupacao_do_caminhao_que_pagou(self):
         """A ocupacao e o que ensina; o valor sozinho nao denuncia desperdicio."""

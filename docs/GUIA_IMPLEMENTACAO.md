@@ -382,7 +382,7 @@ Consequências já mapeadas das decisões:
 | Armazenagem de MP a 2% do valor de compra | §7.4 | `CONFORME` | `fechar_rodadas` |
 | Fornecedores por cidade | §7.1 | `CONFORME` | `views.MATERIA_PRIMA_FORNECEDORES` |
 | Desconto logístico cruzado de R$ 0,50/km por produto remetido | §7.2.1 | `CONFORME` | `services/logistica.calcular_frete_materia_prima` |
-| Frete de produtos acabados | §9.2a | `BLOQUEADO` | há proporcionalidade, mas não taxa documental |
+| Frete de produtos acabados | §9.2a + decisão de calibração | `CONFORME` | R$ 5,00/km + R$ 500,00 de carga/descarga por viagem em `services/logistica.calcular_frete` |
 
 ### 4.4 Comercialização e demanda
 
@@ -514,9 +514,10 @@ antigos do `docs/BACKLOG.md`.
   físicas do espaço industrial", e o que acaba é o galpão. Compra ainda não
   processada já consome o limite, senão bastava parcelar para furá-lo. O painel
   mostra quanto resta.
-- `ORION-C-10` `BLOQUEADO` — §9.2a exige frete proporcional à distância e ao
-  volume, mas não define uma taxa. A regra antiga de R$ 0,10/km/unidade não
-  tem origem documental; é necessária definição antes de alterá-la.
+- `ORION-C-10` `CONCLUIDO` (2026-09-19) — Produto acabado cobra R$ 5,00/km
+  mais R$ 500,00 de carga e descarga por viagem de até 12.000 kg. A calibração
+  arredonda a referência de carga geral da ANTT para preservar a imersão e
+  fazer distância e consolidação de carga influenciarem a competição.
 - `ORION-C-11` `CONCLUIDO` — `GameConfig.numero_rodadas` já carrega
   `MinValueValidator(3)` e `MaxValueValidator(12)`, e o formulário de
   configuração é `ModelForm`, então a validação roda. Item era falso alarme.
