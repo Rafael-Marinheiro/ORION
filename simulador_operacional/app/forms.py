@@ -151,6 +151,11 @@ class CompraMateriaPrimaForm(forms.ModelForm):
 class InvestimentoForm(forms.ModelForm):
     cidade = forms.ModelChoiceField(queryset=Cidade.objects.all(), required=False)
     produto = forms.ModelChoiceField(queryset=Produto.objects.filter(ativo=True), required=False)
+    quantidade = forms.IntegerField(min_value=0, required=False)
+    operacao_financeira = forms.ChoiceField(
+        choices=Investimento.OPERACAO_FINANCEIRA_CHOICES,
+        required=False,
+    )
 
     class Meta:
         model = Investimento
@@ -171,6 +176,8 @@ class InvestimentoForm(forms.ModelForm):
             cleaned_data["operacao_financeira"] = "aplicar"
         elif operacao not in {"aplicar", "resgatar"}:
             self.add_error("operacao_financeira", "Operacao financeira invalida.")
+        else:
+            cleaned_data["quantidade"] = 0
         return cleaned_data
 
 
