@@ -384,6 +384,10 @@ Consequências já mapeadas das decisões:
 
 ## 4. Matriz de conformidade
 
+> `IMPLEMENTADO` significa código escrito e **suíte não executada** — o Docker
+> esteve fora do ar em 2026-09-18 e o commit `01338cd` nunca rodou. Só vira
+> `CONFORME` depois que os testes passarem.
+
 ### 4.1 Cadastro, acesso e configuração
 
 | Regra | Origem | Status | Onde |
@@ -450,10 +454,10 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | Sorteio automático por rodada | §8.2 | `CONFORME` | `views.sortear_evento` + comando agendado |
 | Evento aplicado igualmente a todos os grupos | §8.2 | `CONFORME` | `EventoRodada` por rodada |
-| Os 6 eventos nomeados do §8.4 | §8.4 | `AUSENTE` | o seed cria outros eventos |
-| Probabilidades 15 / 20 / 20 / 15 / 15 / 15 | §8.4 | `DIVERGENTE` | seed aplica **probabilidade igual** a todos |
-| Impactos específicos por evento (ex.: greve retém 30% das entregas) | §8.4 | `DIVERGENTE` | impactos genéricos |
-| Frase indicativa por evento | §8.5 | `AUSENTE` | campo não existe no modelo |
+| Os 6 eventos nomeados do §8.4 | §8.4 | `CONFORME` | `seed_dados_base` |
+| Probabilidades 15 / 20 / 20 / 15 / 15 / 15 | §8.4 | `CONFORME` | `seed_dados_base` + sorteio ponderado em `services/eventos.py` |
+| Impactos específicos por evento (ex.: greve retém 30% das entregas) | §8.4 | `IMPLEMENTADO` | `services/retencao.py` + `Evento.retencao_entregas_percent` |
+| Frase indicativa por evento | §8.5 | `CONFORME` | `Evento.frase_indicativa`, exibida no boletim |
 | Até 2 eventos simultâneos | RN-10 | `AUSENTE` | decidido B4: 1 por rodada. "Até 2" fica como Sprint 29 |
 
 ### 4.7 Fechamento, financeiro e ranking
@@ -465,10 +469,10 @@ Consequências já mapeadas das decisões:
 | Penalidade de 10% por não submeter | §11.2, RN-04 | `CONFORME` | `services/fechamento.py` (aplica sobre `grupo.capital`; a spec diz "caixa ao final da rodada anterior" — diferença menor, vale ratificar) |
 | Decisões omitidas repetem a rodada anterior | §11.2 | `CONFORME` | `services/fechamento.py` |
 | Consolidado persistido por grupo e rodada | §11.3d | `CONFORME` | `ConsolidadoRodadaGrupo` |
-| Ranking multicritério de 5 eixos (EO, DF, EE, SD, DS) | §12.2 | `DIVERGENTE` | implementa 4 eixos: lucro 0,4 · market share 0,3 · atendimento 0,2 · estoque 0,1. **Sustentabilidade não existe** |
-| Pesos 0,30 / 0,25 / 0,15 / 0,20 / 0,10 | §12.4 | `DIVERGENTE` | ver acima |
-| Critérios de desempate | §12.5 (decidido B5) | `AUSENTE` | nenhum dos dois conjuntos implementado; ver `ORION-C-07` |
-| Restrição de investimento após 2 rodadas de caixa negativo | RN-09 | `AUSENTE` | — |
+| Ranking multicritério de 5 eixos (EO, DF, EE, SD, DS) | §12.2 | `IMPLEMENTADO` | `services/pontuacao.py` |
+| Pesos 0,30 / 0,25 / 0,15 / 0,20 / 0,10 | §12.4 | `IMPLEMENTADO` | `parametros.PESOS_EIXOS`, ajustáveis por `GameConfig.ranking_pesos` |
+| Critérios de desempate | §12.5 (decidido B5) | `IMPLEMENTADO` | `pontuacao.ordenar_classificacao`, aplicado em `RankingView` |
+| Restrição de investimento após 2 rodadas de caixa negativo | RN-09 | `IMPLEMENTADO` | `investimentos.impedimento_para_investir` |
 
 ### 4.8 Telas (§10)
 
@@ -478,7 +482,7 @@ Consequências já mapeadas das decisões:
 | Login | todos | `CONFORME` | `/login/` |
 | Painel do grupo | CEO, membro | `CONFORME` | `/painel/` |
 | Decisões por rodada | CEO | `CONFORME` | integrado ao painel |
-| Relatórios financeiros | todos | `DIVERGENTE` | `/relatorios/` — falta DRE e Fluxo de Caixa |
+| Relatórios financeiros | todos | `IMPLEMENTADO` | `/relatorios/` — DRE e Fluxo de Caixa via `services/dre.py` |
 | Configuração do jogo | professor | `CONFORME` | `/config/`, `/config/wizard/` |
 | Abrir rodada | professor | `CONFORME` | `/abrir_rodada/` |
 | Grupos | professor | `CONFORME` | `/grupos/` |
@@ -511,10 +515,10 @@ antigos do `docs/BACKLOG.md`.
 
 ### P1 — regras de negócio divergentes da especificação
 
-- `ORION-C-03` — Semear os 6 eventos do §8.4 com nome, tipo, impacto, frase
+- `ORION-C-03` `CONCLUIDO` (2026-09-18) — Semear os 6 eventos do §8.4 com nome, tipo, impacto, frase
   indicativa e as probabilidades 15/20/20/15/15/15. Inclui campo novo
   `frase_indicativa` e migração.
-- `ORION-C-04` — Substituir a probabilidade igual pelo sorteio ponderado pelas
+- `ORION-C-04` `CONCLUIDO` (2026-09-18) — Substituir a probabilidade igual pelo sorteio ponderado pelas
   probabilidades fixas.
 - `ORION-C-05` `CONCLUIDO` (2026-09-18) — Retenção de entregas em
   `services/retencao.py`. Os impactos percentuais (custo de MP, custo
@@ -588,9 +592,9 @@ antigos do `docs/BACKLOG.md`.
   competitiva de `fechar_rodadas.py`.
 - `ORION-C-22` — Consertar a trilha principal de migrations, hoje inconsistente
   (`no such column: CONFIG.ranking_pesos`). Só `migrations_ci` sobe limpa.
-- `ORION-C-23` — Cobrir `export_resultados_pdf` e `export_resultados_excel`
+- `ORION-C-23` `CONCLUIDO` (2026-09-18, não verificado) — Cobrir `export_resultados_pdf` e `export_resultados_excel`
   com teste (52 linhas sem execução; CSV e JSON já têm).
-- `ORION-C-24` — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução).
+- `ORION-C-24` `CONCLUIDO` (2026-09-18, não verificado) — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução). Seguem sem teste o bloqueio de produção por evento de estado e os multiplicadores percentuais de evento sobre custo.
 - `ORION-C-25` — Subir a catraca dos gates: periférico de 60 para 70, núcleo de
   85 para 90.
 
