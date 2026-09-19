@@ -244,21 +244,15 @@ Três categorias, com dono diferente:
 
 **Pendências para o Dr. Pio, por ordem de impacto:**
 
-1. **D10 · Unidade do frete.** O §7.2 diz R$ 1,50 por km **por kg**. Os valores
-   dele foram preservados; só a unidade passou a ser por viagem de caminhão.
-   Motivo: no exemplo do próprio §7.2.1, 500 kg de MP3 valendo R$ 4.000 geram
-   R$ 750.000 de frete — 188x a carga, 75% do capital inicial numa compra. É
-   aritmética, não preferência. **Mas a correção é uma leitura minha da
-   intenção dele, e ele pode ter pensado outra coisa.**
-2. **B8 · Fórmula de SD.** A proposta registrada é invenção minha, não dele.
+1. **B8 · Fórmula de SD.** A proposta registrada é invenção minha, não dele.
    Vale 0,20 da nota. Não deve ser implementada sem ratificação.
-3. **D11 · Variedade de eventos.** O §8.2 pede probabilidade constante; a
+2. **D11 · Variedade de eventos.** O §8.2 pede probabilidade constante; a
    redução de peso do evento recente a torna levemente dependente do
    histórico (até 1,3 p.p. de desvio). Atende ao pedido de variedade do dono
    do projeto, mas afasta-se da letra do documento.
-4. **D9.5 · Custo do operador.** Ele escreveu R$ 1.800/mês; a rodada virou o
+3. **D9.5 · Custo do operador.** Ele escreveu R$ 1.800/mês; a rodada virou o
    período de competência da folha. Leitura, não transcrição.
-5. **B9 e B10.** Giro de estoque contado duas vezes e o limiar de 1.000 km,
+4. **B9 e B10.** Giro de estoque contado duas vezes e o limiar de 1.000 km,
    que a base regional tornou inócuo.
 
 O que **não** precisa dele: correções de bug que não tocam regra de negócio
@@ -357,19 +351,6 @@ A mensagem de confirmação passa a dizer quantas viagens e qual a ocupação.
 As distâncias e populações da tabela regional são aproximadas e devem ser
 conferidas contra IBGE e rota real antes do uso em sala (`ORION-C-27`).
 
-### Ainda bloqueado
-
-- **B6 · Frete de produtos acabados.** A documentação é **silenciosa** sobre a
-  taxa. A política "a documentação decide" não produz um número onde não há
-  número. O código usa R$ 0,10/km/unidade, sem origem documental.
-- **B7 · Unidade do frete de matéria-prima.** O §7.2.1 está aritmeticamente
-  correto, mas economicamente impraticável: no exemplo do próprio documento,
-  500 kg de MP3 valendo R$ 4.000 geram frete de R$ 750.000 — 188x o valor da
-  carga e 75% do capital inicial numa única compra. Implementar como está
-  escrito trava o jogo na primeira rodada. A fórmula R$ 1,50/km × kg parece ter
-  sido pensada por lote, não por quilo-quilômetro. Precisa de decisão do autor
-  da especificação.
-
 Consequências já mapeadas das decisões:
 
 - **B3** tinha o parâmetro legado `capacidade_maquina = 100`, que não
@@ -419,10 +400,10 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | 4 MPs com preços 3,00 / 5,50 / 8,00 / 15,00 | §7.1 | `CONFORME` | seed `materias_primas` |
 | Recebimento na rodada seguinte (D+1) | §7.2 | `CONFORME` | `CompraMateriaPrima.rodada_pedido` |
-| Frete de MP a R$ 1,50/km | §7.2 | `CONFORME` | `services/materias_primas.calcular_frete` |
+| Frete de MP a R$ 1,50/km por viagem de caminhão | §7.2 (decidido D10) | `CONFORME` | `services/logistica.calcular_frete` |
 | Armazenagem de MP a 2% do valor de compra | §7.4 | `CONFORME` | `fechar_rodadas` |
 | Fornecedores por cidade | §7.1 | `CONFORME` | `views.MATERIA_PRIMA_FORNECEDORES` |
-| Desconto logístico cruzado de R$ 0,50/km | §7.2.1 | `DIVERGENTE` | **duas implementações conflitantes**: `services/materias_primas.py` usa R$ 0,50/km (correto), `views.FATOR_DESCONTO_LOGISTICO_CRUZADO` usa 10% |
+| Desconto logístico cruzado de R$ 0,50/km | §7.2.1 (decidido D10) | `CONFORME` | retorno de viagens em `services/logistica.calcular_frete` |
 | Frete de produtos acabados | §9.2a (decidido D10) | `CONFORME` | mesmo modelo de caminhão da compra de MP |
 
 ### 4.4 Comercialização e demanda
@@ -505,12 +486,15 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-01` `CONCLUIDO` (2026-09-18) — B1 a B5 decididos pela política "a
   documentação decide"; ver seção 3. **B5 tem confiança baixa** e vale ratificar
   com o Dr. Pio.
-- `ORION-C-26` `BLOQUEADO` — B6 e B7 (frete de produtos acabados e unidade do
-  frete de MP) seguem sem decisão. Nenhum trabalho de logística deve começar
-  antes: o §7.2.1, como escrito, torna a primeira compra inviável.
-- `ORION-C-02` `AUSENTE` — Unificar o desconto logístico cruzado. Hoje há duas
-  implementações divergentes da mesma regra; a de `services/materias_primas.py`
-  é a que segue a especificação. Remover a outra.
+- `ORION-C-26` `CONCLUIDO` (2026-09-19) — D10 é a regra consolidada para as
+  duas modalidades: R$ 1,50/km por viagem de caminhão de 12.000 kg. Para MP,
+  a remessa de produto para a mesma cidade habilita retorno de caminhão a
+  R$ 0,50/km, limitado às viagens efetivamente enviadas. A fórmula literal do
+  §7.2 por kg permanece registrada como especificação de origem; D10 é a
+  decisão de implementação que a torna jogável.
+- `ORION-C-02` `CONCLUIDO` (2026-09-19) — Removido o cálculo legado paralelo.
+  O desconto cruzado é calculado apenas em `services/logistica.py`, no mesmo
+  modelo de viagens adotado por D10.
 
 ### P1 — regras de negócio divergentes da especificação
 
@@ -555,8 +539,9 @@ antigos do `docs/BACKLOG.md`.
   físicas do espaço industrial", e o que acaba é o galpão. Compra ainda não
   processada já consome o limite, senão bastava parcelar para furá-lo. O painel
   mostra quanto resta.
-- `ORION-C-10` — Documentar ou corrigir a taxa de frete de produtos acabados
-  (hoje R$ 0,10/km/unidade, sem origem documental).
+- `ORION-C-10` `CONCLUIDO` (2026-09-19) — Produto acabado usa o mesmo frete de
+  caminhão definido por D10. A taxa antiga de R$ 0,10/km/unidade foi removida
+  junto com o serviço econômico legado que a continha.
 - `ORION-C-11` `CONCLUIDO` — `GameConfig.numero_rodadas` já carrega
   `MinValueValidator(3)` e `MaxValueValidator(12)`, e o formulário de
   configuração é `ModelForm`, então a validação roda. Item era falso alarme.
@@ -595,8 +580,8 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-19` `CONCLUIDO` (2026-09-19) — Removido `homeold.html`, template
   órfão sem rota, referência no código ou correspondência na especificação.
 - `ORION-C-20` `CONCLUIDO` (2026-09-19) — Removido o parâmetro legado
-  `capacidade_maquina = 100`; a capacidade efetiva permanece 400 minutos por
-  máquina e produto, conforme §13.4 e decisão B3.
+  `capacidade_maquina = 100`, inclusive da migração consolidada; a capacidade
+  efetiva permanece 400 minutos por máquina e produto, conforme §13.4 e decisão B3.
 - `ORION-C-21` `CONCLUIDO` (2026-09-19) — Removido `services/vendas.py` e seu
   teste isolado: contrariavam a alocação competitiva entre grupos definida na
   §9.2(c) e já implementada em `fechar_rodadas.py`.
