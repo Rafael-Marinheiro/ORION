@@ -14,8 +14,8 @@
 - `python simulador_operacional/manage.py test app --settings=simulador_operacional.settings_test`
 2. Cobertura critica:
 - `coverage run --rcfile=.coveragerc-critical simulador_operacional/manage.py test app --settings=simulador_operacional.settings_test`
-- `coverage report --rcfile=.coveragerc-critical --fail-under=85`
-- `coverage report --rcfile=.coveragerc-perifericos --fail-under=60`
+- `coverage report --rcfile=.coveragerc-critical --fail-under=90`
+- `coverage report --rcfile=.coveragerc-perifericos --fail-under=70`
 3. CI verde em todas as etapas.
 
 ## 3) Operacao

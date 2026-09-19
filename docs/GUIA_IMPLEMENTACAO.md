@@ -606,8 +606,9 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-23` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `export_resultados_pdf` e `export_resultados_excel`
   com teste (52 linhas sem execução; CSV e JSON já têm).
 - `ORION-C-24` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução). Seguem sem teste o bloqueio de produção por evento de estado e os multiplicadores percentuais de evento sobre custo.
-- `ORION-C-25` — Subir a catraca dos gates: periférico de 60 para 70, núcleo de
-  85 para 90.
+- `ORION-C-25` `CONCLUIDO` (2026-09-19) — Gates elevados: núcleo de 85 para
+  90 e periférico de 60 para 70. A medição de 239 testes alcançou 92% e 81%,
+  respectivamente.
 
 ---
 
@@ -686,7 +687,7 @@ docker compose run --rm web python manage.py test app --settings=simulador_opera
 Gates de cobertura, na mesma sequência do CI:
 
 ```bash
-docker compose run --rm web sh -c "pip install -q coverage==7.6.1; coverage run --rcfile=../.coveragerc-critical manage.py test app --settings=simulador_operacional.settings_test && coverage report --rcfile=../.coveragerc-critical --fail-under=85 && coverage report --rcfile=../.coveragerc-perifericos --fail-under=60"
+docker compose run --rm web sh -c "pip install -q coverage==7.6.1; coverage run --rcfile=../.coveragerc-critical manage.py test app --settings=simulador_operacional.settings_test && coverage report --rcfile=../.coveragerc-critical --fail-under=90 && coverage report --rcfile=../.coveragerc-perifericos --fail-under=70"
 ```
 
 ---

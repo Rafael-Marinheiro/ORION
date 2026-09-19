@@ -13,7 +13,7 @@ O levantamento de requisitos e a modelagem do sistema foram publicados no **XIV 
 ## Stack
 
 - **API:** Python 3.11, Django 4.2, Django REST Framework, autenticação JWT e documentação com Swagger (drf-yasg)
-- **Qualidade:** testes com pytest e cobertura mínima de 85% nos módulos críticos, verificada no CI
+- **Qualidade:** testes com pytest e cobertura mínima de 90% nos módulos críticos, verificada no CI
 - **Entrega:** Docker, Gunicorn e GitHub Actions
 
 ## Como rodar
