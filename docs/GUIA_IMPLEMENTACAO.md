@@ -490,7 +490,7 @@ Consequências já mapeadas das decisões:
 | **Encerramento da rodada** | CEO | `AUSENTE` | template existe (`financeiro/encerramento.html`), sem view nem rota |
 | **Relatórios comparativos** | todos | `AUSENTE` | templates existem (`dashboard/*.html`), sem view nem rota |
 | **Classificação final** | todos | `AUSENTE` | template existe (`classificacao.html`), sem view nem rota |
-| **Gerenciamento do jogo** (monitorar participação) | professor | `AUSENTE` | — |
+| **Gerenciamento do jogo** (monitorar participação) | professor | `CONFORME` | `/gerenciamento/` |
 | **Painel de controle / Suporte** | professor | `AUSENTE` | — |
 
 ---
@@ -586,7 +586,9 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-17` `CONCLUIDO` (2026-09-19) — Ranking em `/ranking/` exibe o
   líder, o maior lucro e a maior participação de mercado da rodada, além do
   histórico de posição e pontuação do grupo do usuário em cada rodada fechada.
-- `ORION-C-18` — Gerenciamento do jogo: monitoramento de participação por grupo.
+- `ORION-C-18` `CONCLUIDO` (2026-09-19) — Gerenciamento em `/gerenciamento/`
+  lista, por rodada aberta, o CEO, o estado da submissão e o horário de envio
+  de cada grupo.
 
 ### P3 — dívida e higiene
 

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerenciamento do jogo — ORION{% endblock %}
+
+{% block content %}
+<div class="o-head">
+    <h1>Gerenciamento do jogo</h1>
+    <p class="o-head__sub">Acompanhe as submissões dos grupos nas rodadas abertas.</p>
+</div>
+
+{% for painel in paineis %}
+<section class="o-section" aria-labelledby="rodada-{{ painel.rodada.id }}">
+    <h2 id="rodada-{{ painel.rodada.id }}" class="o-section-title">
+        {% if painel.rodada.jogo %}{{ painel.rodada.jogo.nome }} · {% endif %}Rodada {{ painel.rodada.numero }}
+    </h2>
+    <p class="o-note">{{ painel.submetidos }} de {{ painel.participacoes|length }} grupos submeteram. Prazo: {{ painel.rodada.fim|date:'d/m/Y H:i' }}.</p>
+    <div class="o-tablewrap">
+        <table class="o-table">
+            <caption class="o-sr">Participação dos grupos na rodada {{ painel.rodada.numero }}</caption>
+            <thead><tr><th scope="col">Grupo</th><th scope="col">CEO da rodada</th><th scope="col">Status</th><th scope="col">Enviado em</th></tr></thead>
+            <tbody>
+                {% for item in painel.participacoes %}
+                <tr>
+                    <th scope="row">{{ item.grupo.nome }}</th>
+                    <td>{% if item.ceo %}{{ item.ceo.usuario.nome_usuario }}{% else %}Não definido{% endif %}</td>
+                    <td>{% if item.auditoria %}<span class="o-badge o-badge--ok">Enviado</span>{% else %}<span class="o-badge o-badge--mute">Pendente</span>{% endif %}</td>
+                    <td class="o-num">{% if item.auditoria %}{{ item.auditoria.data_registro|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">Não há grupos neste jogo.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% empty %}
+<div class="o-empty o-empty--center">
+    {% include 'partials/empty.svg.html' %}
+    <p>Não há rodadas abertas para monitorar.</p>
+</div>
+{% endfor %}
+{% endblock %}

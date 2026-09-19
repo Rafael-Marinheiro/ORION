@@ -642,6 +642,59 @@ class RodadaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         return response
 
 
+class GerenciamentoJogoView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """Acompanha a submissão das decisões nas rodadas ainda abertas."""
+
+    template_name = "gerenciamento_jogo.html"
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        rodadas = Rodada.objects.filter(
+            fechada=False, fim__gt=timezone.now()
+        ).select_related("jogo").order_by("jogo__nome", "numero")
+        paineis = []
+
+        for rodada in rodadas:
+            grupos = Grupo.objects.filter(
+                jogo_id=rodada.jogo_id
+            ).order_by("nome") if rodada.jogo_id else Grupo.objects.filter(
+                jogo__isnull=True
+            ).order_by("nome")
+            ceos = {
+                ceo.grupo_id: ceo
+                for ceo in CEOGrupoRodada.objects.filter(
+                    grupo__in=grupos, rodada=rodada.numero
+                ).select_related("usuario")
+            }
+            auditorias = {}
+            for auditoria in AuditoriaSubmissaoRodada.objects.filter(
+                grupo__in=grupos, rodada=rodada.numero
+            ).select_related("usuario").order_by("grupo_id", "-data_registro"):
+                auditorias.setdefault(auditoria.grupo_id, auditoria)
+
+            participacoes = [
+                {
+                    "grupo": grupo,
+                    "ceo": ceos.get(grupo.id),
+                    "auditoria": auditorias.get(grupo.id),
+                }
+                for grupo in grupos
+            ]
+            paineis.append(
+                {
+                    "rodada": rodada,
+                    "participacoes": participacoes,
+                    "submetidos": sum(item["auditoria"] is not None for item in participacoes),
+                }
+            )
+
+        context["paineis"] = paineis
+        return context
+
+
 def numeros_de_rodadas_fechadas(jogo_id=None, sem_jogo=False):
     """Numeros das rodadas ja encerradas.
 
