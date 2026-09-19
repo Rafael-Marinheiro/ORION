@@ -12,7 +12,8 @@ from pathlib import Path
 from django.test import TestCase
 from django.utils import timezone
 
-from app.models import Grupo, ResultadoFinanceiro, Rodada
+from app.management.commands.fechar_rodadas import Command
+from app.models import CapacidadeProdutoGrupo, Grupo, Produto, ResultadoFinanceiro, Rodada
 from app.parametros import (
     CUSTO_OPERADOR_POR_RODADA,
     OPERADORES_POR_MAQUINA,
@@ -38,6 +39,21 @@ class ParametrosDaEspecificacaoTest(TestCase):
         self.assertEqual(CUSTO_OPERADOR_POR_RODADA, SALARIO_OPERADOR_MENSAL)
         # o valor anterior, R$ 2.000, nao vinha de documento nenhum
         self.assertNotEqual(CUSTO_OPERADOR_POR_RODADA, Decimal("2000"))
+
+    def test_fechamento_cobra_a_folha_recorrente_por_operador_ativo(self):
+        grupo = Grupo.objects.create(nome="Equipe Folha")
+        produto = Produto.objects.create(codigo="A", nome="Produto A")
+        CapacidadeProdutoGrupo.objects.create(
+            grupo=grupo,
+            produto=produto,
+            maquinas=2,
+            operadores=3,
+            minutos_por_maquina=400,
+        )
+
+        custo = Command().processar_investimentos_pendentes(grupo, rodada_numero=1)
+
+        self.assertEqual(custo, Decimal("5400"))
 
     def test_demais_parametros(self):
         self.assertEqual(TAXA_APLICACAO_FINANCEIRA_RODADA, Decimal("0.015"))  # 14.4.1

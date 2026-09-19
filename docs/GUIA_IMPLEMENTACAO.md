@@ -443,7 +443,7 @@ Consequências já mapeadas das decisões:
 | Máquinas ativam na rodada seguinte | §14.2.2 | `CONFORME` | `Investimento.rodada_ativacao` |
 | Aplicação financeira a 1,5% por rodada, juros compostos | §14.4 | `CONFORME` | `TAXA_APLICACAO_FINANCEIRA_RODADA` |
 | Fator de marketing: `Mc = 1 + 0,20 · ln(1+Ic) / ln(1+10000)` | §14.1.1 | `DIVERGENTE` | `views.calcular_fator_marketing` usa modelo linear por `ganho_por_base`; a fórmula estava em imagem, recuperada em 2026-09-18 (`ORION-C-06`) |
-| Salário do operador R$ 1.800/mês | §14.2.4, §14.3 | `CONFORME` | convertido pró-rata semanal (rodada = 1 semana, RN-06) |
+| Salário do operador R$ 1.800/mês | §14.2.4, §14.3 | `CONFORME` | `CUSTO_OPERADOR_POR_RODADA`: cada rodada fecha uma folha integral, sem pró-rata de calendário |
 | Custo da máquina R$ 8.000 | §14.2.4 | `NAO_VERIFICADO` | — |
 | Limite de expansão de +50% sobre as máquinas iniciais | §14.2.1 | `AUSENTE` | sem validação |
 
@@ -546,8 +546,9 @@ antigos do `docs/BACKLOG.md`.
   sem eles não há como aplicar o desempate. A tabela de exemplo do §12.6 não
   reproduz a fórmula do §12.2 com os pesos do §12.4 (G1 daria 77,9 e a tabela
   declara 75,35); vale a parte normativa, fórmula e pesos.
-- `ORION-C-08` — Corrigir o custo do operador para R$ 1.800 e definir a
-  conversão mês/rodada.
+- `ORION-C-08` `CONCLUIDO` (2026-09-19) — Custo do operador em R$ 1.800 por
+  rodada; a rodada é o período de competência da folha, sem pró-rata de
+  calendário, pois o professor define livremente o seu prazo.
 - `ORION-C-09` `CONCLUIDO` (2026-09-18) — Teto de +50% sobre o parque inicial
   (§14.2.1), em `services/investimentos.py`. O limite é sobre o parque do
   grupo, não por linha de produto — o §14.2.1 justifica o teto por "restrições
