@@ -592,8 +592,8 @@ antigos do `docs/BACKLOG.md`.
 
 ### P3 — dívida e higiene
 
-- `ORION-C-19` — Remover `homeold.html` (template órfão sem correspondência na
-  especificação).
+- `ORION-C-19` `CONCLUIDO` (2026-09-19) — Removido `homeold.html`, template
+  órfão sem rota, referência no código ou correspondência na especificação.
 - `ORION-C-20` — Resolver `GameConfig.capacidade_maquina = 100`, um terceiro
   modelo de capacidade que não corresponde a nenhuma versão da spec.
 - `ORION-C-21` — Decidir o destino de `services/vendas.py`, que implementa um
