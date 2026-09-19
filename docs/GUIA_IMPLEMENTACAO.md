@@ -485,7 +485,7 @@ Consequências já mapeadas das decisões:
 | Configuração do jogo | professor | `CONFORME` | `/config/`, `/config/wizard/` |
 | Abrir rodada | professor | `CONFORME` | `/abrir_rodada/` |
 | Grupos | professor | `CONFORME` | `/grupos/` |
-| Ranking | todos | `DIVERGENTE` | `/ranking/` — falta destaques da rodada e evolução do grupo |
+| Ranking | todos | `CONFORME` | `/ranking/` — classificação, destaques da rodada e evolução do grupo |
 | Ajuda | todos | `CONFORME` | `/ajuda/` |
 | **Encerramento da rodada** | CEO | `AUSENTE` | template existe (`financeiro/encerramento.html`), sem view nem rota |
 | **Relatórios comparativos** | todos | `AUSENTE` | templates existem (`dashboard/*.html`), sem view nem rota |
@@ -583,7 +583,9 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-16` `CONCLUIDO` (2026-09-19) — Classificação final em
   `/classificacao/`, liberada após todas as rodadas configuradas fecharem.
   Soma os cinco eixos e a receita do ciclo e aplica o desempate do §12.5.
-- `ORION-C-17` — Ranking com destaques da rodada e evolução do grupo.
+- `ORION-C-17` `CONCLUIDO` (2026-09-19) — Ranking em `/ranking/` exibe o
+  líder, o maior lucro e a maior participação de mercado da rodada, além do
+  histórico de posição e pontuação do grupo do usuário em cada rodada fechada.
 - `ORION-C-18` — Gerenciamento do jogo: monitoramento de participação por grupo.
 
 ### P3 — dívida e higiene

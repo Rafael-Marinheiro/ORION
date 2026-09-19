@@ -55,6 +55,42 @@
     </table>
 </div>
 
+{% if destaques %}
+<section class="o-section" aria-labelledby="destaques-titulo">
+    <h2 id="destaques-titulo" class="o-section-title">Destaques da rodada</h2>
+    <div class="o-kpis">
+        {% for destaque in destaques %}
+        <article class="o-kpi">
+            <span class="o-kpi__label">{{ destaque.titulo }}</span>
+            <strong class="o-kpi__value o-kpi__value--text">{{ destaque.grupo }}</strong>
+            <span class="o-kpi__foot">
+                {% if forloop.counter == 2 %}R$ {{ destaque.valor|floatformat:2 }}
+                {% elif forloop.counter == 3 %}{{ destaque.valor|floatformat:1 }}%
+                {% else %}{{ destaque.valor }}{% endif %}
+            </span>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if evolucao_grupo %}
+<section class="o-section" aria-labelledby="evolucao-titulo">
+    <h2 id="evolucao-titulo" class="o-section-title">Evolução do seu grupo</h2>
+    <div class="o-tablewrap">
+        <table class="o-table">
+            <caption class="o-sr">Histórico da posição do seu grupo no ranking</caption>
+            <thead><tr><th scope="col">Rodada</th><th scope="col" class="num">Posição</th><th scope="col" class="num">Pontuação</th></tr></thead>
+            <tbody>
+                {% for item in evolucao_grupo %}
+                <tr><th scope="row">{{ item.rodada }}</th><td class="num">{{ item.posicao }}º</td><td class="num">{{ item.pontuacao|floatformat:2 }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
 <p class="o-note">
     Empate na pontuação é resolvido, nesta ordem, por maior EO, maior SD,
     maior DS, maior receita bruta e ordem alfabética do nome do grupo.

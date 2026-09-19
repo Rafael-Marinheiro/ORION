@@ -662,44 +662,56 @@ def numeros_de_rodadas_fechadas(jogo_id=None, sem_jogo=False):
 class RankingView(LoginRequiredMixin, TemplateView):
     template_name = "ranking.html"
 
+    @staticmethod
+    def _ordenar_consolidados(consolidados):
+        """Aplica os critérios normativos do ranking a uma rodada."""
+        return ordenar_classificacao(
+            [
+                {
+                    "grupo": c.grupo,
+                    "pontuacao": c.score_multicriterio,
+                    "EO": c.eo_percent,
+                    "DF": c.df_percent,
+                    "EE": c.eficiencia_estoque_percent,
+                    "SD": c.sd_percent,
+                    "DS": c.ds_percent,
+                    "receita": c.receita_vendas,
+                    "lucro_rodada": c.lucro_rodada,
+                    "market_share": c.market_share_percent,
+                    "nome": c.grupo.nome,
+                }
+                for c in consolidados
+            ]
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Consolidado, nao Indicador: o desempate do 12.5 precisa de EO, SD,
         # DS e receita bruta, que so existem la.
         indicadores = ConsolidadoRodadaGrupo.objects.select_related("grupo", "grupo__jogo")
+        grupo_usuario = None
+        rodada_kwargs = {}
 
         if not self.request.user.is_staff:
-            grupo = obter_grupo_do_usuario(self.request.user)
-            if grupo and grupo.jogo_id:
-                indicadores = indicadores.filter(grupo__jogo_id=grupo.jogo_id)
-            elif grupo:
+            grupo_usuario = obter_grupo_do_usuario(self.request.user)
+            if grupo_usuario and grupo_usuario.jogo_id:
+                indicadores = indicadores.filter(grupo__jogo_id=grupo_usuario.jogo_id)
+                rodada_kwargs["jogo_id"] = grupo_usuario.jogo_id
+            elif grupo_usuario:
                 indicadores = indicadores.filter(grupo__jogo__isnull=True)
+                rodada_kwargs["sem_jogo"] = True
+            else:
+                indicadores = indicadores.none()
 
-        indicadores = indicadores.filter(rodada__in=numeros_de_rodadas_fechadas())
+        rodadas_fechadas = sorted(numeros_de_rodadas_fechadas(**rodada_kwargs))
+        indicadores = indicadores.filter(rodada__in=rodadas_fechadas)
         rodada_referencia = indicadores.order_by("-rodada").values_list("rodada", flat=True).first()
         if rodada_referencia:
-            ranking = ordenar_classificacao(
-                [
-                    {
-                        "grupo": c.grupo,
-                        "pontuacao": c.score_multicriterio,
-                        "EO": c.eo_percent,
-                        "DF": c.df_percent,
-                        "EE": c.eficiencia_estoque_percent,
-                        "SD": c.sd_percent,
-                        "DS": c.ds_percent,
-                        "receita": c.receita_vendas,
-                        "lucro_rodada": c.lucro_rodada,
-                        "nome": c.grupo.nome,
-                    }
-                    for c in indicadores.filter(rodada=rodada_referencia)
-                ]
-            )
+            ranking = self._ordenar_consolidados(indicadores.filter(rodada=rodada_referencia))
         else:
             ranking = []
             grupos_base = Grupo.objects.order_by("-capital")
             if not self.request.user.is_staff:
-                grupo_usuario = obter_grupo_do_usuario(self.request.user)
                 if grupo_usuario and grupo_usuario.jogo_id:
                     grupos_base = grupos_base.filter(jogo_id=grupo_usuario.jogo_id)
                 elif grupo_usuario:
@@ -722,7 +734,40 @@ class RankingView(LoginRequiredMixin, TemplateView):
 
         context["ranking"] = ranking
         context["rodada_referencia"] = rodada_referencia
+        context["destaques"] = self._destaques_da_rodada(ranking)
+        context["evolucao_grupo"] = self._evolucao_do_grupo(
+            indicadores, rodadas_fechadas, grupo_usuario
+        )
         return context
+
+    @staticmethod
+    def _destaques_da_rodada(ranking):
+        if not ranking:
+            return []
+        maior_lucro = max(ranking, key=lambda item: item["lucro_rodada"])
+        maior_market_share = max(ranking, key=lambda item: item["market_share"])
+        return [
+            {"titulo": "Líder da rodada", "grupo": ranking[0]["grupo"].nome,
+             "valor": f'{ranking[0]["pontuacao"]:.2f} pontos'},
+            {"titulo": "Maior lucro", "grupo": maior_lucro["grupo"].nome,
+             "valor": maior_lucro["lucro_rodada"]},
+            {"titulo": "Maior participação de mercado", "grupo": maior_market_share["grupo"].nome,
+             "valor": maior_market_share["market_share"]},
+        ]
+
+    def _evolucao_do_grupo(self, indicadores, rodadas_fechadas, grupo_usuario):
+        if not grupo_usuario:
+            return []
+        evolucao = []
+        for rodada in rodadas_fechadas:
+            ranking = self._ordenar_consolidados(indicadores.filter(rodada=rodada))
+            for posicao, item in enumerate(ranking, start=1):
+                if item["grupo"].id == grupo_usuario.id:
+                    evolucao.append(
+                        {"rodada": rodada, "posicao": posicao, "pontuacao": item["pontuacao"]}
+                    )
+                    break
+        return evolucao
 
 
 class ClassificacaoFinalView(LoginRequiredMixin, TemplateView):
