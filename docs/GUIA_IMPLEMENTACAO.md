@@ -597,9 +597,9 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-20` `CONCLUIDO` (2026-09-19) — Removido o parâmetro legado
   `capacidade_maquina = 100`; a capacidade efetiva permanece 400 minutos por
   máquina e produto, conforme §13.4 e decisão B3.
-- `ORION-C-21` — Decidir o destino de `services/vendas.py`, que implementa um
-  modelo de demanda por grupo isolado, diferente e concorrente com a alocação
-  competitiva de `fechar_rodadas.py`.
+- `ORION-C-21` `CONCLUIDO` (2026-09-19) — Removido `services/vendas.py` e seu
+  teste isolado: contrariavam a alocação competitiva entre grupos definida na
+  §9.2(c) e já implementada em `fechar_rodadas.py`.
 - `ORION-C-22` — Consertar a trilha principal de migrations, hoje inconsistente
   (`no such column: CONFIG.ranking_pesos`). Só `migrations_ci` sobe limpa.
 - `ORION-C-23` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `export_resultados_pdf` e `export_resultados_excel`

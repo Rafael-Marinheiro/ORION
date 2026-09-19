@@ -2,10 +2,9 @@ from decimal import Decimal
 
 from django.test import TestCase, override_settings
 
-from app.models import Cidade, Grupo, Investimento, LinhaProducao
+from app.models import Grupo, Investimento, LinhaProducao
 from app.services.investimentos import aplicar_retorno_investimentos
 from app.services.producao import calcular_eficiencia, registrar_producao
-from app.services.vendas import calcular_demanda
 
 
 @override_settings(MIGRATION_MODULES={"app": None})
@@ -19,16 +18,6 @@ class ServicosBasicosTest(TestCase):
 
         self.assertEqual(linha.producao, 40)
         self.assertEqual(calcular_eficiencia(linha), 0.4)
-
-    def test_calcular_demanda_respeita_limite_e_disponibilidade(self):
-        cidade = Cidade.objects.create(nome="Cidade X", distancia_km=100, demanda=100, limite_demanda=30)
-        demanda = calcular_demanda(
-            cidade=cidade,
-            preco=Decimal("2"),
-            fator_marketing=Decimal("2"),
-            disponibilidade=50,
-        )
-        self.assertEqual(demanda, 30)
 
     def test_aplicar_retorno_investimentos(self):
         grupo = Grupo.objects.create(nome="G2", capital=Decimal("1000"))
