@@ -17,7 +17,6 @@ class GameConfigFormTest(TestCase):
                 "maquinas_iniciais_b": 1,
                 "maquinas_iniciais_c": 1,
                 "trabalhadores_iniciais": 2,
-                "capacidade_maquina": 100,
                 "numero_rodadas": 3,
                 "produtos_habilitados": "A,B,C",
                 "modulo_producao": True,
@@ -50,7 +49,6 @@ class GameConfigFormTest(TestCase):
                 "maquinas_iniciais_b": 1,
                 "maquinas_iniciais_c": 1,
                 "trabalhadores_iniciais": 2,
-                "capacidade_maquina": 100,
                 "numero_rodadas": 3,
                 "produtos_habilitados": "A,B,C",
                 "modulo_producao": True,
@@ -120,7 +118,10 @@ class ConfigWizardStep1FormTest(TestCase):
                 "capital_inicial": "100000",
                 "estoque_inicial": 0,
                 "maquinas_iniciais": 5,
-                "capacidade_maquina": 100,
             }
         )
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_nao_expoe_parametro_de_capacidade_legado(self):
+        self.assertNotIn("capacidade_maquina", ConfigWizardStep1Form().fields)
+        self.assertNotIn("capacidade_maquina", GameConfigForm().fields)

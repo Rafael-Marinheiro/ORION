@@ -25,7 +25,6 @@ class Command(BaseCommand):
                 "capital_inicial": 1000000,
                 "estoque_inicial": 0,
                 "maquinas_iniciais": 40,
-                "capacidade_maquina": 100,
                 "modulo_producao": True,
                 "modulo_distribuicao": True,
                 "modulo_financeiro": True,

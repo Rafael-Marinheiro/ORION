@@ -517,7 +517,6 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
                 "capital_inicial": config.capital_inicial,
                 "estoque_inicial": config.estoque_inicial,
                 "maquinas_iniciais": config.maquinas_iniciais,
-                "capacidade_maquina": config.capacidade_maquina,
             }
             initial.update(wizard_data.get("step1", {}))
             form = self.get_form_for_step(step, initial=initial)
@@ -583,7 +582,6 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
             config.capital_inicial = dados_step1["capital_inicial"]
             config.estoque_inicial = dados_step1["estoque_inicial"]
             config.maquinas_iniciais = dados_step1["maquinas_iniciais"]
-            config.capacidade_maquina = dados_step1["capacidade_maquina"]
             config.produtos_habilitados = dados_step2.get("produtos_habilitados") or ""
             config.modulo_producao = dados_step2.get("modulo_producao", False)
             config.modulo_distribuicao = dados_step2.get("modulo_distribuicao", False)
@@ -1647,7 +1645,6 @@ class GrupoCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 + config.maquinas_iniciais_c
             )
             grupo.trabalhadores = config.trabalhadores_iniciais
-            grupo.capacidade_maquina = config.capacidade_maquina
             grupo.save()
             lider = None
             for form in membro_formset:

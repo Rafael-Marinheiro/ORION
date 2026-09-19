@@ -32,7 +32,6 @@ class GameConfigWizardTest(TestCase):
                 "capital_inicial": "1000000.00",
                 "estoque_inicial": "0",
                 "maquinas_iniciais": "40",
-                "capacidade_maquina": "100",
             },
         )
 
@@ -48,7 +47,6 @@ class GameConfigWizardTest(TestCase):
                 "capital_inicial": "750000.50",
                 "estoque_inicial": "12",
                 "maquinas_iniciais": "8",
-                "capacidade_maquina": "120",
             },
         )
         self.client.post(

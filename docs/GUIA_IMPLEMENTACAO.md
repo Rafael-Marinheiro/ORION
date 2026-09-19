@@ -372,8 +372,8 @@ conferidas contra IBGE e rota real antes do uso em sala (`ORION-C-27`).
 
 Consequências já mapeadas das decisões:
 
-- **B3** deixa solto `GameConfig.capacidade_maquina = 100`, um terceiro valor
-  que não corresponde a nenhuma versão e não entra no cálculo real. Remover
+- **B3** tinha o parâmetro legado `capacidade_maquina = 100`, que não
+  correspondia a nenhuma versão e não entrava no cálculo real. Foi removido
   (`ORION-C-20`).
 - **B4** mantém o "até 2 eventos" como evolução futura (Sprint 29), com modelo
   probabilístico próprio.
@@ -594,8 +594,9 @@ antigos do `docs/BACKLOG.md`.
 
 - `ORION-C-19` `CONCLUIDO` (2026-09-19) — Removido `homeold.html`, template
   órfão sem rota, referência no código ou correspondência na especificação.
-- `ORION-C-20` — Resolver `GameConfig.capacidade_maquina = 100`, um terceiro
-  modelo de capacidade que não corresponde a nenhuma versão da spec.
+- `ORION-C-20` `CONCLUIDO` (2026-09-19) — Removido o parâmetro legado
+  `capacidade_maquina = 100`; a capacidade efetiva permanece 400 minutos por
+  máquina e produto, conforme §13.4 e decisão B3.
 - `ORION-C-21` — Decidir o destino de `services/vendas.py`, que implementa um
   modelo de demanda por grupo isolado, diferente e concorrente com a alocação
   competitiva de `fechar_rodadas.py`.

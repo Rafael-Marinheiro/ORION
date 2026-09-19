@@ -73,7 +73,6 @@ class GameConfigForm(forms.ModelForm):
             "maquinas_iniciais_b",
             "maquinas_iniciais_c",
             "trabalhadores_iniciais",
-            "capacidade_maquina",
             "numero_rodadas",
             "produtos_habilitados",
             "modulo_producao",
@@ -221,7 +220,6 @@ class GrupoForm(forms.ModelForm):
             "maquinas_b",
             "maquinas_c",
             "trabalhadores",
-            "capacidade_maquina",
         ]
 
     def clean_membros(self):
@@ -261,7 +259,6 @@ class ConfigWizardStep1Form(forms.Form):
     capital_inicial = forms.DecimalField(min_value=0, decimal_places=2, max_digits=12)
     estoque_inicial = forms.IntegerField(min_value=0)
     maquinas_iniciais = forms.IntegerField(min_value=0)
-    capacidade_maquina = forms.IntegerField(min_value=1)
 
 
 class ConfigWizardStep2Form(forms.Form):

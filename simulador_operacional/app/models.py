@@ -104,7 +104,6 @@ class GameConfig(models.Model):
     maquinas_iniciais_b = models.PositiveIntegerField(default=15)
     maquinas_iniciais_c = models.PositiveIntegerField(default=10)
     trabalhadores_iniciais = models.PositiveIntegerField(default=80)
-    capacidade_maquina = models.PositiveIntegerField(default=100)
     numero_rodadas = models.PositiveIntegerField(
         default=3,
         validators=[MinValueValidator(3), MaxValueValidator(12)],
@@ -153,7 +152,6 @@ class Grupo(models.Model):
     maquinas_b = models.PositiveIntegerField(default=15)
     maquinas_c = models.PositiveIntegerField(default=10)
     trabalhadores = models.PositiveIntegerField(default=80)
-    capacidade_maquina = models.PositiveIntegerField(default=100)
 
     class Meta:
         db_table = "GRUPOS"
