@@ -1,30 +1,4 @@
-"""Frete por viagem de caminhao.
-
-Por que nao por quilo
----------------------
-O 7.2 manda cobrar "R$ 1,50 por quilometro rodado, multiplicado pela
-quantidade adquirida (em kg)". O exemplo do proprio 7.2.1 mostra o problema:
-500 kg de MP3, que valem R$ 4.000, geram R$ 750.000 de frete -- 188 vezes o
-valor da carga. Nenhum grupo consegue comprar materia-prima com essa regra.
-A unidade foi trocada: R$ 1,50 por quilometro por VIAGEM, nao por quilo.
-
-O que o modelo ensina
----------------------
-O caminhao e indivisivel. Mandar 12.001 kg custa duas viagens, o mesmo que
-mandar 24.000 kg. Isso premia quem consolida pedido e pune quem compra em
-migalhas, que e exatamente a licao de planejamento de suprimentos:
-
-    1.000 kg de MP1 de Mossoro  -> 1 viagem, 8% da capacidade paga
-    12.000 kg de MP1 de Mossoro -> 1 viagem, 100% da capacidade paga
-
-O custo do frete e o mesmo nos dois casos. O segundo grupo pagou o mesmo
-para trazer doze vezes mais. A conta nao e escondida: a taxa de ocupacao
-volta no resultado para o aluno ver quanto de caminhao vazio ele pagou.
-
-O desconto de retorno (7.2.1) segue a mesma logica fisica: se o grupo ja
-mandou produto para aquela cidade, o caminhao volta carregado em vez de
-voltar vazio, e a viagem de volta sai mais barata.
-"""
+"""Cálculos de frete previstos na documentação do simulador."""
 
 from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 
@@ -35,6 +9,25 @@ from app.parametros import (
 )
 
 CENTAVO = Decimal("0.01")
+
+
+def calcular_frete_materia_prima(distancia_km, quantidade_kg, produtos_remetidos=0) -> dict:
+    """Aplica literalmente os §§7.2 e 7.2.1.
+
+    O frete é R$ 1,50 por quilômetro e por kg adquirido. A remessa para a
+    mesma cidade reduz R$ 0,50 por quilômetro e por unidade de produto, até o
+    limite da quantidade adquirida.
+    """
+    distancia = Decimal(str(distancia_km or 0))
+    quantidade = max(Decimal("0"), Decimal(str(quantidade_kg or 0)))
+    limite_desconto = min(quantidade, max(Decimal("0"), Decimal(str(produtos_remetidos or 0))))
+    custo_bruto = (distancia * quantidade * CUSTO_VIAGEM_POR_KM).quantize(CENTAVO)
+    desconto = (distancia * limite_desconto * DESCONTO_RETORNO_POR_KM).quantize(CENTAVO)
+    return {
+        "custo_bruto": custo_bruto,
+        "desconto_retorno": min(desconto, custo_bruto),
+        "custo": custo_bruto - min(desconto, custo_bruto),
+    }
 
 
 def viagens_necessarias(peso_kg) -> int:

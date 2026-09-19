@@ -35,7 +35,7 @@ from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_ROD
 from .services.dre import montar_dre, montar_fluxo_de_caixa, resumo_do_fluxo
 from .services.eventos import sortear_evento
 from .services.investimentos import impedimento_para_investir, limite_de_expansao
-from .services.logistica import calcular_frete, peso_do_envio, viagens_necessarias
+from .services.logistica import calcular_frete, calcular_frete_materia_prima, peso_do_envio
 from .services.marketing import fator_marketing
 from .services.perecibilidade import resumo_vencimento
 from .services.pontuacao import ordenar_classificacao
@@ -179,24 +179,13 @@ def calcular_fator_marketing(grupo, cidade, rodada_numero):
     return fator_marketing(grupo, cidade, rodada_numero)
 
 
-def viagens_com_carga_de_retorno(grupo, cidade, rodada_numero):
-    """Quantas viagens ate `cidade` podem voltar carregadas.
-
-    O 7.2.1 da desconto quando o grupo compra materia-prima na mesma cidade
-    para onde mandou produto. Fisicamente e o frete de retorno: o caminhao
-    que levou produto volta com a MP em vez de voltar vazio.
-
-    O desconto e limitado pelas viagens de produto que de fato existiram --
-    nao da para aproveitar retorno de caminhao que nunca foi.
-    """
-    envios = Distribuicao.objects.filter(
-        grupo=grupo, cidade=cidade, rodada=rodada_numero
-    ).select_related("produto")
-    peso_enviado = sum(
-        (peso_do_envio(envio.produto, envio.quantidade) for envio in envios),
-        Decimal("0"),
+def quantidade_produtos_remetidos(grupo, cidade, rodada_numero):
+    """Unidades remetidas para limitar o desconto do §7.2.1."""
+    return (
+        Distribuicao.objects.filter(grupo=grupo, cidade=cidade, rodada=rodada_numero)
+        .aggregate(total=Sum("quantidade"))["total"]
+        or 0
     )
-    return viagens_necessarias(peso_enviado)
 
 
 def obter_aplicacao_financeira_grupo(grupo):
@@ -1063,10 +1052,10 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     return redirect("painel_grupo")
 
                 custo_insumo = compra.quantidade_kg * compra.preco_unitario
-                frete = calcular_frete(
+                frete = calcular_frete_materia_prima(
                     distancia_km=compra.cidade_fornecedora.distancia_km,
-                    peso_kg=compra.quantidade_kg,
-                    viagens_com_retorno=viagens_com_carga_de_retorno(
+                    quantidade_kg=compra.quantidade_kg,
+                    produtos_remetidos=quantidade_produtos_remetidos(
                         grupo, compra.cidade_fornecedora, rodada_ativa.numero
                     ),
                 )

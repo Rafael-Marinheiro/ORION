@@ -273,7 +273,7 @@ Ficam registradas aqui para ninguém as confundir com divergência acidental.
 | D9.5 | Custo do operador por rodada | §14.2.4: R$ 1.800/mês + RN-06: rodada = 1 semana | **R$ 1.800 por rodada**, sem conversão por tempo | o professor define o prazo livremente; converter por tempo decorrido faria o custo da mesma decisão mudar conforme o prazo |
 | D9.6 | Sigilo da rodada aberta | não previsto | **resultado só aparece após o fechamento** | é um jogo de competição; desempenho alheio antes da submissão muda a decisão de quem ainda não decidiu |
 | D11 | Variedade de eventos | §8.2: "probabilidade **constante** de ocorrência" | **peso reduzido do evento recente** (×0,05 / ×0,30 / ×0,65), nunca bloqueio | bloquear achata os pesos: com 3 eventos de 60/30/10, cooldown duro os transforma em 33/33/33 |
-| D10 | Unidade do frete | §7.2: R$ 1,50 por km **por kg** | **R$ 1,50 por km por viagem de caminhão** (12.000 kg) | a unidade do documento faz o frete valer 188x a carga; o jogo trava na primeira compra |
+| D10 | Unidade do frete | §7.2: R$ 1,50 por km **por kg** | **§7.2 literal: R$ 1,50 por km por kg** | a regra está expressa no documento e prevalece |
 
 **Consequência de D9.2 e D9.3 no equilíbrio do jogo.** O mercado regional é
 cerca de 5x menor que o nacional, e a capacidade produtiva não mudou:
@@ -288,28 +288,6 @@ curva de sensibilidade a preço e o investimento em marketing, que estavam
 praticamente inertes enquanto a demanda superava a oferta. Se ficar punitivo
 demais, o ajuste indicado é **reduzir as máquinas iniciais**, não inflar a
 demanda — inflar quebraria a proporcionalidade com a população.
-
-**D10 · O modelo de frete e o que ele ensina.** O caminhão é indivisível, e é
-daí que vem a lição. Pedido de MP1 vindo de Mossoró (190 km):
-
-| Pedido | Viagens | Ocupação | Frete | Frete / carga |
-|---|---|---|---|---|
-| 500 kg | 1 | 4% | R$ 285,00 | **19,0%** |
-| 6.000 kg | 1 | 50% | R$ 285,00 | 1,6% |
-| 12.000 kg | 1 | 100% | R$ 285,00 | **0,8%** |
-| 12.001 kg | 2 | 50% | R$ 570,00 | 1,6% |
-
-O frete de 500 kg e o de 12.000 kg é o mesmo: 24x de diferença no custo por
-quilo, só por consolidar. Pedir 1 kg além do caminhão dobra a conta. A
-distância continua pesando, mas sem dominar: o mesmo pedido cheio custa 0,3%
-da carga vindo de Caicó e 2,0% vindo de Fortaleza.
-
-O desconto do §7.2.1 vira frete de retorno: as viagens que levaram produto
-para aquela cidade podem voltar carregadas com a matéria-prima, limitado
-pelas viagens de produto que de fato existiram.
-
-A taxa de ocupação volta no resultado para o aluno ver quanto de caminhão
-vazio pagou — é ela, não o valor absoluto, que carrega a lição.
 
 **D11 · Variedade de eventos sem falsear os pesos.** O cooldown original
 bloqueava o evento das duas rodadas anteriores. Isso torna a probabilidade
@@ -400,11 +378,11 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | 4 MPs com preços 3,00 / 5,50 / 8,00 / 15,00 | §7.1 | `CONFORME` | seed `materias_primas` |
 | Recebimento na rodada seguinte (D+1) | §7.2 | `CONFORME` | `CompraMateriaPrima.rodada_pedido` |
-| Frete de MP a R$ 1,50/km por viagem de caminhão | §7.2 (decidido D10) | `CONFORME` | `services/logistica.calcular_frete` |
+| Frete de MP a R$ 1,50/km por kg adquirido | §7.2 | `CONFORME` | `services/logistica.calcular_frete_materia_prima` |
 | Armazenagem de MP a 2% do valor de compra | §7.4 | `CONFORME` | `fechar_rodadas` |
 | Fornecedores por cidade | §7.1 | `CONFORME` | `views.MATERIA_PRIMA_FORNECEDORES` |
-| Desconto logístico cruzado de R$ 0,50/km | §7.2.1 (decidido D10) | `CONFORME` | retorno de viagens em `services/logistica.calcular_frete` |
-| Frete de produtos acabados | §9.2a (decidido D10) | `CONFORME` | mesmo modelo de caminhão da compra de MP |
+| Desconto logístico cruzado de R$ 0,50/km por produto remetido | §7.2.1 | `CONFORME` | `services/logistica.calcular_frete_materia_prima` |
+| Frete de produtos acabados | §9.2a | `BLOQUEADO` | há proporcionalidade, mas não taxa documental |
 
 ### 4.4 Comercialização e demanda
 
@@ -486,15 +464,12 @@ antigos do `docs/BACKLOG.md`.
 - `ORION-C-01` `CONCLUIDO` (2026-09-18) — B1 a B5 decididos pela política "a
   documentação decide"; ver seção 3. **B5 tem confiança baixa** e vale ratificar
   com o Dr. Pio.
-- `ORION-C-26` `CONCLUIDO` (2026-09-19) — D10 é a regra consolidada para as
-  duas modalidades: R$ 1,50/km por viagem de caminhão de 12.000 kg. Para MP,
-  a remessa de produto para a mesma cidade habilita retorno de caminhão a
-  R$ 0,50/km, limitado às viagens efetivamente enviadas. A fórmula literal do
-  §7.2 por kg permanece registrada como especificação de origem; D10 é a
-  decisão de implementação que a torna jogável.
+- `ORION-C-26` `CONCLUIDO` (2026-09-19) — B7 foi resolvido pela regra explícita
+  do §7.2: R$ 1,50/km por kg adquirido. O §7.2.1 reduz R$ 0,50/km por produto
+  remetido para a mesma cidade, limitado à quantidade adquirida.
 - `ORION-C-02` `CONCLUIDO` (2026-09-19) — Removido o cálculo legado paralelo.
-  O desconto cruzado é calculado apenas em `services/logistica.py`, no mesmo
-  modelo de viagens adotado por D10.
+  O desconto cruzado é calculado apenas em `services/logistica.py`, com as
+  quantidades e os valores definidos no §7.2.1.
 
 ### P1 — regras de negócio divergentes da especificação
 
@@ -539,9 +514,9 @@ antigos do `docs/BACKLOG.md`.
   físicas do espaço industrial", e o que acaba é o galpão. Compra ainda não
   processada já consome o limite, senão bastava parcelar para furá-lo. O painel
   mostra quanto resta.
-- `ORION-C-10` `CONCLUIDO` (2026-09-19) — Produto acabado usa o mesmo frete de
-  caminhão definido por D10. A taxa antiga de R$ 0,10/km/unidade foi removida
-  junto com o serviço econômico legado que a continha.
+- `ORION-C-10` `BLOQUEADO` — §9.2a exige frete proporcional à distância e ao
+  volume, mas não define uma taxa. A regra antiga de R$ 0,10/km/unidade não
+  tem origem documental; é necessária definição antes de alterá-la.
 - `ORION-C-11` `CONCLUIDO` — `GameConfig.numero_rodadas` já carrega
   `MinValueValidator(3)` e `MaxValueValidator(12)`, e o formulário de
   configuração é `ModelForm`, então a validação roda. Item era falso alarme.

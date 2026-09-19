@@ -4,7 +4,12 @@ from django.test import TestCase
 
 from app.models import ComposicaoProduto, MateriaPrima, Produto
 from app.parametros import CAPACIDADE_CAMINHAO_KG
-from app.services.logistica import calcular_frete, peso_do_envio, viagens_necessarias
+from app.services.logistica import (
+    calcular_frete,
+    calcular_frete_materia_prima,
+    peso_do_envio,
+    viagens_necessarias,
+)
 
 
 class ViagensTest(TestCase):
@@ -21,6 +26,17 @@ class ViagensTest(TestCase):
 
 
 class FreteTest(TestCase):
+    def test_frete_de_materia_prima_usa_quilo_quilometro_documentado(self):
+        frete = calcular_frete_materia_prima(1000, 500, produtos_remetidos=300)
+
+        self.assertEqual(frete["custo_bruto"], Decimal("750000.00"))
+        self.assertEqual(frete["desconto_retorno"], Decimal("150000.00"))
+        self.assertEqual(frete["custo"], Decimal("600000.00"))
+
+    def test_desconto_de_materia_prima_nao_excede_quantidade_comprada(self):
+        frete = calcular_frete_materia_prima(100, 50, produtos_remetidos=80)
+
+        self.assertEqual(frete["desconto_retorno"], Decimal("2500.00"))
     def test_consolidar_nao_muda_o_frete_mas_muda_o_custo_por_quilo(self):
         """A licao central: o caminhao cheio e o vazio custam o mesmo."""
         pouco = calcular_frete(190, 1000)
