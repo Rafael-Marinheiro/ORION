@@ -580,7 +580,9 @@ antigos do `docs/BACKLOG.md`.
   gravado. A linha "Compras e investimentos" é o resíduo entre o caixa e o
   resultado — é ela que mostra ao aluno para onde o dinheiro foi antes de
   virar receita.
-- `ORION-C-16` — Classificação final (template pronto).
+- `ORION-C-16` `CONCLUIDO` (2026-09-19) — Classificação final em
+  `/classificacao/`, liberada após todas as rodadas configuradas fecharem.
+  Soma os cinco eixos e a receita do ciclo e aplica o desempate do §12.5.
 - `ORION-C-17` — Ranking com destaques da rodada e evolução do grupo.
 - `ORION-C-18` — Gerenciamento do jogo: monitoramento de participação por grupo.
 

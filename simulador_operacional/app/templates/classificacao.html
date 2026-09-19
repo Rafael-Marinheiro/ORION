@@ -16,23 +16,23 @@
                 <th scope="col">Grupo</th>
                 <th scope="col" class="num">Eficiência operacional</th>
                 <th scope="col" class="num">Desempenho financeiro</th>
-                <th scope="col" class="num">Demanda atendida</th>
+                <th scope="col" class="num">Eficiência de estoques</th>
+                <th scope="col" class="num">Satisfação da demanda</th>
                 <th scope="col" class="num">Sustentabilidade</th>
-                <th scope="col" class="num">Saldo de caixa</th>
-                <th scope="col" class="num">Desperdício</th>
+                <th scope="col" class="num">Pontuação</th>
             </tr>
         </thead>
         <tbody>
         {% for g in grupos %}
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
                 <td class="rank">{{ forloop.counter }}</td>
-                <th scope="row">{{ g.nome }}</th>
-                <td class="num">{{ g.eficiencia_operacional|floatformat:2 }}</td>
-                <td class="num">{{ g.desempenho_financeiro|floatformat:2 }}</td>
-                <td class="num">{{ g.demanda_atendida|floatformat:2 }}</td>
-                <td class="num">{{ g.sustentabilidade|floatformat:2 }}</td>
-                <td class="num">{{ g.saldo_caixa_final|floatformat:2 }}</td>
-                <td class="num">{{ g.desperdicio_total }}</td>
+                <th scope="row">{{ g.grupo.nome }}</th>
+                <td class="num">{{ g.EO|floatformat:2 }}</td>
+                <td class="num">{{ g.DF|floatformat:2 }}</td>
+                <td class="num">{{ g.EE|floatformat:2 }}</td>
+                <td class="num">{{ g.SD|floatformat:2 }}</td>
+                <td class="num">{{ g.DS|floatformat:2 }}</td>
+                <td class="num">{{ g.pontuacao|floatformat:2 }}</td>
             </tr>
         {% empty %}
             <tr>

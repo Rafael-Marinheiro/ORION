@@ -43,6 +43,7 @@
                 {% if user.is_authenticated %}
                     <li><a class="o-nav__link" href="{% url 'painel_grupo' %}" {% if nav == 'painel' %}aria-current="page"{% endif %}>Painel</a></li>
                     <li><a class="o-nav__link" href="{% url 'ranking' %}" {% if nav == 'ranking' %}aria-current="page"{% endif %}>Ranking</a></li>
+                    <li><a class="o-nav__link" href="{% url 'classificacao_final' %}">Classificação final</a></li>
                     <li><a class="o-nav__link" href="{% url 'relatorios' %}" {% if nav == 'relatorios' %}aria-current="page"{% endif %}>Relatórios</a></li>
                     <li><a class="o-nav__link" href="{% url 'relatorios_comparativos' %}">Comparativos</a></li>
                     <li><a class="o-nav__link" href="{% url 'encerramento_rodada' %}" {% if nav == 'encerramento_rodada' %}aria-current="page"{% endif %}>Encerramento</a></li>

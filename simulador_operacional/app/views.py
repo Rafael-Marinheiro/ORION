@@ -725,6 +725,65 @@ class RankingView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class ClassificacaoFinalView(LoginRequiredMixin, TemplateView):
+    """Classificação do ciclo após o encerramento de todas as rodadas."""
+
+    template_name = "classificacao.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grupo_usuario = obter_grupo_do_usuario(self.request.user)
+        if not grupo_usuario:
+            context["grupos"] = []
+            return context
+
+        if grupo_usuario.jogo_id:
+            grupos = Grupo.objects.filter(jogo_id=grupo_usuario.jogo_id)
+            rodadas = Rodada.objects.filter(jogo_id=grupo_usuario.jogo_id)
+            numero_rodadas = grupo_usuario.jogo.config.numero_rodadas
+        else:
+            grupos = Grupo.objects.filter(jogo__isnull=True)
+            rodadas = Rodada.objects.filter(jogo__isnull=True)
+            config = GameConfig.objects.order_by("id").first()
+            numero_rodadas = config.numero_rodadas if config else 0
+
+        fechadas = set(rodadas.filter(fechada=True).values_list("numero", flat=True))
+        esperadas = set(range(1, numero_rodadas + 1))
+        if not numero_rodadas or not esperadas.issubset(fechadas):
+            context["grupos"] = []
+            return context
+
+        consolidados = ConsolidadoRodadaGrupo.objects.filter(
+            grupo__in=grupos, rodada__in=esperadas
+        ).select_related("grupo")
+        por_grupo = {}
+        for consolidado in consolidados:
+            dados = por_grupo.setdefault(
+                consolidado.grupo_id,
+                {
+                    "grupo": consolidado.grupo,
+                    "pontuacao": Decimal("0"),
+                    "EO": Decimal("0"),
+                    "DF": Decimal("0"),
+                    "EE": Decimal("0"),
+                    "SD": Decimal("0"),
+                    "DS": Decimal("0"),
+                    "receita": Decimal("0"),
+                    "nome": consolidado.grupo.nome,
+                },
+            )
+            dados["pontuacao"] += consolidado.score_multicriterio
+            dados["EO"] += consolidado.eo_percent
+            dados["DF"] += consolidado.df_percent
+            dados["EE"] += consolidado.eficiencia_estoque_percent
+            dados["SD"] += consolidado.sd_percent
+            dados["DS"] += consolidado.ds_percent
+            dados["receita"] += consolidado.receita_vendas
+
+        context["grupos"] = ordenar_classificacao(por_grupo.values())
+        return context
+
+
 class PainelGrupoView(LoginRequiredMixin, TemplateView):
     template_name = "painel_grupo.html"
 
