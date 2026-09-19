@@ -570,7 +570,9 @@ antigos do `docs/BACKLOG.md`.
 
 - `ORION-C-13` `CONCLUIDO` (2026-09-19) — Tela de Encerramento da Rodada em
   `/encerramento/`, com o resultado da última rodada fechada do próprio grupo.
-- `ORION-C-14` — Relatórios Comparativos entre grupos (templates prontos).
+- `ORION-C-14` `CONCLUIDO` (2026-09-19) — Relatórios Comparativos em
+  `/relatorios/comparativos/`, com gráficos de desempenho e escopo isolado
+  por jogo.
 - `ORION-C-15` `CONCLUIDO` (2026-09-18) — DRE e Fluxo de Caixa em
   `services/dre.py`, apresentados na própria tela de Relatórios Financeiros,
   como o §10.3 descreve (uma tela, não duas). Os dois fecham: o DRE soma

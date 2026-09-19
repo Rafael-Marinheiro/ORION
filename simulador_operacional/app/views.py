@@ -1549,12 +1549,15 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
             if not grupo_usuario:
                 resultados = ResultadoFinanceiro.objects.none()
                 consolidados = ConsolidadoRodadaGrupo.objects.none()
+                form.fields["grupo"].queryset = Grupo.objects.none()
             elif grupo_usuario.jogo_id:
                 resultados = resultados.filter(grupo__jogo_id=grupo_usuario.jogo_id)
                 consolidados = consolidados.filter(grupo__jogo_id=grupo_usuario.jogo_id)
+                form.fields["grupo"].queryset = Grupo.objects.filter(jogo_id=grupo_usuario.jogo_id)
             else:
                 resultados = resultados.filter(grupo__jogo__isnull=True)
                 consolidados = consolidados.filter(grupo__jogo__isnull=True)
+                form.fields["grupo"].queryset = Grupo.objects.filter(jogo__isnull=True)
         if form.is_valid():
             if form.cleaned_data.get("rodada"):
                 resultados = resultados.filter(rodada=form.cleaned_data["rodada"])
@@ -1593,6 +1596,10 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
             "fluxo_resumo": resumo_do_fluxo(fluxo),
         }
         return render(request, self.template_name, contexto)
+
+
+class RelatoriosComparativosView(RelatoriosView):
+    """Entrada explícita para a leitura comparativa entre equipes do jogo."""
 
 
 class EncerramentoRodadaView(LoginRequiredMixin, TemplateView):
