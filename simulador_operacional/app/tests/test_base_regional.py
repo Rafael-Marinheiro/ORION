@@ -5,10 +5,20 @@ from io import StringIO
 from django.core.management import call_command
 from django.test import TestCase
 
-from app.models import Cidade, DemandaCidadeProduto
+from app.models import Cidade, DemandaCidadeProduto, GameConfig, default_ranking_pesos
 
 
 class BaseRegionalTest(TestCase):
+    def test_seed_inicia_cinco_pesos_sem_sobrescrever_configuracao_existente(self):
+        call_command("seed_dados_base", stdout=StringIO())
+        config = GameConfig.objects.get(pk=1)
+        self.assertEqual(config.ranking_pesos, default_ranking_pesos())
+        config.ranking_pesos = {"EO": 1, "DF": 0, "EE": 0, "SD": 0, "DS": 0}
+        config.save()
+        call_command("seed_dados_base", stdout=StringIO())
+        config.refresh_from_db()
+        self.assertEqual(config.ranking_pesos["EO"], 1)
+
     def test_seed_idempotente_com_rotas_e_demanda_derivada(self):
         call_command("seed_dados_base", stdout=StringIO())
         ids = dict(Cidade.objects.values_list("nome", "pk"))

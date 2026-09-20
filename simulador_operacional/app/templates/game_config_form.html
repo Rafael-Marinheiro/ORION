@@ -11,6 +11,9 @@
 <div class="o-form-panel o-panel">
     <form method="post">
         {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="o-note o-note--error" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
         {% for field in form %}
         <p>
             {{ field.label_tag }}

@@ -12,6 +12,7 @@ from app.models import (
     Jogo,
     MateriaPrima,
     Produto,
+    default_ranking_pesos,
 )
 
 
@@ -28,21 +29,11 @@ class Command(BaseCommand):
                 "modulo_producao": True,
                 "modulo_distribuicao": True,
                 "modulo_financeiro": True,
-                "ranking_pesos": {
-                    "lucro": 0.4,
-                    "market_share": 0.3,
-                    "atendimento": 0.2,
-                    "eficiencia_estoque": 0.1,
-                },
+                "ranking_pesos": default_ranking_pesos(),
             },
         )
         if not config.ranking_pesos:
-            config.ranking_pesos = {
-                "lucro": 0.4,
-                "market_share": 0.3,
-                "atendimento": 0.2,
-                "eficiencia_estoque": 0.1,
-            }
+            config.ranking_pesos = default_ranking_pesos()
             config.save(update_fields=["ranking_pesos"])
 
         Jogo.objects.get_or_create(

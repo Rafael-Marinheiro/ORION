@@ -6,6 +6,13 @@ from app.models import Cidade, GameConfig, Produto
 
 @override_settings(MIGRATION_MODULES={"app": None})
 class GameConfigFormTest(TestCase):
+    def test_carrega_cinco_pesos_do_fechamento_sem_reinterpretar_legado(self):
+        from app.models import default_ranking_pesos
+        config = GameConfig.objects.create(ranking_pesos={"lucro": 0.4})
+        form = GameConfigForm(instance=config)
+        for sigla, peso in default_ranking_pesos().items():
+            self.assertEqual(form.fields[f"peso_{sigla.lower()}"].initial, peso)
+
     def test_save_ranking_weights_when_sum_is_one(self):
         config = GameConfig.objects.create()
         form = GameConfigForm(
@@ -23,20 +30,28 @@ class GameConfigFormTest(TestCase):
                 "modulo_distribuicao": True,
                 "modulo_financeiro": True,
                 "regra_eventos": "{}",
-                "peso_lucro": "0.5",
-                "peso_market_share": "0.2",
-                "peso_atendimento": "0.2",
-                "peso_eficiencia_estoque": "0.1",
+                "peso_eo": "0.4",
+                "peso_df": "0.2",
+                "peso_sd": "0.2",
+                "peso_ds": "0.1",
+                "peso_ee": "0.1",
             },
             instance=config,
         )
 
         self.assertTrue(form.is_valid(), form.errors)
         salvo = form.save()
-        self.assertEqual(salvo.ranking_pesos["lucro"], 0.5)
-        self.assertEqual(salvo.ranking_pesos["market_share"], 0.2)
-        self.assertEqual(salvo.ranking_pesos["atendimento"], 0.2)
-        self.assertEqual(salvo.ranking_pesos["eficiencia_estoque"], 0.1)
+        self.assertEqual(salvo.ranking_pesos["EO"], 0.4)
+        self.assertEqual(salvo.ranking_pesos["DF"], 0.2)
+        self.assertEqual(salvo.ranking_pesos["SD"], 0.2)
+        self.assertEqual(salvo.ranking_pesos["EE"], 0.1)
+        self.assertEqual(salvo.ranking_pesos["DS"], 0.1)
+        from app.management.commands.fechar_rodadas import Command
+        from decimal import Decimal
+        self.assertEqual(Command.obter_pesos_ranking(salvo.ranking_pesos), {
+            "EO": Decimal("0.4"), "DF": Decimal("0.2"), "EE": Decimal("0.1"),
+            "SD": Decimal("0.2"), "DS": Decimal("0.1"),
+        })
 
     def test_invalid_when_weights_sum_is_not_one(self):
         config = GameConfig.objects.create()
@@ -55,10 +70,11 @@ class GameConfigFormTest(TestCase):
                 "modulo_distribuicao": True,
                 "modulo_financeiro": True,
                 "regra_eventos": "{}",
-                "peso_lucro": "0.5",
-                "peso_market_share": "0.2",
-                "peso_atendimento": "0.2",
-                "peso_eficiencia_estoque": "0.2",
+                "peso_eo": "0.4",
+                "peso_df": "0.2",
+                "peso_sd": "0.2",
+                "peso_ds": "0.1",
+                "peso_ee": "0.2",
             },
             instance=config,
         )

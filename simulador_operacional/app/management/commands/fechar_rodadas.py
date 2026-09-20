@@ -426,10 +426,9 @@ class Command(BaseCommand):
                 logger.info("Nenhuma rodada para fechar em %s", agora, extra={"correlation_id": correlation_id})
                 self.stdout.write("Nenhuma rodada para fechar")
 
-            config = GameConfig.objects.order_by("id").first()
-            pesos = self.obter_pesos_ranking(config.ranking_pesos if config else None)
-
             for rodada in rodadas:
+                config = rodada.jogo.config if rodada.jogo_id else GameConfig.objects.filter(pk=1).first()
+                pesos = self.obter_pesos_ranking(config.ranking_pesos if config else None)
                 logger.info(
                     "Fechando rodada %s",
                     rodada.numero,

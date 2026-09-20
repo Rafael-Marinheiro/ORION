@@ -35,33 +35,25 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 class GameConfigForm(forms.ModelForm):
-    peso_lucro = forms.DecimalField(
-        label="Peso - Lucro",
-        min_value=0,
-        max_value=1,
-        decimal_places=4,
-        max_digits=6,
+    peso_eo = forms.DecimalField(
+        label="Peso - Eficiência Operacional (EO)",
+        min_value=0, max_value=1, decimal_places=4, max_digits=6,
     )
-    peso_market_share = forms.DecimalField(
-        label="Peso - Market Share",
-        min_value=0,
-        max_value=1,
-        decimal_places=4,
-        max_digits=6,
+    peso_df = forms.DecimalField(
+        label="Peso - Desempenho Financeiro (DF)",
+        min_value=0, max_value=1, decimal_places=4, max_digits=6,
     )
-    peso_atendimento = forms.DecimalField(
-        label="Peso - Atendimento",
-        min_value=0,
-        max_value=1,
-        decimal_places=4,
-        max_digits=6,
+    peso_ee = forms.DecimalField(
+        label="Peso - Eficiência de Estoques (EE)",
+        min_value=0, max_value=1, decimal_places=4, max_digits=6,
     )
-    peso_eficiencia_estoque = forms.DecimalField(
-        label="Peso - Eficiencia de Estoque",
-        min_value=0,
-        max_value=1,
-        decimal_places=4,
-        max_digits=6,
+    peso_sd = forms.DecimalField(
+        label="Peso - Satisfação da Demanda (SD)",
+        min_value=0, max_value=1, decimal_places=4, max_digits=6,
+    )
+    peso_ds = forms.DecimalField(
+        label="Peso - Sustentabilidade (DS)",
+        min_value=0, max_value=1, decimal_places=4, max_digits=6,
     )
 
     class Meta:
@@ -85,35 +77,27 @@ class GameConfigForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         pesos = self.instance.ranking_pesos if self.instance and self.instance.ranking_pesos else default_ranking_pesos()
-        self.fields["peso_lucro"].initial = pesos.get("lucro", 0.4)
-        self.fields["peso_market_share"].initial = pesos.get("market_share", 0.3)
-        self.fields["peso_atendimento"].initial = pesos.get("atendimento", 0.2)
-        self.fields["peso_eficiencia_estoque"].initial = pesos.get("eficiencia_estoque", 0.1)
+        for sigla, padrao in default_ranking_pesos().items():
+            self.fields[f"peso_{sigla.lower()}"].initial = pesos.get(sigla, padrao)
 
     def clean(self):
         cleaned_data = super().clean()
-        soma = (
-            Decimal(cleaned_data.get("peso_lucro") or 0)
-            + Decimal(cleaned_data.get("peso_market_share") or 0)
-            + Decimal(cleaned_data.get("peso_atendimento") or 0)
-            + Decimal(cleaned_data.get("peso_eficiencia_estoque") or 0)
-        )
-        if abs(soma - Decimal("1")) > Decimal("0.0001"):
-            raise forms.ValidationError("A soma dos pesos deve ser igual a 1.0.")
+        campos = [f"peso_{sigla.lower()}" for sigla in default_ranking_pesos()]
+        if all(campo in cleaned_data for campo in campos):
+            soma = sum(cleaned_data[campo] for campo in campos)
+            if abs(soma - Decimal("1")) > Decimal("0.0001"):
+                raise forms.ValidationError("A soma dos pesos deve ser igual a 1.0.")
         return cleaned_data
 
     def save(self, commit=True):
         instance = super().save(commit=False)
         instance.ranking_pesos = {
-            "lucro": float(self.cleaned_data["peso_lucro"]),
-            "market_share": float(self.cleaned_data["peso_market_share"]),
-            "atendimento": float(self.cleaned_data["peso_atendimento"]),
-            "eficiencia_estoque": float(self.cleaned_data["peso_eficiencia_estoque"]),
+            sigla: float(self.cleaned_data[f"peso_{sigla.lower()}"])
+            for sigla in default_ranking_pesos()
         }
         if commit:
             instance.save()
         return instance
-
 
 
 class DecisaoForm(forms.ModelForm):
@@ -188,15 +172,17 @@ class RodadaForm(forms.ModelForm):
         model = Rodada
         fields = ["jogo", "numero", "fim"]
 
-    def clean_numero(self):
-        numero = self.cleaned_data["numero"]
-        config = GameConfig.objects.first()
+    def clean(self):
+        dados = super().clean()
+        numero = dados.get("numero")
+        jogo = dados.get("jogo")
+        config = jogo.config if jogo else GameConfig.objects.filter(pk=1).first()
         max_rodadas = config.numero_rodadas if config else 12
-        if numero < 1 or numero > max_rodadas:
-            raise forms.ValidationError(
-                f"Número da rodada deve ser entre 1 e {max_rodadas}"
+        if numero is not None and not 1 <= numero <= max_rodadas:
+            self.add_error(
+                "numero", f"Número da rodada deve ser entre 1 e {max_rodadas}"
             )
-        return numero
+        return dados
 
 
 class GrupoForm(forms.ModelForm):
