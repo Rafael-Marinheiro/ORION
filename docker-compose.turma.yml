@@ -1,0 +1,25 @@
+# Ensaio local: usa o banco do worktree e serve os arquivos estáticos do Django.
+# Preparar migrações/seed antes de subir, conforme docs/RUNBOOK_OPERACAO.md.
+services:
+  web:
+    volumes:
+      - .:/app
+    command: python manage.py runserver 0.0.0.0:8000 --noreload
+  rodadas:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          python manage.py sortear_eventos_rodada || exit 1
+          python manage.py fechar_rodadas || exit 1
+          sleep 5
+        done
+    depends_on:
+      - web
+    restart: on-failure

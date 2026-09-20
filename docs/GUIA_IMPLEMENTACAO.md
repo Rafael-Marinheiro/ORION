@@ -5,7 +5,9 @@ especificação. Substitui `SPRINTS.md` e `docs/BACKLOG.md` como fonte de
 verdade sobre o que está feito — os dois continuam no repositório como
 histórico, mas não devem ser consultados para decidir o que falta.
 
-Última auditoria: **2026-09-18**.
+Última auditoria de prontidão: **2026-09-20** (RN-01/RN-02 e fluxo de primeira turma).
+Ver `docs/AUDITORIA_REGRAS_INICIAIS.md`, `docs/BASE_REGIONAL.md` e `tasks/todo.md`
+para evidências e limites desta verificação; as outras seções preservam o histórico.
 
 ---
 
@@ -170,7 +172,13 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
   facilidade — a própria tabela de exemplo do §12.6 traz EE de 110 e 105. A
   soma ponderada precisa saber lidar com isso.
 
-### B8 · Fórmula proposta para SD — aguardando ratificação
+### B8 · Fórmula de SD — aguardando ratificação do Product Owner
+
+**Constatação em 20/09/2026:** o código já implementa SD 60/40 e o limiar
+regional de 200 km (`parametros.py` registra autorização anterior do Rafael).
+O estado anterior deste guia dizia que SD não estava implementado. A automação
+preservou o código e registrou a ratificação pedagógica pendente; a passagem
+dos testes não implica aprovação da fórmula pelo Dr. Pio.
 
 O eixo vale 0,20, o segundo maior peso, e não pode ficar indefinido. A
 proposta abaixo parte da única frase que o documento oferece sobre ele —
@@ -356,9 +364,9 @@ Consequências já mapeadas das decisões:
 | Grupo com 3 a 6 participantes | RN-02 | `CONFORME` | `forms.MembroFormSet` (`min_num=3`, `max_num=6`) |
 | Capital inicial R$ 1.000.000 | RN-02 | `CONFORME` | `GameConfig.capital_inicial` |
 | 40 máquinas iniciais (15 A / 15 B / 10 C) | RN-02 | `CONFORME` | `views.CAPACIDADE_PADRAO_POR_CODIGO` |
-| 80 funcionários iniciais (2 por máquina) | RN-02 | `NAO_VERIFICADO` | — |
+| 80 funcionários iniciais (2 por máquina) | RN-02 | `CONFORME` | `garantir_capacidades_grupo`, `test_primeira_turma` (padrões iniciais) |
 | Senha mínima de 8 caracteres com letras e números | RN-01 | `CONFORME` | `LetterAndDigitPasswordValidator`, também aplicado em `MembroForm` |
-| Número de rodadas entre 3 e 12 | RN-02 | `AUSENTE` | sem validação no formulário |
+| Número de rodadas entre 3 e 12 | RN-02 | `CONFORME` | `GameConfig`/`GameConfigForm`, `test_regras_iniciais`; limite da rodada usa o jogo selecionado |
 
 ### 4.2 Produção
 
@@ -388,7 +396,7 @@ Consequências já mapeadas das decisões:
 
 | Regra | Origem | Status | Onde |
 |---|---|---|---|
-| 10 cidades com distância e demanda máxima | §9.1 | `CONFORME` | seed `cidades` |
+| 12 cidades regionais com distância e demanda derivada | §9.1 + D9.1–D9.3 | `CONFORME` | `seed_dados_base`, `test_base_regional`; fontes e data em `docs/BASE_REGIONAL.md` |
 | Curva de sensibilidade a preço 5x / 3x / 2x / 1x / 0,5x | §9.2c | `CONFORME` | `fechar_rodadas.calcular_peso_preco` |
 | Alocação proporcional ao peso, limitada ao enviado | §9.2b, §9.2c | `CONFORME` | `fechar_rodadas` |
 | Demanda máxima por cidade e produto | §9.1 | `CONFORME` | `DemandaCidadeProduto` |
@@ -663,3 +671,28 @@ docker compose run --rm web sh -c "pip install -q coverage==7.6.1; coverage run 
 | `SPRINTS.md` | Histórico. Desatualizado. |
 | `docs/RELEASE_CHECKLIST.md` | Passos de release. Ativo. |
 | `docs/RUNBOOK_OPERACAO.md` | Operação. Ativo. |
+
+## 9. Prontidão técnica — 20/09/2026
+
+- População das 12 praças: Censo 2022/IBGE com malha 2023; distâncias
+  rodoviárias com fontes e consulta registradas. Atualizações no seed
+  e demanda derivada preservam D9.1–D9.3.
+- Cadastro: e-mails distintos, exatamente um líder, 3–6 participantes e
+  transação sem contas órfãs. Os recursos iniciais vêm do jogo selecionado.
+- API administrativa: aluno/CEO não podem alterar configurações, catálogo,
+  rodadas ou registros por operações de escrita. Decisões seguem pelo painel.
+- Configuração: cinco eixos EO/DF/EE/SD/DS na tela e no seed; o fechamento usa
+  os pesos do jogo. Não se convertem pesos antigos silenciosamente.
+- Migração consolidada não cria mais administrador com senha fixa. Conta
+  recém-provisionada neste banco teve senha invalidada; redefinição é interativa.
+- Ensaio completo: duas equipes, três rodadas, D+1, produção, distribuição,
+  submissão exclusiva, auditoria, sigilo nas telas, resultados e classificação.
+- Verificação: **248 testes OK**, cobertura núcleo **93%**, periférico **85%**;
+  migrações reais e seed repetido validados em banco temporário sem usuários.
+- Operação: roteiro da primeira turma e Compose local com banco persistente
+  e processamento periódico. O responsável ainda precisa definir a senha do
+  professor e ensaiar navegador/rede/prazo antes da turma.
+
+Esta evidência permite iniciar um ensaio funcional acompanhado com os padrões
+RN-02. Não certifica nota pedagógica, carga, customização da planta ou publicação
+em produção. As decisões pendentes e tarefas posteriores estão em `tasks/todo.md`.

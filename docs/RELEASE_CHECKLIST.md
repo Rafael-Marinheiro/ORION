@@ -1,5 +1,21 @@
 ﻿# Release Checklist
 
+## Ensaio de primeira turma — 20/09/2026
+
+- [x] Fontes regionais, datas e diferenças em `BASE_REGIONAL.md`.
+- [x] Auditoria RN-01/RN-02 e correções com testes.
+- [x] Suíte no Docker: 248 testes; gates 93%/85%.
+- [x] Migrações reais + seed duas vezes sem conta administrativa automática.
+- [x] Cenário de duas equipes e três rodadas até classificação e exportações.
+- [x] Roteiro para professor/alunos e preparação técnica separados.
+- [ ] Responsável define senha do professor; nunca usar senha antiga provisionada.
+- [ ] Responsável executa ensaio de navegador, rede e fechamento no ambiente da aula.
+- [ ] Dr. Pio ratifica pendências pedagógicas antes do uso como nota oficial.
+
+Usar `RUNBOOK_OPERACAO.md` e os dois arquivos Compose para o ensaio local.
+Os passos gerais de release abaixo continuam sendo para publicação posterior.
+
+
 ## 1) Preparacao
 1. Atualizar branch com mudancas aprovadas.
 2. Confirmar migracoes versionadas (principal e CI).

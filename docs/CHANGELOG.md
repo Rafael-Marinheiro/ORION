@@ -1,5 +1,14 @@
 ﻿# Changelog
 
+## Não publicado — 2026-09-20
+
+- Base regional conferida com IBGE e fontes rodoviárias; demanda recalculada.
+- Cadastro sem usuários órfãos, e-mails repetidos ou múltiplos líderes.
+- Escrita administrativa restrita ao professor; limites e pesos usam o jogo.
+- Cinco pesos documentados na configuração; remoção do administrador com senha fixa.
+- Ensaio de primeira turma com três rodadas e roteiro operacional local.
+
+
 ## [1.0.0-rc2] - 2026-03-09
 
 ### Added
