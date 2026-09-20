@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
-from django.forms import formset_factory
+from django.forms import BaseFormSet, formset_factory
 from decimal import Decimal
 
 from .models import (
@@ -239,14 +239,33 @@ class MembroForm(forms.Form):
     senha = forms.CharField(widget=forms.PasswordInput)
     lider = forms.BooleanField(required=False, label="Líder do grupo")
 
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        if User.objects.filter(email_usuario__iexact=email).exists():
+            raise forms.ValidationError("Este e-mail já possui cadastro.")
+        return email
+
     def clean_senha(self):
         senha = self.cleaned_data["senha"]
         validate_password(senha)
         return senha
 
 
+class BaseMembroFormSet(BaseFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        emails = [form.cleaned_data["email"].casefold() for form in self.forms]
+        if len(emails) != len(set(emails)):
+            raise forms.ValidationError("Cada integrante deve ter um e-mail diferente.")
+        if sum(bool(form.cleaned_data.get("lider")) for form in self.forms) != 1:
+            raise forms.ValidationError("Selecione exatamente um líder para o grupo.")
+
+
 MembroFormSet = formset_factory(
-    MembroForm, min_num=3, max_num=6, validate_min=True, validate_max=True, extra=0
+    MembroForm, formset=BaseMembroFormSet,
+    min_num=3, max_num=6, validate_min=True, validate_max=True, extra=0,
 )
 
 

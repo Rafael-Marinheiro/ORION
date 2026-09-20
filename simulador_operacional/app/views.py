@@ -17,6 +17,7 @@ from django.contrib.auth.views import (
     PasswordResetDoneView,
     PasswordResetView,
 )
+from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -1619,45 +1620,47 @@ class GrupoCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         grupo_form = GrupoCadastroForm(request.POST)
         membro_formset = MembroFormSet(request.POST)
         if grupo_form.is_valid() and membro_formset.is_valid():
-            grupo = grupo_form.save(commit=False)
-            config, _ = GameConfig.objects.get_or_create(id=1)
-            grupo.capital = config.capital_inicial
-            grupo.estoque = config.estoque_inicial
-            grupo.maquinas_a = config.maquinas_iniciais_a
-            grupo.maquinas_b = config.maquinas_iniciais_b
-            grupo.maquinas_c = config.maquinas_iniciais_c
-            grupo.maquinas = (
-                config.maquinas_iniciais_a
-                + config.maquinas_iniciais_b
-                + config.maquinas_iniciais_c
-            )
-            grupo.trabalhadores = config.trabalhadores_iniciais
-            grupo.save()
-            lider = None
-            for form in membro_formset:
-                user = User.objects.create_user(
-                    email_usuario=form.cleaned_data["email"],
-                    nome_usuario=form.cleaned_data["nome"],
-                    password=form.cleaned_data["senha"],
-                    tipo_usuario=(
-                        "lider_grupo" if form.cleaned_data.get("lider") else "membro_grupo"
-                    ),
-                )
-                grupo.membros.add(user)
-                if form.cleaned_data.get("lider"):
-                    lider = user
-            if not lider:
-                grupo.delete()
+            try:
+                with transaction.atomic():
+                    grupo = grupo_form.save(commit=False)
+                    if grupo.jogo_id:
+                        config = grupo.jogo.config
+                    else:
+                        config, _ = GameConfig.objects.get_or_create(id=1)
+                    grupo.capital = config.capital_inicial
+                    grupo.estoque = config.estoque_inicial
+                    grupo.maquinas_a = config.maquinas_iniciais_a
+                    grupo.maquinas_b = config.maquinas_iniciais_b
+                    grupo.maquinas_c = config.maquinas_iniciais_c
+                    grupo.maquinas = (
+                        config.maquinas_iniciais_a
+                        + config.maquinas_iniciais_b
+                        + config.maquinas_iniciais_c
+                    )
+                    grupo.trabalhadores = config.trabalhadores_iniciais
+                    grupo.save()
+                    lider = None
+                    for form in membro_formset:
+                        user = User.objects.create_user(
+                            email_usuario=form.cleaned_data["email"],
+                            nome_usuario=form.cleaned_data["nome"],
+                            password=form.cleaned_data["senha"],
+                            tipo_usuario=(
+                                "lider_grupo" if form.cleaned_data.get("lider") else "membro_grupo"
+                            ),
+                        )
+                        grupo.membros.add(user)
+                        if form.cleaned_data.get("lider"):
+                            lider = user
+                    grupo.lider = lider
+                    grupo.save()
+            except IntegrityError:
                 membro_formset._non_form_errors = membro_formset.error_class(
-                    ["Selecione um líder para o grupo."]
+                    ["Não foi possível cadastrar os integrantes. Confira se os e-mails já possuem cadastro."]
                 )
-                return render(
-                    request,
-                    self.template_name,
-                    {"form": grupo_form, "membro_formset": membro_formset},
-                )
-            grupo.lider = lider
-            grupo.save()
+                return render(request, self.template_name, {
+                    "form": grupo_form, "membro_formset": membro_formset,
+                })
             messages.success(request, "Grupo criado com sucesso.")
             return redirect(self.success_url)
         return render(
