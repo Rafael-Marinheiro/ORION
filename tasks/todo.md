@@ -9,8 +9,8 @@ partindo de Currais Novos.
 - [ ] Cada valor tem fonte e data.
 - [ ] Divergências do seed são listadas.
 
-**Verificação:** pesquisa de fontes e revisão do seed.  
-**Dependências:** nenhuma.  
+**Verificação:** pesquisa de fontes e revisão do seed.
+**Dependências:** nenhuma.
 **Escopo estimado:** médio.
 
 ## Tarefa 2: aplicar a base regional validada
@@ -22,8 +22,8 @@ validados.
 - [ ] Seed é idempotente e cria as 12 praças esperadas.
 - [ ] Demanda deriva da população pela fórmula registrada.
 
-**Verificação:** testes focados e suíte completa em Docker.  
-**Dependências:** Tarefa 1.  
+**Verificação:** testes focados e suíte completa em Docker.
+**Dependências:** Tarefa 1.
 **Escopo estimado:** médio.
 
 ## Tarefa 3: auditar RN-01 e RN-02
@@ -34,8 +34,8 @@ e com o código atual.
 **Critérios de aceite:**
 - [ ] Cada requisito possui evidência de código e teste, ou diagnóstico.
 
-**Verificação:** testes focados.  
-**Dependências:** nenhuma.  
+**Verificação:** testes focados.
+**Dependências:** nenhuma.
 **Escopo estimado:** pequeno.
 
 ## Tarefa 4: corrigir regras iniciais pendentes
@@ -45,8 +45,8 @@ e com o código atual.
 **Critérios de aceite:**
 - [ ] Regra corrigida e protegida por teste.
 
-**Verificação:** suíte completa em Docker.  
-**Dependências:** Tarefa 3.  
+**Verificação:** suíte completa em Docker.
+**Dependências:** Tarefa 3.
 **Escopo estimado:** médio.
 
 ## Tarefa 5: cenário ponta a ponta
@@ -56,8 +56,8 @@ e com o código atual.
 **Critérios de aceite:**
 - [ ] Permissões e resultados pós-fechamento são verificados.
 
-**Verificação:** teste de integração em Docker.  
-**Dependências:** Tarefas 2 e 4.  
+**Verificação:** teste de integração em Docker.
+**Dependências:** Tarefas 2 e 4.
 **Escopo estimado:** médio.
 
 ## Tarefa 6: roteiro de primeira turma
@@ -67,6 +67,6 @@ e com o código atual.
 **Critérios de aceite:**
 - [ ] Professor consegue seguir o roteiro sem conhecimento do código.
 
-**Verificação:** revisão manual do roteiro.  
-**Dependências:** Tarefa 5.  
+**Verificação:** revisão manual do roteiro.
+**Dependências:** Tarefa 5.
 **Escopo estimado:** pequeno.
