@@ -66,3 +66,10 @@ class CadastroGrupoTest(TestCase):
 
         self.assertEqual(resposta.status_code, 200)
         self.assertFalse(Grupo.objects.filter(nome="Equipe Vega").exists())
+
+    def test_senha_de_membro_exige_letras_numeros_e_oito_caracteres(self):
+        resposta = self.client.post(self.url, self._payload(**{"form-0-senha": "somenteletras"}))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, "A senha deve conter ao menos uma letra e um dígito.")
+        self.assertFalse(Grupo.objects.filter(nome="Equipe Vega").exists())

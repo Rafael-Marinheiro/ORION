@@ -357,7 +357,7 @@ Consequências já mapeadas das decisões:
 | Capital inicial R$ 1.000.000 | RN-02 | `CONFORME` | `GameConfig.capital_inicial` |
 | 40 máquinas iniciais (15 A / 15 B / 10 C) | RN-02 | `CONFORME` | `views.CAPACIDADE_PADRAO_POR_CODIGO` |
 | 80 funcionários iniciais (2 por máquina) | RN-02 | `NAO_VERIFICADO` | — |
-| Senha mínima de 8 caracteres com letras e números | RN-01 | `NAO_VERIFICADO` | — |
+| Senha mínima de 8 caracteres com letras e números | RN-01 | `CONFORME` | `LetterAndDigitPasswordValidator`, também aplicado em `MembroForm` |
 | Número de rodadas entre 3 e 12 | RN-02 | `AUSENTE` | sem validação no formulário |
 
 ### 4.2 Produção

@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.forms import formset_factory
 from decimal import Decimal
@@ -237,6 +238,11 @@ class MembroForm(forms.Form):
     email = forms.EmailField()
     senha = forms.CharField(widget=forms.PasswordInput)
     lider = forms.BooleanField(required=False, label="Líder do grupo")
+
+    def clean_senha(self):
+        senha = self.cleaned_data["senha"]
+        validate_password(senha)
+        return senha
 
 
 MembroFormSet = formset_factory(
