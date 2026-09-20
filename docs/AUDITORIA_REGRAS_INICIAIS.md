@@ -33,6 +33,12 @@ Nenhuma fórmula pendente do Product Owner foi alterada.
   existentes não são sobrescritas silenciosamente. O fechamento lê os pesos
   de cada jogo.
 
+- A migração consolidada criava administrador com senha fixa. O nó histórico
+  foi preservado sem provisionar conta nem apagar usuários no rollback.
+  `tools/verificar_base_limpa.py` verifica migrações reais em banco temporário,
+  inclusive ausência de contas automáticas; a senha provisionada neste worktree
+  foi invalidada. Instalações anteriores devem redefinir a senha pelo responsável.
+
 ## Pendências que não exigem inventar regras neste incremento
 
 - B8/B10: o guia diz aguardar ratificação, mas `parametros.py` já contém SD
