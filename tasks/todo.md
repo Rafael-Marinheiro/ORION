@@ -6,8 +6,8 @@
 partindo de Currais Novos.
 
 **Critérios de aceite:**
-- [ ] Cada valor tem fonte e data.
-- [ ] Divergências do seed são listadas.
+- [x] Cada valor tem fonte e data. Ver `docs/BASE_REGIONAL.md` (20/09/2026).
+- [x] Divergências do seed são listadas na base regional.
 
 **Verificação:** pesquisa de fontes e revisão do seed.
 **Dependências:** nenhuma.
@@ -19,8 +19,8 @@ partindo de Currais Novos.
 validados.
 
 **Critérios de aceite:**
-- [ ] Seed é idempotente e cria as 12 praças esperadas.
-- [ ] Demanda deriva da população pela fórmula registrada.
+- [x] Seed é idempotente e cria as 12 praças esperadas em base limpa.
+- [x] Demanda deriva da população pela fórmula registrada. Dois testes focados passaram no Docker; suíte completa será repetida ao concluir as correções.
 
 **Verificação:** testes focados e suíte completa em Docker.
 **Dependências:** Tarefa 1.

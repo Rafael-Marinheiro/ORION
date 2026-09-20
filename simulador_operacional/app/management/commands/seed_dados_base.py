@@ -109,22 +109,23 @@ class Command(BaseCommand):
         # media nas 10 cidades listadas. Assim a regra "demanda proporcional
         # a populacao" fica explicita e auditavel.
         #
-        # Distancias rodoviarias e populacoes sao aproximadas e devem ser
-        # conferidas contra IBGE e rota real antes do uso em sala.
+        # Populacao: Censo 2022, malha 2023 (IBGE). Distancias rodoviarias
+        # consultadas em 2026-09-20. Fontes e divergencias por cidade em
+        # docs/BASE_REGIONAL.md; manter a mesma edicao populacional nas 12 pracas.
         cidades = [
-            # (nome, distancia_km desde Currais Novos, populacao estimada)
-            ("Currais Novos", 0, 45000),
-            ("Acari", 23, 11000),
-            ("Caico", 75, 68000),
-            ("Santa Cruz", 95, 40000),
-            ("Patos", 135, 108000),
-            ("Assu", 140, 58000),
-            ("Natal", 172, 751000),
-            ("Campina Grande", 190, 419000),
-            ("Mossoro", 190, 265000),
-            ("Joao Pessoa", 300, 833000),
-            ("Recife", 420, 1488000),
-            ("Fortaleza", 470, 2428000),
+            # (nome, distancia_km desde Currais Novos, populacao Censo 2022)
+            ("Currais Novos", 0, 41313),
+            ("Acari", 29, 10597),
+            ("Caico", 88, 61146),
+            ("Santa Cruz", 64, 37313),
+            ("Patos", 143, 103165),
+            ("Assu", 139, 56496),
+            ("Natal", 181, 751300),
+            ("Campina Grande", 167, 419379),
+            ("Mossoro", 198, 264577),
+            ("Joao Pessoa", 263, 833932),
+            ("Recife", 342, 1488920),
+            ("Fortaleza", 437, 2428708),
         ]
         for nome, distancia, populacao in cidades:
             demanda = max(
