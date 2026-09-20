@@ -321,8 +321,8 @@ havia lição de planejamento de carga. Com o caminhão, dobra:
 
 | Envio para Natal (172 km) | Frete antigo | Frete novo |
 |---|---|---|
-| 40 unidades de A (1 caminhão cheio) | R$ 688,00 | R$ 258,00 |
-| 41 unidades de A (2 caminhões, 51%) | R$ 705,20 | **R$ 516,00** |
+| 40 unidades de A (1 caminhão cheio) | R$ 688,00 | R$ 1.360,00 |
+| 41 unidades de A (2 caminhões, 51%) | R$ 705,20 | **R$ 2.720,00** |
 
 A mensagem de confirmação passa a dizer quantas viagens e qual a ocupação.
 

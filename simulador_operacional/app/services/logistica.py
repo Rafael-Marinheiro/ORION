@@ -44,12 +44,8 @@ def viagens_necessarias(peso_kg) -> int:
     return int((peso / Decimal(CAPACIDADE_CAMINHAO_KG)).to_integral_value(ROUND_CEILING))
 
 
-def calcular_frete(distancia_km, peso_kg, viagens_com_retorno: int = 0) -> dict:
-    """Frete de um envio, com a conta aberta para a tela mostrar.
-
-    `viagens_com_retorno` e quantas viagens podem aproveitar carga de volta,
-    limitado pelas viagens que de fato existem.
-    """
+def calcular_frete(distancia_km, peso_kg) -> dict:
+    """Frete de produtos acabados, aberto para exibição na tela."""
     distancia = Decimal(str(distancia_km or 0))
     peso = Decimal(str(peso_kg or 0))
     viagens = viagens_necessarias(peso)
@@ -73,18 +69,14 @@ def calcular_frete(distancia_km, peso_kg, viagens_com_retorno: int = 0) -> dict:
         * viagens
     ).quantize(CENTAVO, ROUND_HALF_UP)
 
-    com_retorno = max(0, min(int(viagens_com_retorno), viagens))
-    desconto = (distancia * DESCONTO_RETORNO_POR_KM * com_retorno).quantize(CENTAVO, ROUND_HALF_UP)
-    desconto = min(desconto, custo_bruto)
-
     return {
         "peso_kg": peso,
         "viagens": viagens,
         "capacidade_paga_kg": capacidade_paga,
         "ocupacao_percentual": ocupacao,
         "custo_bruto": custo_bruto,
-        "desconto_retorno": desconto,
-        "custo": custo_bruto - desconto,
+        "desconto_retorno": Decimal("0"),
+        "custo": custo_bruto,
     }
 
 

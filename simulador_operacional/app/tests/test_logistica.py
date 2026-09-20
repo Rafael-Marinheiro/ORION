@@ -72,24 +72,6 @@ class FreteTest(TestCase):
         self.assertEqual(frete["custo"], Decimal("1360.00"))
         self.assertEqual(frete["custo"] / Decimal("40"), Decimal("34.00"))
 
-    def test_desconto_de_retorno_abate_por_viagem(self):
-        sem = calcular_frete(190, 5000)
-        com = calcular_frete(190, 5000, viagens_com_retorno=1)
-
-        self.assertEqual(com["desconto_retorno"], Decimal("95.00"))  # 190 x 0,50
-        self.assertEqual(com["custo"], sem["custo"] - Decimal("95.00"))
-
-    def test_retorno_nao_passa_das_viagens_existentes(self):
-        frete = calcular_frete(190, 5000, viagens_com_retorno=9)
-
-        self.assertEqual(frete["viagens"], 1)
-        self.assertEqual(frete["desconto_retorno"], Decimal("95.00"))
-
-    def test_desconto_nunca_deixa_o_frete_negativo(self):
-        frete = calcular_frete(10, 5000, viagens_com_retorno=1)
-
-        self.assertGreaterEqual(frete["custo"], Decimal("0"))
-
     def test_envio_vazio_nao_custa(self):
         self.assertEqual(calcular_frete(190, 0)["custo"], Decimal("0"))
         self.assertEqual(calcular_frete(0, 5000)["custo"], Decimal("0"))

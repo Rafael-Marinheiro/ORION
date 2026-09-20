@@ -1207,10 +1207,8 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     )
                     return redirect("painel_grupo")
 
-                # Mesmo modelo de caminhao da compra de materia-prima: o
-                # frete vai por viagem, nao por unidade. A taxa anterior de
-                # R$ 0,10/km/unidade nao vinha de documento nenhum e tornava
-                # a distancia quase irrelevante na decisao de distribuir.
+                # §9.2a: frete proporcional à distância e ao volume. A
+                # calibração aprovada cobra R$ 5/km e R$ 500 por viagem.
                 frete = calcular_frete(
                     distancia_km=envio.cidade.distancia_km,
                     peso_kg=peso_do_envio(envio.produto, envio.quantidade),
