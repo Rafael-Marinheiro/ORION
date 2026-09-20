@@ -85,6 +85,18 @@ e com o código atual.
   administrativa criada pela migração antiga foi invalidada; o responsável
   precisa redefini-la interativamente, conforme o roteiro.
 
+## Complemento operacional — execução seguinte de 20/09/2026
+
+Fontes relidas: DOCX 3 (RF.05/RNF.05), 8 (§8.2/§8.5), 11 (§11.1/§11.3)
+e guia de implementação. Não altera fórmulas nem decisões pedagógicas.
+
+- [x] Corrigir sorteio agendado que ignorava o jogo e pulava turmas com o
+  mesmo número de rodada. Regressão reproduzida antes da correção; oito
+  testes de comandos e primeira turma passaram depois.
+- [ ] Verificar recuperação do fechamento após falha e corrigir gravações
+  parciais, se confirmadas, antes do ensaio do processador automático.
+- [ ] Ensaiar inicialização HTTP e ciclo de rodadas em base descartável.
+
 ## Pendências registradas (prosseguir sem inventar decisões)
 
 1. **Dr. Pio — B8/B10/B9/D11:** ratificar SD 60/40, limiar regional de 200 km,

@@ -418,7 +418,7 @@ Consequências já mapeadas das decisões:
 
 | Regra | Origem | Status | Onde |
 |---|---|---|---|
-| Sorteio automático por rodada | §8.2 | `CONFORME` | `views.sortear_evento` + comando agendado |
+| Sorteio automático por rodada | §8.2 | `CONFORME` | `services/eventos.py` + comando agendado; isolamento por jogo e idempotência em `SortearEventosRodadaCommandTest` (20/09/2026) |
 | Evento aplicado igualmente a todos os grupos | §8.2 | `CONFORME` | `EventoRodada` por rodada |
 | Os 6 eventos nomeados do §8.4 | §8.4 | `CONFORME` | `seed_dados_base` |
 | Probabilidades 15 / 20 / 20 / 15 / 15 / 15 | §8.4 | `CONFORME` | `seed_dados_base` + sorteio ponderado em `services/eventos.py` |

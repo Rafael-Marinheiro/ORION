@@ -9,10 +9,36 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from app.models import Decisao, Evento, EventoRodada, Grupo, Rodada, User
+from app.models import Decisao, Evento, EventoRodada, GameConfig, Grupo, Jogo, Rodada, User
 
 
 class SortearEventosRodadaCommandTest(TestCase):
+    def test_sorteia_por_jogo_sem_repetir_ou_misturar_eventos(self):
+        evento = Evento.objects.create(nome="Estabilidade", tipo="demanda", impacto_percentual=0)
+        config = GameConfig.objects.create()
+        jogos = [Jogo.objects.create(nome=nome, config=config) for nome in ("Turma A", "Turma B")]
+        for jogo in [*jogos, None]:
+            Rodada.objects.create(jogo=jogo, numero=1, fim=timezone.now() + timezone.timedelta(hours=1))
+        EventoRodada.objects.create(jogo=jogos[0], rodada=1, evento=evento)
+
+        call_command("sortear_eventos_rodada")
+        call_command("sortear_eventos_rodada")
+
+        self.assertEqual(EventoRodada.objects.count(), 3)
+        for jogo in [*jogos, None]:
+            self.assertEqual(EventoRodada.objects.filter(jogo=jogo, rodada=1).count(), 1)
+
+    def test_ignora_rodadas_fechadas_e_ainda_nao_iniciadas(self):
+        Evento.objects.create(nome="Estabilidade", tipo="demanda", impacto_percentual=0)
+        fim = timezone.now() + timezone.timedelta(hours=2)
+        Rodada.objects.create(numero=1, fim=fim, fechada=True)
+        futura = Rodada.objects.create(numero=2, fim=fim)
+        Rodada.objects.filter(pk=futura.pk).update(inicio=fim - timezone.timedelta(hours=1))
+
+        call_command("sortear_eventos_rodada")
+
+        self.assertFalse(EventoRodada.objects.exists())
+
     def test_comando_sorteia_evento_para_rodada_aberta(self):
         Evento.objects.create(nome="Greve geral", tipo="greve", impacto_percentual=-10)
         rodada = Rodada.objects.create(numero=1, fim=timezone.now() + timezone.timedelta(hours=1))

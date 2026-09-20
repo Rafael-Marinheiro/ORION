@@ -7,6 +7,7 @@
 - Escrita administrativa restrita ao professor; limites e pesos usam o jogo.
 - Cinco pesos documentados na configuração; remoção do administrador com senha fixa.
 - Ensaio de primeira turma com três rodadas e roteiro operacional local.
+- Sorteio agendado respeita o jogo da rodada, sem misturar turmas de mesmo número.
 
 
 ## [1.0.0-rc2] - 2026-03-09
