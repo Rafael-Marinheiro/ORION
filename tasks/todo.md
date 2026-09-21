@@ -103,6 +103,15 @@ e guia de implementação. Não altera fórmulas nem decisões pedagógicas.
 - [x] Medir o requisito RF.05: `FechamentoRodadaCapacidadeTest` fechou uma
   rodada de 12 grupos em 0,360 s no Docker, abaixo do máximo de 10 s do DOCX 3
   (21/09/2026).
+- [x] Isolar lembretes por turma: cada rodada envia mensagens somente aos
+  grupos vinculados ao mesmo jogo; regressão coberta em
+  `EnviarLembretesCommandTest` (21/09/2026).
+- [x] Corrigir a multa de ausência no fechamento ativo: 10% do caixa final da
+  rodada anterior, conforme DOCX 11.2; regressão coberta em
+  `FechamentoRodadaPenalidadeTest` (21/09/2026).
+- [x] Reduzir a janela de publicação automática do resultado no Compose de
+  ensaio de cinco para um segundo, sem alegar precisão absoluta de agendador
+  (21/09/2026).
 
 ## Pendências registradas (prosseguir sem inventar decisões)
 
