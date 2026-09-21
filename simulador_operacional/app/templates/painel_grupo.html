@@ -57,6 +57,27 @@
         </div>
     </div>
 
+    {% if linhas_fabrica %}
+    <section class="o-panel o-factory" aria-labelledby="fabrica-titulo">
+        <h2 id="fabrica-titulo" class="o-panel__title">Fábrica em operação</h2>
+        <p class="o-panel__hint">Produção registrada em relação à capacidade disponível de cada linha nesta rodada.</p>
+        <div class="o-factory__lines">
+            {% for linha in linhas_fabrica %}
+            <article class="o-factory__line">
+                <div class="o-factory__line-head">
+                    <strong>Produto {{ linha.produto.codigo }}</strong>
+                    <span class="o-num">{{ linha.produzidas }} / {{ linha.capacidade }} un</span>
+                </div>
+                <div class="o-factory__track" role="progressbar" aria-label="Produção do produto {{ linha.produto.codigo }}" aria-valuemin="0" aria-valuemax="{{ linha.capacidade }}" aria-valuenow="{{ linha.produzidas }}">
+                    <span style="--o-fill: {{ linha.percentual }}%"></span>
+                </div>
+                <p class="o-muted">{{ linha.maquinas }} máquinas · {{ linha.operadores }} operadores · {{ linha.percentual }}% da capacidade</p>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
     {% if grafico_desempenho.labels %}
     <section class="o-panel o-panel--chart" aria-labelledby="desempenho-titulo">
         <h2 id="desempenho-titulo" class="o-panel__title">Desempenho por rodada</h2>

@@ -168,6 +168,13 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-brand:hover { color: var(--o-ink); text-decoration: none; }
 .o-brand .o-mark { width: 28px; height: 28px; color: var(--o-star); }
 
+.o-factory__lines { display: grid; gap: var(--o-3); }
+.o-factory__line { padding: var(--o-3); border: 1px solid var(--o-line); border-radius: var(--o-radius); background: var(--o-panel-2); }
+.o-factory__line-head { display: flex; justify-content: space-between; gap: var(--o-3); align-items: baseline; }
+.o-factory__line p { margin: var(--o-2) 0 0; font-size: 0.8125rem; }
+.o-factory__track { height: 8px; margin-top: var(--o-2); border-radius: 999px; overflow: hidden; background: var(--o-line); }
+.o-factory__track span { display: block; width: var(--o-fill); height: 100%; border-radius: inherit; background: var(--o-star); }
+
 /* --- 4. Navegacao -------------------------------------------------------- */
 
 .o-nav {

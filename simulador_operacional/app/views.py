@@ -957,6 +957,24 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         evento = sortear_evento(rodada_ativa.numero, jogo_id=grupo.jogo_id) if rodada_ativa and grupo else None
 
         capacidade_total = sum(c.capacidade_unidades_rodada for c in capacidades) if grupo else 0
+        producao_por_produto = {}
+        for producao in producoes:
+            producao_por_produto[producao.produto_id] = (
+                producao_por_produto.get(producao.produto_id, 0)
+                + producao.quantidade_produzida
+            )
+        linhas_fabrica = []
+        for capacidade in capacidades:
+            produzidas = producao_por_produto.get(capacidade.produto_id, 0)
+            total_linha = capacidade.capacidade_unidades_rodada
+            linhas_fabrica.append({
+                "produto": capacidade.produto,
+                "maquinas": capacidade.maquinas,
+                "operadores": capacidade.operadores,
+                "capacidade": total_linha,
+                "produzidas": produzidas,
+                "percentual": min(100, round((produzidas / total_linha) * 100)) if total_linha else 0,
+            })
         alerta = None
         if grupo:
             if grupo.estoque < capacidade_total * 0.2:
@@ -1003,6 +1021,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "saldos_mp": saldos_mp,
             "saldos_produto": saldos_produto,
             "capacidades_produto": capacidades,
+            "linhas_fabrica": linhas_fabrica,
             "aplicacao_financeira": aplicacao_financeira,
             "vencimento_proximo": resumo_vencimento(
                 grupo, rodada_ativa.numero if rodada_ativa else None
