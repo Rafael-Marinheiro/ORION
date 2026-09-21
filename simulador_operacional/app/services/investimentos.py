@@ -29,7 +29,9 @@ def aplicar_retorno_investimentos(grupo: Grupo, rodada_atual: int) -> None:
     grupo.save()
 
 
-def maquinas_iniciais():
+def maquinas_iniciais(grupo=None):
+    if grupo and grupo.jogo_id and grupo.jogo.config_id:
+        return int(grupo.jogo.config.maquinas_iniciais)
     config = GameConfig.objects.order_by("id").first()
     if config and config.maquinas_iniciais:
         return int(config.maquinas_iniciais)
@@ -38,7 +40,7 @@ def maquinas_iniciais():
 
 def limite_de_expansao(grupo):
     """Quantas maquinas o grupo ainda pode comprar (14.2.1)."""
-    teto = int(Decimal(maquinas_iniciais()) * LIMITE_EXPANSAO_MAQUINAS)
+    teto = int(Decimal(maquinas_iniciais(grupo)) * LIMITE_EXPANSAO_MAQUINAS)
     ja_compradas = sum(
         investimento.quantidade
         for investimento in Investimento.objects.filter(grupo=grupo, categoria="maquinas")
@@ -83,7 +85,7 @@ def impedimento_para_investir(grupo, investimento):
             return (
                 f"Limite de expansão atingido: o espaço industrial comporta no "
                 f"máximo {limite['teto']} máquinas adicionais (+50% sobre as "
-                f"{maquinas_iniciais()} iniciais). Já foram adquiridas "
+                f"{maquinas_iniciais(grupo)} iniciais). Já foram adquiridas "
                 f"{limite['compradas']}; restam {limite['restante']}."
             )
 

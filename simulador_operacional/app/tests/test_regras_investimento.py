@@ -18,6 +18,7 @@ from app.models import (
     GameConfig,
     Grupo,
     Investimento,
+    Jogo,
     Produto,
     Rodada,
     User,
@@ -47,6 +48,14 @@ class LimiteDeExpansaoTest(TestCase):
     def test_teto_e_metade_do_parque_inicial(self):
         """14.2.1: "ate 50% sobre a quantidade inicial instalada"."""
         self.assertEqual(limite_de_expansao(self.grupo)["teto"], 20)
+
+    def test_teto_usa_a_configuracao_do_jogo_do_grupo(self):
+        """Turmas distintas não podem compartilhar o teto do primeiro jogo."""
+        config_da_turma = GameConfig.objects.create(maquinas_iniciais=10)
+        jogo = Jogo.objects.create(nome="Turma com parque menor", config=config_da_turma)
+        grupo = Grupo.objects.create(nome="Equipe da outra turma", jogo=jogo)
+
+        self.assertEqual(limite_de_expansao(grupo)["teto"], 5)
 
     def test_compra_dentro_do_teto_passa(self):
         self.assertIsNone(impedimento_para_investir(self.grupo, self._compra(20)))
