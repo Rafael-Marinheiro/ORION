@@ -60,10 +60,11 @@ docker compose -f docker-compose.yml -f docker-compose.turma.yml logs --tail 40 
 ```
 
 O painel bloqueia submissões ao vencer o prazo. O processamento consulta as
-rodadas a cada cinco segundos, mais o tempo dos comandos; os resultados podem
-aparecer alguns segundos depois. Isso não é fechamento no instante exato
-previsto pelo DOCX 11; registrar a tolerância no ensaio. Falhas aparecem nos
-logs e em Execuções de jobs. Manter a máquina ligada e sem suspensão na aula.
+rodadas a cada segundo, mais o tempo dos comandos; os resultados podem aparecer
+logo depois. O agendador do sistema operacional não fornece garantia de execução
+no instante exato previsto pelo DOCX 11; registre a tolerância observada no
+ensaio. Falhas aparecem nos logs e em Execuções de jobs. Manter a máquina ligada
+e sem suspensão na aula.
 
 ## 2. Professor: preparar a turma
 

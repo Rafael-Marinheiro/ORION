@@ -18,7 +18,10 @@ services:
         while true; do
           python manage.py sortear_eventos_rodada || exit 1
           python manage.py fechar_rodadas || exit 1
-          sleep 5
+          # O prazo bloqueia decisões no próprio Django. Esta cadência limita
+          # a publicação do fechamento automático a aproximadamente 1 s,
+          # além do tempo de processamento da rodada.
+          sleep 1
         done
     depends_on:
       - web
