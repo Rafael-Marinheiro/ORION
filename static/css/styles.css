@@ -1129,6 +1129,16 @@ ul.errorlist {
 
 .o-chart--tall { height: 380px; }
 .o-chart--ranking { height: 360px; }
+.o-chart--ranking > div[aria-label] {
+    height: 100%;
+    color: var(--o-ink-dim);
+}
+.o-chart--ranking > div[aria-label] svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
 
 .o-filters--bar { margin-bottom: var(--o-5); }
 

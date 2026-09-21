@@ -80,7 +80,10 @@
     <h2 id="posicoes-titulo" class="o-section-title">Progresso das equipes por rodada</h2>
     <div class="o-panel o-panel--chart">
         <p class="o-panel__hint">Cada linha mostra a posição alcançada por uma equipe em cada rodada fechada. A posição 1 permanece no topo.</p>
-        <div class="o-chart o-chart--ranking"><canvas id="ranking-posicoes"></canvas></div>
+        <div class="o-chart o-chart--ranking">
+            <canvas id="ranking-posicoes"></canvas>
+            <div id="ranking-posicoes-svg" hidden aria-label="Gráfico de posições das equipes por rodada"></div>
+        </div>
         <p id="fb-ranking-posicoes" class="o-muted" hidden>Gráfico indisponível. Consulte a tabela de evolução abaixo.</p>
     </div>
 </section>
@@ -122,7 +125,65 @@
             canvas: 'ranking-posicoes', fallback: 'fb-ranking-posicoes',
             type: 'line', labels: dados.labels, series: dados.series,
             reverseY: true, integerY: true,
-            yMin: 1, yMax: Math.max(2, dados.series.length)
+            // Uma margem discreta evita que a posição 1 seja recortada
+            // pelo limite superior do gráfico, sobretudo quando só há uma equipe.
+            yMin: 0.75, yMax: Math.max(2.25, dados.series.length + 0.25)
+        });
+
+        /* O ORION continua útil mesmo quando a CDN está indisponível: esta
+           alternativa nativa preserva a leitura da evolução, sem depender
+           de uma biblioteca externa. */
+        window.addEventListener('load', function () {
+            if (window.Chart) { return; }
+
+            var canvas = document.getElementById('ranking-posicoes');
+            var host = document.getElementById('ranking-posicoes-svg');
+            if (!canvas || !host) { return; }
+
+            var ns = 'http://www.w3.org/2000/svg';
+            var largura = 720, altura = 290, margem = { topo: 28, direita: 24, baixo: 58, esquerda: 48 };
+            var areaLargura = largura - margem.esquerda - margem.direita;
+            var areaAltura = altura - margem.topo - margem.baixo;
+            var totalEquipes = Math.max(1, dados.series.length);
+            var yMin = 0.75, yMax = Math.max(2.25, totalEquipes + 0.25);
+            var cores = ['#38bdf8', '#a78bfa', '#34d399', '#f6c453', '#fb7185', '#22d3ee'];
+            var svg = document.createElementNS(ns, 'svg');
+            svg.setAttribute('viewBox', '0 0 ' + largura + ' ' + altura);
+            svg.setAttribute('role', 'img');
+            svg.setAttribute('aria-label', 'Evolução da posição das equipes por rodada; posição 1 no topo.');
+
+            function elemento(nome, atributos, texto) {
+                var el = document.createElementNS(ns, nome);
+                Object.keys(atributos || {}).forEach(function (chave) { el.setAttribute(chave, atributos[chave]); });
+                if (texto) { el.textContent = texto; }
+                svg.appendChild(el);
+                return el;
+            }
+            function x(indice) {
+                return margem.esquerda + (dados.labels.length < 2 ? areaLargura / 2 : indice * areaLargura / (dados.labels.length - 1));
+            }
+            function y(posicao) { return margem.topo + (posicao - yMin) * areaAltura / (yMax - yMin); }
+
+            for (var posicao = 1; posicao <= totalEquipes; posicao += 1) {
+                elemento('line', { x1: margem.esquerda, x2: largura - margem.direita, y1: y(posicao), y2: y(posicao), stroke: 'currentColor', 'stroke-opacity': '.18' });
+                elemento('text', { x: margem.esquerda - 10, y: y(posicao) + 4, 'text-anchor': 'end', fill: 'currentColor', 'font-size': '12' }, String(posicao));
+            }
+            dados.labels.forEach(function (rotulo, indice) {
+                elemento('line', { x1: x(indice), x2: x(indice), y1: margem.topo, y2: altura - margem.baixo, stroke: 'currentColor', 'stroke-opacity': '.10' });
+                elemento('text', { x: x(indice), y: altura - margem.baixo + 22, 'text-anchor': 'middle', fill: 'currentColor', 'font-size': '12' }, rotulo);
+            });
+            dados.series.forEach(function (serie, indice) {
+                var cor = cores[indice % cores.length];
+                var pontos = serie.data.map(function (valor, i) { return x(i) + ',' + y(valor); }).join(' ');
+                elemento('polyline', { points: pontos, fill: 'none', stroke: cor, 'stroke-width': '3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+                serie.data.forEach(function (valor, i) { elemento('circle', { cx: x(i), cy: y(valor), r: '5', fill: cor, stroke: 'var(--o-panel)', 'stroke-width': '2' }); });
+                var legendaX = margem.esquerda + indice * 128;
+                elemento('circle', { cx: legendaX, cy: altura - 16, r: '4', fill: cor });
+                elemento('text', { x: legendaX + 9, y: altura - 12, fill: 'currentColor', 'font-size': '12' }, serie.label);
+            });
+            canvas.hidden = true;
+            host.hidden = false;
+            host.replaceChildren(svg);
         });
     }());
 </script>
