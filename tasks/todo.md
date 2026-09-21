@@ -97,7 +97,9 @@ e guia de implementação. Não altera fórmulas nem decisões pedagógicas.
   grupo e na segunda rodada; transação por rodada permite repetição sem
   cobrança duplicada, mantém rodadas concluídas e registra a falha no job.
   Nove testes de comandos/recuperação passaram.
-- [ ] Ensaiar inicialização HTTP e ciclo de rodadas em base descartável.
+- [x] Ensaiar inicialização HTTP e ciclo de rodadas em base descartável:
+  migrações, seed, rotas `/` e `/login/`, uma rodada vencida e seu consolidado
+  responderam corretamente em contêiner isolado (21/09/2026).
 
 ## Pendências registradas (prosseguir sem inventar decisões)
 
