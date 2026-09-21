@@ -409,10 +409,10 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | Máquinas ativam na rodada seguinte | §14.2.2 | `CONFORME` | `Investimento.rodada_ativacao` |
 | Aplicação financeira a 1,5% por rodada, juros compostos | §14.4 | `CONFORME` | `TAXA_APLICACAO_FINANCEIRA_RODADA` |
-| Fator de marketing: `Mc = 1 + 0,20 · ln(1+Ic) / ln(1+10000)` | §14.1.1 | `DIVERGENTE` | `views.calcular_fator_marketing` usa modelo linear por `ganho_por_base`; a fórmula estava em imagem, recuperada em 2026-09-18 (`ORION-C-06`) |
+| Fator de marketing: `Mc = 1 + 0,20 · ln(1+Ic) / ln(1+10000)` | §14.1.1 | `CONFORME` | `services.marketing.fator_de_investimento`, com teto de R$ 10.000 e testes de curva, teto e retorno marginal em `test_marketing` |
 | Salário do operador R$ 1.800/mês | §14.2.4, §14.3 | `CONFORME` | `CUSTO_OPERADOR_POR_RODADA`: cada rodada fecha uma folha integral, sem pró-rata de calendário |
 | Custo da máquina R$ 8.000 | §14.2.4 | `NAO_VERIFICADO` | — |
-| Limite de expansão de +50% sobre as máquinas iniciais | §14.2.1 | `AUSENTE` | sem validação |
+| Limite de expansão de +50% sobre as máquinas iniciais | §14.2.1 | `CONFORME` | `services.investimentos.limite_de_expansao` bloqueia compras acima do teto, inclusive pendentes; `test_regras_investimento` |
 
 ### 4.6 Eventos aleatórios
 
@@ -454,11 +454,11 @@ Consequências já mapeadas das decisões:
 | Grupos | professor | `CONFORME` | `/grupos/` |
 | Ranking | todos | `CONFORME` | `/ranking/` — classificação, destaques da rodada e evolução do grupo |
 | Ajuda | todos | `CONFORME` | `/ajuda/` |
-| **Encerramento da rodada** | CEO | `AUSENTE` | template existe (`financeiro/encerramento.html`), sem view nem rota |
-| **Relatórios comparativos** | todos | `AUSENTE` | templates existem (`dashboard/*.html`), sem view nem rota |
-| **Classificação final** | todos | `AUSENTE` | template existe (`classificacao.html`), sem view nem rota |
+| **Encerramento da rodada** | CEO | `CONFORME` | `/encerramento/`, `EncerramentoRodadaView` |
+| **Relatórios comparativos** | todos | `CONFORME` | `/relatorios/comparativos/`, `RelatoriosComparativosView` |
+| **Classificação final** | todos | `CONFORME` | `/classificacao/`, `ClassificacaoFinalView` |
 | **Gerenciamento do jogo** (monitorar participação) | professor | `CONFORME` | `/gerenciamento/` |
-| **Painel de controle / Suporte** | professor | `AUSENTE` | — |
+| **Painel de controle / Suporte** | professor | `CONFORME` | `/gerenciamento/`, `GerenciamentoJogoView`; execução e falhas de jobs em `/jobs/` |
 
 ---
 
