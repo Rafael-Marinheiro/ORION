@@ -7,7 +7,7 @@ from app.services.relatorios_dashboard import montar_painel
 
 
 def consolidado(grupo, rodada, receita, operacionais=0, armaz_mp=0, armaz_prod=0,
-                perdas=0, penalidade=0):
+                perdas=0, penalidade=0, market_share=0):
     custos = Decimal(operacionais + armaz_mp + armaz_prod + perdas + penalidade)
     return ConsolidadoRodadaGrupo.objects.create(
         grupo=grupo,
@@ -20,6 +20,7 @@ def consolidado(grupo, rodada, receita, operacionais=0, armaz_mp=0, armaz_prod=0
         penalidade_sem_submissao=Decimal(penalidade),
         custos_totais=custos,
         lucro_rodada=Decimal(receita) - custos,
+        market_share_percent=Decimal(market_share),
     )
 
 
@@ -75,14 +76,16 @@ class MontarPainelTest(TestCase):
         self.assertEqual(sum(s["data"][0] for s in composicao["series"]), 200.0)
 
     def test_variacao_compara_com_a_rodada_anterior(self):
-        consolidado(self.vega, 1, 100, operacionais=50)
-        consolidado(self.vega, 2, 150, operacionais=50)
+        consolidado(self.vega, 1, 100, operacionais=50, market_share=40)
+        consolidado(self.vega, 2, 150, operacionais=50, market_share=55)
 
         kpis = montar_painel(ConsolidadoRodadaGrupo.objects.all())["kpis"]
 
         self.assertEqual(kpis["rodada"], 2)
         self.assertEqual(kpis["rodada_anterior"], 1)
         self.assertEqual(kpis["receita_var"], Decimal("50"))
+        self.assertEqual(kpis["market_share"], Decimal("55"))
+        self.assertEqual(kpis["market_share_var"], Decimal("15"))
 
     def test_primeira_rodada_nao_tem_base_de_comparacao(self):
         consolidado(self.vega, 1, 100, operacionais=50)

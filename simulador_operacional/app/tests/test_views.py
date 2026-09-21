@@ -93,6 +93,27 @@ class PainelGrupoViewTest(TestCase):
         })
         self.assertContains(response, 'id="painel-desempenho"')
 
+    def test_painel_exibe_indicadores_comparados_com_a_rodada_anterior(self):
+        grupo = self._create_group(3)
+        ConsolidadoRodadaGrupo.objects.create(
+            grupo=grupo, rodada=1, receita_vendas=Decimal("100"),
+            custos_totais=Decimal("60"), lucro_rodada=Decimal("40"),
+            market_share_percent=Decimal("35"),
+        )
+        ConsolidadoRodadaGrupo.objects.create(
+            grupo=grupo, rodada=2, receita_vendas=Decimal("150"),
+            custos_totais=Decimal("75"), lucro_rodada=Decimal("75"),
+            market_share_percent=Decimal("45"),
+        )
+        self.client.login(username="view0@example.com", password="secret")
+
+        response = self.client.get(reverse("painel_grupo"))
+
+        self.assertContains(response, "Indicadores da rodada 2")
+        self.assertContains(response, "comparados com a rodada 1")
+        self.assertContains(response, "Market share")
+        self.assertContains(response, "10,0 p.p.")
+
     def test_ranking_and_relatorios_access_for_authenticated_user(self):
         self.client.login(username="view0@example.com", password="secret")
         response_ranking = self.client.get(reverse("ranking"))

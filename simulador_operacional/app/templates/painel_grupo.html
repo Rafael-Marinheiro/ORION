@@ -58,6 +58,44 @@
         </div>
     </div>
 
+    {% if painel_indicadores.tem_dados %}
+    <section class="o-section" aria-labelledby="indicadores-titulo">
+        <h2 id="indicadores-titulo" class="o-section-title">
+            Indicadores da rodada {{ painel_indicadores.kpis.rodada }}
+            {% if painel_indicadores.kpis.rodada_anterior %}
+            <span class="o-muted">comparados com a rodada {{ painel_indicadores.kpis.rodada_anterior }}</span>
+            {% endif %}
+        </h2>
+        <div class="o-kpis">
+            <article class="o-kpi">
+                <span class="o-kpi__label">Receita de vendas</span>
+                <strong class="o-kpi__value">R$ {{ painel_indicadores.kpis.receita|floatformat:2 }}</strong>
+                {% include 'partials/delta.html' with valor=painel_indicadores.kpis.receita_var tom=painel_indicadores.kpis.receita_tom %}
+            </article>
+            <article class="o-kpi">
+                <span class="o-kpi__label">Custos totais</span>
+                <strong class="o-kpi__value">R$ {{ painel_indicadores.kpis.custos|floatformat:2 }}</strong>
+                {% include 'partials/delta.html' with valor=painel_indicadores.kpis.custos_var tom=painel_indicadores.kpis.custos_tom %}
+            </article>
+            <article class="o-kpi">
+                <span class="o-kpi__label">Lucro da rodada</span>
+                <strong class="o-kpi__value">R$ {{ painel_indicadores.kpis.lucro|floatformat:2 }}</strong>
+                {% include 'partials/delta.html' with valor=painel_indicadores.kpis.lucro_var tom=painel_indicadores.kpis.lucro_tom %}
+            </article>
+            <article class="o-kpi">
+                <span class="o-kpi__label">Market share</span>
+                <strong class="o-kpi__value">{{ painel_indicadores.kpis.market_share|floatformat:1 }}%</strong>
+                {% include 'partials/delta.html' with valor=painel_indicadores.kpis.market_share_var tom=painel_indicadores.kpis.market_share_tom pontos=True %}
+            </article>
+            <article class="o-kpi">
+                <span class="o-kpi__label">Margem</span>
+                <strong class="o-kpi__value">{% if painel_indicadores.kpis.margem is not None %}{{ painel_indicadores.kpis.margem|floatformat:1 }}%{% else %}—{% endif %}</strong>
+                {% include 'partials/delta.html' with valor=painel_indicadores.kpis.margem_var tom=painel_indicadores.kpis.margem_tom pontos=True %}
+            </article>
+        </div>
+    </section>
+    {% endif %}
+
     {% if linhas_fabrica %}
     <section class="o-panel o-factory" aria-labelledby="fabrica-titulo">
         <h2 id="fabrica-titulo" class="o-panel__title">Fábrica em operação</h2>

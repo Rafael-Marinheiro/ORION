@@ -922,6 +922,11 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         if grupo:
             garantir_capacidades_grupo(grupo)
         resultados = grupo.resultados.all() if grupo else ResultadoFinanceiro.objects.none()
+        consolidados = (
+            ConsolidadoRodadaGrupo.objects.filter(grupo=grupo)
+            if grupo
+            else ConsolidadoRodadaGrupo.objects.none()
+        )
         decisoes = grupo.decisoes.all() if grupo else Decisao.objects.none()
         envios = (
             grupo.envios.select_related("cidade", "produto").all()
@@ -959,6 +964,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         if rodada_filtro and rodada_filtro.isdigit():
             rodada_filtrada = int(rodada_filtro)
             resultados = resultados.filter(rodada=rodada_filtrada)
+            consolidados = consolidados.filter(rodada=rodada_filtrada)
             decisoes = decisoes.filter(rodada=rodada_filtrada)
             envios = envios.filter(rodada=rodada_filtrada)
             producoes = producoes.filter(rodada=rodada_filtrada)
@@ -974,6 +980,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "receita": [float(linha["receita"]) for linha in resultados_grafico],
             "lucro": [float(linha["lucro"]) for linha in resultados_grafico],
         }
+        painel_indicadores = montar_painel_financeiro(consolidados)
 
         ultima_vista = request.session.get("ultima_rodada_vista", 0)
         nova = resultados.order_by("-rodada").first()
@@ -1030,6 +1037,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "producoes": producoes,
             "resultados": resultados,
             "grafico_desempenho": grafico_desempenho,
+            "painel_indicadores": painel_indicadores,
             "form": form or DecisaoForm(),
             "envio_form": envio_form or DistribuicaoForm(),
             "producao_form": producao_form or ProducaoForm(),

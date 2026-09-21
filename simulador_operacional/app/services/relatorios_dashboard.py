@@ -66,6 +66,9 @@ def montar_painel(consolidados):
     receita = [_soma(r.receita_vendas for r in por_rodada[n]) for n in rodadas]
     custos = [_soma(r.custos_totais for r in por_rodada[n]) for n in rodadas]
     lucro = [_soma(r.lucro_rodada for r in por_rodada[n]) for n in rodadas]
+    market_share = [
+        _soma(r.market_share_percent for r in por_rodada[n]) for n in rodadas
+    ]
 
     composicao = [
         {
@@ -96,6 +99,13 @@ def montar_painel(consolidados):
     receita_var = _variacao(receita[ultima], antes(receita))
     custos_var = _variacao(custos[ultima], antes(custos))
     lucro_var = _variacao(lucro[ultima], antes(lucro))
+    # Participação já é percentual; sua mudança é lida em pontos percentuais,
+    # não como uma nova taxa percentual sobre a rodada anterior.
+    market_share_var = (
+        market_share[ultima] - market_share[anterior]
+        if anterior is not None
+        else None
+    )
     margem_var = (
         margem_atual - margem_anterior
         if margem_atual is not None and margem_anterior is not None
@@ -114,6 +124,9 @@ def montar_painel(consolidados):
         "lucro": lucro[ultima],
         "lucro_var": lucro_var,
         "lucro_tom": _tom(lucro_var),
+        "market_share": market_share[ultima],
+        "market_share_var": market_share_var,
+        "market_share_tom": _tom(market_share_var),
         "margem": margem_atual,
         "margem_var": margem_var,
         "margem_tom": _tom(margem_var),
