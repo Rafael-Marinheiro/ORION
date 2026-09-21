@@ -5,6 +5,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
@@ -427,232 +428,238 @@ class Command(BaseCommand):
                 self.stdout.write("Nenhuma rodada para fechar")
 
             for rodada in rodadas:
-                config = rodada.jogo.config if rodada.jogo_id else GameConfig.objects.filter(pk=1).first()
-                pesos = self.obter_pesos_ranking(config.ranking_pesos if config else None)
-                logger.info(
-                    "Fechando rodada %s",
-                    rodada.numero,
-                    extra={"correlation_id": correlation_id, "rodada": rodada.numero},
-                )
-                self.stdout.write(f"Fechando rodada {rodada.numero}")
+                # Uma falha deve desfazer todos os efeitos desta rodada.
+                # O job permanece fora da transação para registrar a falha.
+                with transaction.atomic():
+                    rodada = Rodada.objects.select_for_update().get(pk=rodada.pk)
+                    if rodada.fechada:
+                        continue
+                    config = rodada.jogo.config if rodada.jogo_id else GameConfig.objects.filter(pk=1).first()
+                    pesos = self.obter_pesos_ranking(config.ranking_pesos if config else None)
+                    logger.info(
+                        "Fechando rodada %s",
+                        rodada.numero,
+                        extra={"correlation_id": correlation_id, "rodada": rodada.numero},
+                    )
+                    self.stdout.write(f"Fechando rodada {rodada.numero}")
 
-                grupos_qs = Grupo.objects.all()
-                if rodada.jogo_id:
-                    grupos_qs = grupos_qs.filter(jogo_id=rodada.jogo_id)
-                else:
-                    grupos_qs = grupos_qs.filter(jogo__isnull=True)
+                    grupos_qs = Grupo.objects.all()
+                    if rodada.jogo_id:
+                        grupos_qs = grupos_qs.filter(jogo_id=rodada.jogo_id)
+                    else:
+                        grupos_qs = grupos_qs.filter(jogo__isnull=True)
 
-                grupos = list(grupos_qs)
-                grupos_ids = [grupo.id for grupo in grupos]
-                evento = self.obter_evento_rodada(rodada.numero, jogo_id=rodada.jogo_id)
-                stats_venda = self.processar_vendas_por_demanda(
-                    rodada=rodada,
-                    grupos_ids=grupos_ids,
-                    evento=evento,
-                )
+                    grupos = list(grupos_qs)
+                    grupos_ids = [grupo.id for grupo in grupos]
+                    evento = self.obter_evento_rodada(rodada.numero, jogo_id=rodada.jogo_id)
+                    stats_venda = self.processar_vendas_por_demanda(
+                        rodada=rodada,
+                        grupos_ids=grupos_ids,
+                        evento=evento,
+                    )
 
-                receitas_por_grupo = stats_venda["receitas_por_grupo"]
-                vendidos_por_grupo = stats_venda["vendidos_por_grupo"]
-                ofertados_por_grupo = stats_venda["ofertados_por_grupo"]
-                total_vendido_rodada = stats_venda["total_vendido_rodada"]
-                perdas_retencao = stats_venda.get("perdas_retencao_por_grupo", {})
+                    receitas_por_grupo = stats_venda["receitas_por_grupo"]
+                    vendidos_por_grupo = stats_venda["vendidos_por_grupo"]
+                    ofertados_por_grupo = stats_venda["ofertados_por_grupo"]
+                    total_vendido_rodada = stats_venda["total_vendido_rodada"]
+                    perdas_retencao = stats_venda.get("perdas_retencao_por_grupo", {})
 
-                evento_quebra = self.obter_evento_estado_ativo(
-                    rodada_numero=rodada.numero,
-                    jogo_id=rodada.jogo_id,
-                    efeito_estado="quebra_estoque",
-                )
-
-                metricas = {}
-
-                for grupo in grupos:
-                    custos_extras = Decimal("0")
-                    motivos = []
-                    penalidade_sem_submissao = Decimal("0")
-                    perda_pereciveis = Decimal("0")
-                    perda_quebra_estoque = Decimal("0")
-                    custo_armazenagem_mp = Decimal("0")
-                    custo_armazenagem_produtos = Decimal("0")
-
-                    custo_rh_recorrente = self.processar_investimentos_pendentes(
-                        grupo=grupo,
+                    evento_quebra = self.obter_evento_estado_ativo(
                         rodada_numero=rodada.numero,
+                        jogo_id=rodada.jogo_id,
+                        efeito_estado="quebra_estoque",
                     )
 
-                    receita_vendas = receitas_por_grupo.get(grupo.id, Decimal("0"))
-                    if receita_vendas > 0:
-                        grupo.capital += receita_vendas
-                        motivos.append("receita de vendas por demanda")
+                    metricas = {}
 
-                    receita_financeira = self.aplicar_rendimento_financeiro(grupo)
-                    if receita_financeira > 0:
-                        motivos.append("rendimento de aplicacoes financeiras")
+                    for grupo in grupos:
+                        custos_extras = Decimal("0")
+                        motivos = []
+                        penalidade_sem_submissao = Decimal("0")
+                        perda_pereciveis = Decimal("0")
+                        perda_quebra_estoque = Decimal("0")
+                        custo_armazenagem_mp = Decimal("0")
+                        custo_armazenagem_produtos = Decimal("0")
 
-                    if not grupo.decisoes.filter(rodada=rodada.numero).exists():
-                        penalidade_sem_submissao = grupo.capital * Decimal("0.10")
-                        custos_extras += penalidade_sem_submissao
-                        motivos.append("penalidade por falta de submissao")
-
-                    perda_pereciveis = self.processar_perecibilidade(grupo, rodada.numero)
-                    if perda_pereciveis > 0:
-                        custos_extras += perda_pereciveis
-                        motivos.append("perda por perecibilidade")
-
-                    perda_quebra_estoque = self.processar_quebra_estoque(grupo, evento_quebra)
-                    if perda_quebra_estoque > 0:
-                        custos_extras += perda_quebra_estoque
-                        motivos.append("quebra de estoque por evento")
-
-                    # 8.4: o perecivel retido na estrada e perdido
-                    perda_retencao = perdas_retencao.get(grupo.id, Decimal("0"))
-                    if perda_retencao > 0:
-                        custos_extras += perda_retencao
-                        motivos.append("perecivel perdido em entrega retida")
-
-                    custo_armazenagem_mp = self.calcular_custo_armazenagem_mp(grupo)
-                    if custo_armazenagem_mp > 0:
-                        custos_extras += custo_armazenagem_mp
-                        motivos.append("armazenagem de materia-prima")
-
-                    custo_armazenagem_produtos = self.calcular_custo_armazenagem_produtos(grupo)
-                    if custo_armazenagem_produtos > 0:
-                        custos_extras += custo_armazenagem_produtos
-                        motivos.append("armazenagem de produtos")
-
-                    if custo_rh_recorrente > 0:
-                        custos_extras += custo_rh_recorrente
-                        motivos.append("custo recorrente de RH")
-
-                    if custos_extras > 0:
-                        grupo.capital -= custos_extras
-
-                    self.atualizar_estoque_total(grupo)
-                    grupo.save(update_fields=["capital", "estoque"])
-
-                    rf, _ = ResultadoFinanceiro.objects.get_or_create(
-                        grupo=grupo,
-                        rodada=rodada.numero,
-                    )
-                    custos_operacionais = rf.custos
-                    rf.receita += receita_vendas + receita_financeira
-                    rf.custos += custos_extras
-                    rf.saldo_caixa = grupo.capital
-                    rf.lucro = rf.receita - rf.custos
-                    rf.save()
-
-                    vendidos = int(vendidos_por_grupo.get(grupo.id, 0))
-                    ofertados = int(ofertados_por_grupo.get(grupo.id, 0))
-                    market_share = (
-                        Decimal(vendidos) * Decimal("100") / Decimal(total_vendido_rodada)
-                        if total_vendido_rodada > 0
-                        else Decimal("0")
-                    )
-                    atendimento = (
-                        Decimal(vendidos) * Decimal("100") / Decimal(ofertados)
-                        if ofertados > 0
-                        else Decimal("0")
-                    )
-                    lucro_rodada = rf.lucro
-
-                    anterior = (
-                        ConsolidadoRodadaGrupo.objects.filter(
-                            grupo=grupo, rodada__lt=rodada.numero
-                        )
-                        .order_by("-rodada")
-                        .first()
-                    )
-                    insumos = coletar_insumos(
-                        grupo=grupo,
-                        rodada=rodada.numero,
-                        perdas=perda_pereciveis + perda_quebra_estoque + perda_retencao,
-                        lucro=rf.lucro,
-                        receita=rf.receita,
-                        saldo_caixa=rf.saldo_caixa,
-                        valor_estoques_anterior=anterior.valor_estoques if anterior else None,
-                    )
-                    eixos = calcular_eixos(insumos)
-
-                    metricas[grupo.id] = {
-                        "grupo": grupo,
-                        "receita_rodada": receita_vendas + receita_financeira,
-                        "custos_operacionais": custos_operacionais,
-                        "penalidade_sem_submissao": penalidade_sem_submissao,
-                        "perda_pereciveis": perda_pereciveis + perda_quebra_estoque + perda_retencao,
-                        "custo_armazenagem_mp": custo_armazenagem_mp,
-                        "custo_armazenagem_produtos": custo_armazenagem_produtos + custo_rh_recorrente,
-                        "custos_totais": rf.custos,
-                        "saldo_caixa": rf.saldo_caixa,
-                        "ofertados": ofertados,
-                        "vendidos": vendidos,
-                        "lucro_rodada": lucro_rodada,
-                        "market_share": market_share,
-                        "atendimento": atendimento,
-                        "eixos": eixos,
-                        "valor_estoques": insumos["valor_estoques"],
-                    }
-
-                    if motivos:
-                        logger.info(
-                            "Rodada %s - Grupo %s: receita %s, custos extras %s (%s)",
-                            rodada.numero,
-                            grupo.nome,
-                            receita_vendas + receita_financeira,
-                            custos_extras,
-                            ", ".join(motivos),
-                            extra={"correlation_id": correlation_id, "rodada": rodada.numero},
+                        custo_rh_recorrente = self.processar_investimentos_pendentes(
+                            grupo=grupo,
+                            rodada_numero=rodada.numero,
                         )
 
-                if metricas:
-                    for dados in metricas.values():
-                        eixos = dados["eixos"]
-                        # pesos podem vir ajustados pelo professor (12.2)
-                        score = self.limitar(pontuacao_total(eixos, pesos))
+                        receita_vendas = receitas_por_grupo.get(grupo.id, Decimal("0"))
+                        if receita_vendas > 0:
+                            grupo.capital += receita_vendas
+                            motivos.append("receita de vendas por demanda")
 
-                        IndicadorRodadaGrupo.objects.update_or_create(
-                            grupo=dados["grupo"],
+                        receita_financeira = self.aplicar_rendimento_financeiro(grupo)
+                        if receita_financeira > 0:
+                            motivos.append("rendimento de aplicacoes financeiras")
+
+                        if not grupo.decisoes.filter(rodada=rodada.numero).exists():
+                            penalidade_sem_submissao = grupo.capital * Decimal("0.10")
+                            custos_extras += penalidade_sem_submissao
+                            motivos.append("penalidade por falta de submissao")
+
+                        perda_pereciveis = self.processar_perecibilidade(grupo, rodada.numero)
+                        if perda_pereciveis > 0:
+                            custos_extras += perda_pereciveis
+                            motivos.append("perda por perecibilidade")
+
+                        perda_quebra_estoque = self.processar_quebra_estoque(grupo, evento_quebra)
+                        if perda_quebra_estoque > 0:
+                            custos_extras += perda_quebra_estoque
+                            motivos.append("quebra de estoque por evento")
+
+                        # 8.4: o perecivel retido na estrada e perdido
+                        perda_retencao = perdas_retencao.get(grupo.id, Decimal("0"))
+                        if perda_retencao > 0:
+                            custos_extras += perda_retencao
+                            motivos.append("perecivel perdido em entrega retida")
+
+                        custo_armazenagem_mp = self.calcular_custo_armazenagem_mp(grupo)
+                        if custo_armazenagem_mp > 0:
+                            custos_extras += custo_armazenagem_mp
+                            motivos.append("armazenagem de materia-prima")
+
+                        custo_armazenagem_produtos = self.calcular_custo_armazenagem_produtos(grupo)
+                        if custo_armazenagem_produtos > 0:
+                            custos_extras += custo_armazenagem_produtos
+                            motivos.append("armazenagem de produtos")
+
+                        if custo_rh_recorrente > 0:
+                            custos_extras += custo_rh_recorrente
+                            motivos.append("custo recorrente de RH")
+
+                        if custos_extras > 0:
+                            grupo.capital -= custos_extras
+
+                        self.atualizar_estoque_total(grupo)
+                        grupo.save(update_fields=["capital", "estoque"])
+
+                        rf, _ = ResultadoFinanceiro.objects.get_or_create(
+                            grupo=grupo,
                             rodada=rodada.numero,
-                            defaults={
-                                "lucro_rodada": dados["lucro_rodada"],
-                                "market_share_percent": dados["market_share"],
-                                "atendimento_demanda_percent": dados["atendimento"],
-                                "eficiencia_estoque_percent": self.limitar(eixos["EE"]),
-                                "score_multicriterio": score,
-                            },
                         )
-                        ConsolidadoRodadaGrupo.objects.update_or_create(
-                            grupo=dados["grupo"],
-                            rodada=rodada.numero,
-                            defaults={
-                                "eo_percent": self.limitar(eixos["EO"]),
-                                "df_percent": self.limitar(eixos["DF"]),
-                                "sd_percent": self.limitar(eixos["SD"]),
-                                "ds_percent": self.limitar(eixos["DS"]),
-                                "valor_estoques": dados["valor_estoques"],
-                                "receita_vendas": dados["receita_rodada"],
-                                "custos_operacionais": dados["custos_operacionais"],
-                                "penalidade_sem_submissao": dados["penalidade_sem_submissao"],
-                                "perda_pereciveis": dados["perda_pereciveis"],
-                                "custo_armazenagem_mp": dados["custo_armazenagem_mp"],
-                                "custo_armazenagem_produtos": dados["custo_armazenagem_produtos"],
-                                "custos_totais": dados["custos_totais"],
-                                "lucro_rodada": dados["lucro_rodada"],
-                                "saldo_caixa": dados["saldo_caixa"],
-                                "total_ofertado": dados["ofertados"],
-                                "total_vendido": dados["vendidos"],
-                                "market_share_percent": dados["market_share"],
-                                "atendimento_demanda_percent": dados["atendimento"],
-                                "eficiencia_estoque_percent": self.limitar(eixos["EE"]),
-                                "score_multicriterio": score,
-                            },
-                        )
+                        custos_operacionais = rf.custos
+                        rf.receita += receita_vendas + receita_financeira
+                        rf.custos += custos_extras
+                        rf.saldo_caixa = grupo.capital
+                        rf.lucro = rf.receita - rf.custos
+                        rf.save()
 
-                rodada.fechada = True
-                rodada.save(update_fields=["fechada"])
-                logger.info(
-                    "Rodada %s fechada",
-                    rodada.numero,
-                    extra={"correlation_id": correlation_id, "rodada": rodada.numero},
-                )
+                        vendidos = int(vendidos_por_grupo.get(grupo.id, 0))
+                        ofertados = int(ofertados_por_grupo.get(grupo.id, 0))
+                        market_share = (
+                            Decimal(vendidos) * Decimal("100") / Decimal(total_vendido_rodada)
+                            if total_vendido_rodada > 0
+                            else Decimal("0")
+                        )
+                        atendimento = (
+                            Decimal(vendidos) * Decimal("100") / Decimal(ofertados)
+                            if ofertados > 0
+                            else Decimal("0")
+                        )
+                        lucro_rodada = rf.lucro
+
+                        anterior = (
+                            ConsolidadoRodadaGrupo.objects.filter(
+                                grupo=grupo, rodada__lt=rodada.numero
+                            )
+                            .order_by("-rodada")
+                            .first()
+                        )
+                        insumos = coletar_insumos(
+                            grupo=grupo,
+                            rodada=rodada.numero,
+                            perdas=perda_pereciveis + perda_quebra_estoque + perda_retencao,
+                            lucro=rf.lucro,
+                            receita=rf.receita,
+                            saldo_caixa=rf.saldo_caixa,
+                            valor_estoques_anterior=anterior.valor_estoques if anterior else None,
+                        )
+                        eixos = calcular_eixos(insumos)
+
+                        metricas[grupo.id] = {
+                            "grupo": grupo,
+                            "receita_rodada": receita_vendas + receita_financeira,
+                            "custos_operacionais": custos_operacionais,
+                            "penalidade_sem_submissao": penalidade_sem_submissao,
+                            "perda_pereciveis": perda_pereciveis + perda_quebra_estoque + perda_retencao,
+                            "custo_armazenagem_mp": custo_armazenagem_mp,
+                            "custo_armazenagem_produtos": custo_armazenagem_produtos + custo_rh_recorrente,
+                            "custos_totais": rf.custos,
+                            "saldo_caixa": rf.saldo_caixa,
+                            "ofertados": ofertados,
+                            "vendidos": vendidos,
+                            "lucro_rodada": lucro_rodada,
+                            "market_share": market_share,
+                            "atendimento": atendimento,
+                            "eixos": eixos,
+                            "valor_estoques": insumos["valor_estoques"],
+                        }
+
+                        if motivos:
+                            logger.info(
+                                "Rodada %s - Grupo %s: receita %s, custos extras %s (%s)",
+                                rodada.numero,
+                                grupo.nome,
+                                receita_vendas + receita_financeira,
+                                custos_extras,
+                                ", ".join(motivos),
+                                extra={"correlation_id": correlation_id, "rodada": rodada.numero},
+                            )
+
+                    if metricas:
+                        for dados in metricas.values():
+                            eixos = dados["eixos"]
+                            # pesos podem vir ajustados pelo professor (12.2)
+                            score = self.limitar(pontuacao_total(eixos, pesos))
+
+                            IndicadorRodadaGrupo.objects.update_or_create(
+                                grupo=dados["grupo"],
+                                rodada=rodada.numero,
+                                defaults={
+                                    "lucro_rodada": dados["lucro_rodada"],
+                                    "market_share_percent": dados["market_share"],
+                                    "atendimento_demanda_percent": dados["atendimento"],
+                                    "eficiencia_estoque_percent": self.limitar(eixos["EE"]),
+                                    "score_multicriterio": score,
+                                },
+                            )
+                            ConsolidadoRodadaGrupo.objects.update_or_create(
+                                grupo=dados["grupo"],
+                                rodada=rodada.numero,
+                                defaults={
+                                    "eo_percent": self.limitar(eixos["EO"]),
+                                    "df_percent": self.limitar(eixos["DF"]),
+                                    "sd_percent": self.limitar(eixos["SD"]),
+                                    "ds_percent": self.limitar(eixos["DS"]),
+                                    "valor_estoques": dados["valor_estoques"],
+                                    "receita_vendas": dados["receita_rodada"],
+                                    "custos_operacionais": dados["custos_operacionais"],
+                                    "penalidade_sem_submissao": dados["penalidade_sem_submissao"],
+                                    "perda_pereciveis": dados["perda_pereciveis"],
+                                    "custo_armazenagem_mp": dados["custo_armazenagem_mp"],
+                                    "custo_armazenagem_produtos": dados["custo_armazenagem_produtos"],
+                                    "custos_totais": dados["custos_totais"],
+                                    "lucro_rodada": dados["lucro_rodada"],
+                                    "saldo_caixa": dados["saldo_caixa"],
+                                    "total_ofertado": dados["ofertados"],
+                                    "total_vendido": dados["vendidos"],
+                                    "market_share_percent": dados["market_share"],
+                                    "atendimento_demanda_percent": dados["atendimento"],
+                                    "eficiencia_estoque_percent": self.limitar(eixos["EE"]),
+                                    "score_multicriterio": score,
+                                },
+                            )
+
+                    rodada.fechada = True
+                    rodada.save(update_fields=["fechada"])
+                    logger.info(
+                        "Rodada %s fechada",
+                        rodada.numero,
+                        extra={"correlation_id": correlation_id, "rodada": rodada.numero},
+                    )
 
             job.status = "sucesso"
             job.detalhes = "Execucao concluida com sucesso."

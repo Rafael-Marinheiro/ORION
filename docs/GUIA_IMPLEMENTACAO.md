@@ -430,7 +430,7 @@ Consequências já mapeadas das decisões:
 
 | Regra | Origem | Status | Onde |
 |---|---|---|---|
-| Fechamento automático no prazo | §11.1 | `CONFORME` | comando `fechar_rodadas` agendado |
+| Fechamento automático no prazo | §11.1 | `DIVERGENTE` | `fechar_rodadas` no serviço local consulta a cada 5 s mais duração dos comandos; não é instante exato. Transação por rodada e retomada após falha verificadas em `FechamentoRecuperacaoTest` (20/09/2026). Ensaio ambiental pendente. |
 | Bloqueio de edição após o prazo | §11.1 | `CONFORME` | `permite_edicao` |
 | Penalidade de 10% por não submeter | §11.2, RN-04 | `CONFORME` | `services/fechamento.py` (aplica sobre `grupo.capital`; a spec diz "caixa ao final da rodada anterior" — diferença menor, vale ratificar) |
 | Decisões omitidas repetem a rodada anterior | §11.2 | `CONFORME` | `services/fechamento.py` |

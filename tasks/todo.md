@@ -93,8 +93,10 @@ e guia de implementação. Não altera fórmulas nem decisões pedagógicas.
 - [x] Corrigir sorteio agendado que ignorava o jogo e pulava turmas com o
   mesmo número de rodada. Regressão reproduzida antes da correção; oito
   testes de comandos e primeira turma passaram depois.
-- [ ] Verificar recuperação do fechamento após falha e corrigir gravações
-  parciais, se confirmadas, antes do ensaio do processador automático.
+- [x] Corrigir gravações parciais no fechamento. Falha reproduzida no segundo
+  grupo e na segunda rodada; transação por rodada permite repetição sem
+  cobrança duplicada, mantém rodadas concluídas e registra a falha no job.
+  Nove testes de comandos/recuperação passaram.
 - [ ] Ensaiar inicialização HTTP e ciclo de rodadas em base descartável.
 
 ## Pendências registradas (prosseguir sem inventar decisões)
