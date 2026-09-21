@@ -226,6 +226,20 @@ class Command(BaseCommand):
         aplicacao.save(update_fields=["saldo_aplicado", "data_atualizacao"])
         return rendimento
 
+    @staticmethod
+    def caixa_base_para_penalidade(grupo, rodada_numero):
+        """Retorna o caixa final da rodada anterior (DOCX 11.2).
+
+        Na primeira rodada ainda não existe resultado consolidado; nesse caso,
+        o capital inicial do grupo é a única base disponível.
+        """
+        resultado_anterior = (
+            ResultadoFinanceiro.objects.filter(grupo=grupo, rodada__lt=rodada_numero)
+            .order_by("-rodada")
+            .first()
+        )
+        return resultado_anterior.saldo_caixa if resultado_anterior else grupo.capital
+
     def processar_vendas_por_demanda(self, rodada, grupos_ids, evento):
         rodada_numero = rodada.numero
         jogo_id = rodada.jogo_id
@@ -496,7 +510,8 @@ class Command(BaseCommand):
                             motivos.append("rendimento de aplicacoes financeiras")
 
                         if not grupo.decisoes.filter(rodada=rodada.numero).exists():
-                            penalidade_sem_submissao = grupo.capital * Decimal("0.10")
+                            caixa_base = self.caixa_base_para_penalidade(grupo, rodada.numero)
+                            penalidade_sem_submissao = caixa_base * Decimal("0.10")
                             custos_extras += penalidade_sem_submissao
                             motivos.append("penalidade por falta de submissao")
 

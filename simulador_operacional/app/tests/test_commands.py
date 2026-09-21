@@ -10,7 +10,18 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from app.models import Decisao, Evento, EventoRodada, GameConfig, Grupo, Jogo, Rodada, User
+from app.models import (
+    ConsolidadoRodadaGrupo,
+    Decisao,
+    Evento,
+    EventoRodada,
+    GameConfig,
+    Grupo,
+    Jogo,
+    ResultadoFinanceiro,
+    Rodada,
+    User,
+)
 
 
 class SortearEventosRodadaCommandTest(TestCase):
@@ -74,6 +85,19 @@ class FechamentoRodadaCapacidadeTest(TestCase):
         self.assertTrue(Rodada.objects.get(numero=1).fechada)
         self.assertEqual(12, Grupo.objects.count())
         self.assertLessEqual(duracao, 10, f"Fechamento levou {duracao:.3f}s")
+
+
+class FechamentoRodadaPenalidadeTest(TestCase):
+    def test_multa_por_ausencia_usa_caixa_do_fim_da_rodada_anterior(self):
+        """DOCX 11.2: a multa é 10% do caixa da rodada imediatamente anterior."""
+        grupo = Grupo.objects.create(nome="Equipe Ausente", capital=Decimal("100000"))
+        ResultadoFinanceiro.objects.create(grupo=grupo, rodada=1, saldo_caixa=Decimal("20000"))
+        Rodada.objects.create(numero=2, fim=timezone.now())
+
+        call_command("fechar_rodadas")
+
+        consolidado = ConsolidadoRodadaGrupo.objects.get(grupo=grupo, rodada=2)
+        self.assertEqual(consolidado.penalidade_sem_submissao, Decimal("2000"))
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")

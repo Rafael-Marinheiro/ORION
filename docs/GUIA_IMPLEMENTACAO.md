@@ -432,7 +432,7 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | Fechamento automático no prazo | §11.1 | `DIVERGENTE` | O painel bloqueia decisões ao vencer o prazo; o serviço local consulta `fechar_rodadas` a cada 1 s, além da duração do comando. Não há garantia do instante exato exigido pelo DOCX 11, mas a janela técnica foi reduzida. Transação por rodada e retomada após falha verificadas em `FechamentoRecuperacaoTest` (20/09/2026). Ensaio HTTP isolado de migração, seed e rodada vencida concluído em 21/09/2026; validar a tolerância na rede da instituição antes da aula. |
 | Bloqueio de edição após o prazo | §11.1 | `CONFORME` | `permite_edicao` |
-| Penalidade de 10% por não submeter | §11.2, RN-04 | `CONFORME` | `services/fechamento.py` (aplica sobre `grupo.capital`; a spec diz "caixa ao final da rodada anterior" — diferença menor, vale ratificar) |
+| Penalidade de 10% por não submeter | §11.2, RN-04 | `CONFORME` | `fechar_rodadas.caixa_base_para_penalidade` usa o saldo de caixa da rodada anterior; na primeira rodada usa o capital inicial. Protegido por `FechamentoRodadaPenalidadeTest`. |
 | Decisões omitidas repetem a rodada anterior | §11.2 | `CONFORME` | `services/fechamento.py` |
 | Consolidado persistido por grupo e rodada | §11.3d | `CONFORME` | `ConsolidadoRodadaGrupo` |
 | Ranking multicritério de 5 eixos (EO, DF, EE, SD, DS) | §12.2 | `CONFORME` | `services/pontuacao.py` |
