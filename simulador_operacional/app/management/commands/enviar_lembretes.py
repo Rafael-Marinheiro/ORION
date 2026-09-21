@@ -17,7 +17,7 @@ class Command(BaseCommand):
             logger.info('Nenhuma rodada proxima do fim em %s', agora)
             return
         for rodada in rodadas:
-            grupos = Grupo.objects.all()
+            grupos = Grupo.objects.filter(jogo_id=rodada.jogo_id)
             for grupo in grupos:
                 if not Decisao.objects.filter(grupo=grupo, rodada=rodada.numero).exists():
                     emails = [m.email_usuario for m in grupo.membros.all()]

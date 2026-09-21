@@ -103,6 +103,27 @@ class EnviarLembretesCommandTest(TestCase):
 
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_lembrete_nao_alcanca_grupo_de_outra_turma(self):
+        config = GameConfig.objects.create()
+        outra_turma = Jogo.objects.create(nome="Turma B", config=config)
+        rodada_da_outra_turma = Rodada.objects.create(
+            jogo=outra_turma, numero=1, fim=timezone.now() + timezone.timedelta(minutes=30)
+        )
+        membro_outra_turma = User.objects.create_user(
+            email_usuario="outra@teste.com", nome_usuario="Outra", password="senha123"
+        )
+        grupo_outra_turma = Grupo.objects.create(nome="G2", jogo=outra_turma, capital=Decimal("100"))
+        grupo_outra_turma.membros.add(membro_outra_turma)
+
+        call_command("enviar_lembretes")
+
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            {tuple(mensagem.to) for mensagem in mail.outbox},
+            {("membro@teste.com",), ("outra@teste.com",)},
+        )
+        self.assertEqual(rodada_da_outra_turma.numero, 1)
+
 
 class BackupDbCommandTest(TestCase):
     def test_copia_arquivo_do_banco_para_pasta_de_backups(self):
