@@ -770,6 +770,9 @@ class RankingView(LoginRequiredMixin, TemplateView):
                         "SD": Decimal("0"),
                         "DS": Decimal("0"),
                         "lucro_rodada": Decimal("0"),
+                        # Antes do primeiro fechamento ainda não existe venda
+                        # consolidada; o destaque continua sendo renderizável.
+                        "market_share": Decimal("0"),
                     }
                 )
 

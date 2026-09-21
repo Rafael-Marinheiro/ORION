@@ -32,6 +32,44 @@
         });
     }
 
+    /* --- fluxo de decisao ---------------------------------------------- */
+    var flow = document.querySelector('[data-decision-flow]');
+
+    if (flow) {
+        var steps = Array.prototype.slice.call(flow.querySelectorAll('[data-flow-target]'));
+        var panels = Array.prototype.slice.call(document.querySelectorAll('[data-flow-panel]'));
+        var flowStatus = flow.querySelector('[data-flow-status]');
+
+        function showStep(target, focusStep) {
+            steps.forEach(function (step) {
+                var selected = step.dataset.flowTarget === target;
+                step.setAttribute('aria-selected', selected ? 'true' : 'false');
+                step.tabIndex = selected ? 0 : -1;
+                step.classList.toggle('is-active', selected);
+                if (selected && focusStep) { step.focus(); }
+            });
+            panels.forEach(function (panel) {
+                panel.hidden = panel.dataset.flowPanel !== target;
+            });
+            flow.dataset.ready = 'true';
+            if (flowStatus) {
+                var current = steps.filter(function (step) { return step.dataset.flowTarget === target; })[0];
+                flowStatus.textContent = current ? 'Etapa ' + current.querySelector('span').textContent + ': ' + current.textContent.trim() + '.' : '';
+            }
+        }
+
+        steps.forEach(function (step, index) {
+            step.addEventListener('click', function () { showStep(step.dataset.flowTarget, false); });
+            step.addEventListener('keydown', function (event) {
+                if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') { return; }
+                event.preventDefault();
+                var next = event.key === 'ArrowRight' ? (index + 1) % steps.length : (index - 1 + steps.length) % steps.length;
+                showStep(steps[next].dataset.flowTarget, true);
+            });
+        });
+        showStep('compra', false);
+    }
+
     /* --- menu de gestao ------------------------------------------------- */
     var menuToggle = document.querySelector('[data-menu-toggle]');
 

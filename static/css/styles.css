@@ -178,6 +178,28 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-factory__track { height: 8px; margin-top: var(--o-2); border-radius: 999px; overflow: hidden; background: var(--o-line); }
 .o-factory__track span { display: block; width: var(--o-fill); height: 100%; border-radius: inherit; background: var(--o-star); }
 
+/* Fluxo O-O-O-O-O: reduz a carga cognitiva sem esconder a ordem real das
+   decisões. JavaScript apenas troca painéis; sem ele, os painéis seguem
+   legíveis porque o HTML continua sendo a fonte de verdade. */
+.o-flow { margin: var(--o-6) 0 var(--o-4); }
+.o-flow__heading { display: flex; justify-content: space-between; gap: var(--o-4); align-items: end; margin-bottom: var(--o-4); }
+.o-flow__heading > p { max-width: 48ch; margin: 0; }
+.o-eyebrow { margin: 0 0 var(--o-1); color: var(--o-gold); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.o-flow__heading h2 { margin: 0; }
+.o-flow__steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--o-2); position: relative; }
+.o-flow__steps::before { content: ""; position: absolute; top: 22px; left: 9%; right: 9%; height: 1px; background: var(--o-line); }
+.o-flow__step { min-height: 58px; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: var(--o-1); border: 0; background: transparent; color: var(--o-ink-dim); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; }
+.o-flow__step span { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--o-line); border-radius: 50%; background: var(--o-panel); font-family: var(--o-mono); }
+.o-flow__step:hover, .o-flow__step:focus-visible, .o-flow__step.is-active { color: var(--o-ink); }
+.o-flow__step.is-active span { border-color: var(--o-star); box-shadow: 0 0 0 4px var(--o-star-bg); color: var(--o-star); }
+.o-flow__step--review span { border-color: var(--o-gold); color: var(--o-gold); }
+.o-decision-panels { display: grid; grid-template-columns: minmax(0, 1fr); }
+.o-decision-panels > .o-panel { margin: 0; }
+.o-review-list { list-style: none; margin: 0 0 var(--o-5); padding: 0; border: 1px solid var(--o-line); border-radius: var(--o-radius-sm); }
+.o-review-list li { display: grid; grid-template-columns: minmax(120px, .32fr) 1fr; gap: var(--o-3); padding: var(--o-3); border-bottom: 1px solid var(--o-line); }
+.o-review-list li:last-child { border-bottom: 0; }
+.o-review-list span { color: var(--o-ink-dim); }
+
 /* --- 4. Navegacao -------------------------------------------------------- */
 
 .o-nav {
@@ -239,6 +261,32 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 }
 
 .o-nav__end { display: flex; align-items: center; gap: var(--o-2); }
+
+/* Em telas amplas, a navegação vira uma coluna estável. Assim, o aluno não
+   perde o contexto ao percorrer relatórios e decisões. No tablet/celular a
+   mesma estrutura volta ao topo e abre somente quando solicitada. */
+@media (min-width: 1024px) {
+    .o-nav {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 244px;
+        border-right: 1px solid var(--o-line);
+        border-bottom: 0;
+    }
+    .o-nav__inner {
+        width: 100%; height: 100%; max-width: none;
+        padding: var(--o-5) var(--o-3);
+        flex-direction: column; align-items: stretch; gap: var(--o-4);
+    }
+    .o-brand { width: 188px; min-height: 52px; margin: 0 var(--o-2); }
+    .o-nav__links { width: 100%; flex: 0 1 auto; flex-direction: column; align-items: stretch; gap: var(--o-1); flex-wrap: nowrap; overflow-y: auto; }
+    .o-nav__link { display: flex; align-items: center; min-height: 44px; padding: var(--o-2) var(--o-3); }
+    .o-nav__link[aria-current="page"] { box-shadow: inset 3px 0 0 var(--o-star); }
+    .o-nav__end { margin-top: auto; padding: var(--o-2); border-top: 1px solid var(--o-line); flex-wrap: wrap; }
+    .o-nav__end > * { flex: 1 1 100%; }
+    .o-nav__end .o-btn { width: 100%; }
+    .o-rail, .o-boletim, main, .o-foot { margin-left: 244px; }
+}
 
 /* menu do staff */
 .o-menu { position: relative; }
@@ -487,6 +535,8 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     width: 1%;
 }
 .o-table tr[data-top="true"] .rank { color: var(--o-star); font-weight: 600; }
+.o-table tr[data-top="true"] .rank { color: var(--o-gold); }
+.o-trophy { display: inline-block; width: 18px; height: 18px; margin-right: var(--o-1); vertical-align: -4px; }
 
 /* Linha de fechamento do DRE e do fluxo de caixa: e o numero que o aluno
    confere contra o lucro da rodada, entao precisa se destacar da deducoes. */
@@ -684,7 +734,7 @@ ul.errorlist {
 
 /* --- 19. Responsivo ------------------------------------------------------ */
 
-@media (max-width: 880px) {
+@media (max-width: 1023px) {
     .o-nav__toggle { display: inline-flex; }
     .o-nav__links {
         display: none;
@@ -711,6 +761,10 @@ ul.errorlist {
     .o-menu__toggle { display: none; }
 }
 
+@media (min-width: 641px) and (max-width: 900px) {
+    .o-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 640px) {
     :root { --o-shell: 100%; }
     h1 { font-size: 1.4375rem; }
@@ -718,6 +772,13 @@ ul.errorlist {
     .o-rail__spacer { display: none; }
     .o-head__actions { width: 100%; }
     .o-head__actions .o-btn { flex: 1 1 auto; }
+    .o-flow__heading { display: block; }
+    .o-flow__heading > p { margin-top: var(--o-2); }
+    .o-flow__steps { gap: 2px; }
+    .o-flow__steps::before { left: 10%; right: 10%; }
+    .o-flow__step { min-height: 56px; font-size: .6875rem; }
+    .o-flow__step span { width: 36px; height: 36px; }
+    .o-review-list li { grid-template-columns: 1fr; gap: var(--o-1); }
 
     /* O ranking tem nove métricas. Em vez de esconder eixos ou exigir gesto
        lateral, cada grupo vira um cartão com rótulos explícitos no celular. */
@@ -1016,7 +1077,7 @@ ul.errorlist {
 /* No topo os controles usam a variante pequena por espaco. Em telas de toque
    isso fica abaixo do minimo de 44px, entao a altura volta ao normal. */
 
-@media (max-width: 880px) {
+@media (max-width: 1023px) {
     .o-nav__end .o-btn--sm { min-height: 44px; }
     .o-brand { min-height: 44px; }
     .o-skip { min-height: 44px; display: inline-flex; align-items: center; }

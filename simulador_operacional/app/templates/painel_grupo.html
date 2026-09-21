@@ -117,8 +117,26 @@
     </ul>
     {% endif %}
 
-    <div class="o-grid">
-        <section class="o-panel o-panel--step">
+    <section class="o-flow" aria-labelledby="fluxo-titulo" data-decision-flow>
+        <div class="o-flow__heading">
+            <div>
+                <p class="o-eyebrow">Decisões da rodada</p>
+                <h2 id="fluxo-titulo">Planeje, confira e envie</h2>
+            </div>
+            <p class="o-muted">Cada etapa permanece disponível para revisão antes da submissão oficial.</p>
+        </div>
+        <div class="o-flow__steps" role="tablist" aria-label="Etapas de decisão">
+            <button type="button" class="o-flow__step" role="tab" aria-selected="true" aria-controls="etapa-compra" id="tab-compra" data-flow-target="compra"><span>1</span>Compra</button>
+            <button type="button" class="o-flow__step" role="tab" aria-selected="false" aria-controls="etapa-producao" id="tab-producao" data-flow-target="producao" tabindex="-1"><span>2</span>Produção</button>
+            <button type="button" class="o-flow__step" role="tab" aria-selected="false" aria-controls="etapa-distribuicao" id="tab-distribuicao" data-flow-target="distribuicao" tabindex="-1"><span>3</span>Distribuição</button>
+            <button type="button" class="o-flow__step" role="tab" aria-selected="false" aria-controls="etapa-investimentos" id="tab-investimentos" data-flow-target="investimentos" tabindex="-1"><span>4</span>Investimentos</button>
+            <button type="button" class="o-flow__step o-flow__step--review" role="tab" aria-selected="false" aria-controls="etapa-revisao" id="tab-revisao" data-flow-target="revisao" tabindex="-1"><span>5</span>Revisão</button>
+        </div>
+        <p class="o-sr" aria-live="polite" data-flow-status></p>
+    </section>
+
+    <div class="o-decision-panels">
+        <section class="o-panel o-panel--step" data-flow-panel="compra" role="tabpanel" id="etapa-compra" aria-labelledby="tab-compra">
             <h2 class="o-panel__title" data-step="1">Compra de matéria-prima</h2>
             <p class="o-panel__hint">O pedido chega na rodada seguinte.</p>
             <form method="post">
@@ -137,7 +155,7 @@
             </ul>
         </section>
 
-        <section class="o-panel o-panel--step">
+        <section class="o-panel o-panel--step" data-flow-panel="producao" role="tabpanel" id="etapa-producao" aria-labelledby="tab-producao">
             <h2 class="o-panel__title" data-step="2">Produção por produto</h2>
             <p class="o-panel__hint">A capacidade da linha limita o volume da rodada.</p>
             <form method="post">
@@ -165,7 +183,7 @@
             </ul>
         </section>
 
-        <section class="o-panel o-panel--step">
+        <section class="o-panel o-panel--step" data-flow-panel="distribuicao" role="tabpanel" id="etapa-distribuicao" aria-labelledby="tab-distribuicao">
             <h2 class="o-panel__title" data-step="3">Distribuição</h2>
             <p class="o-panel__hint">Sobra fica parada; falta deixa demanda na mesa.</p>
             <form method="post">
@@ -184,7 +202,7 @@
             </ul>
         </section>
 
-        <section class="o-panel o-panel--step">
+        <section class="o-panel o-panel--step" data-flow-panel="investimentos" role="tabpanel" id="etapa-investimentos" aria-labelledby="tab-investimentos">
             <h2 class="o-panel__title" data-step="4">Investimentos</h2>
             <p class="o-panel__hint">Marketing por cidade, máquinas e pessoas entram na rodada seguinte. Aplicação financeira rende 1,5% por rodada.</p>
             {% if limite_maquinas %}
@@ -218,9 +236,15 @@
             </ul>
         </section>
 
-        <section class="o-panel o-panel--step">
-            <h2 class="o-panel__title" data-step="5">Submissão oficial</h2>
-            <p class="o-panel__hint">Fecha as decisões da rodada. Sem submissão, a equipe recebe penalidade.</p>
+        <section class="o-panel o-panel--step" data-flow-panel="revisao" role="tabpanel" id="etapa-revisao" aria-labelledby="tab-revisao">
+            <h2 class="o-panel__title" data-step="5">Conferência final e submissão</h2>
+            <p class="o-panel__hint">Revise o que a equipe registrou antes de enviar. Sem submissão, a equipe recebe penalidade.</p>
+            <ul class="o-review-list" aria-label="Resumo das decisões registradas">
+                <li><strong>Compra</strong><span>{% if compras_mp %}{{ compras_mp|length }} registro(s) disponível(is) para conferência{% else %}Nenhuma compra registrada{% endif %}</span></li>
+                <li><strong>Produção</strong><span>{% if producoes %}{{ producoes|length }} registro(s) disponível(is) para conferência{% else %}Nenhuma produção registrada{% endif %}</span></li>
+                <li><strong>Distribuição</strong><span>{% if envios %}{{ envios|length }} registro(s) disponível(is) para conferência{% else %}Nenhuma distribuição registrada{% endif %}</span></li>
+                <li><strong>Investimentos</strong><span>{% if investimentos %}{{ investimentos|length }} registro(s) disponível(is) para conferência{% else %}Nenhum investimento registrado{% endif %}</span></li>
+            </ul>
             <form method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
@@ -237,6 +261,9 @@
             </ul>
         </section>
 
+    </div>
+
+    <div class="o-grid">
         <section class="o-panel">
             <h2 class="o-panel__title">Financeiro</h2>
 

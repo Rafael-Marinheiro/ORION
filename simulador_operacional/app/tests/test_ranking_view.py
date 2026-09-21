@@ -56,3 +56,11 @@ class RankingViewTest(TestCase):
                 {"rodada": 2, "posicao": 1, "pontuacao": Decimal("90")},
             ],
         )
+
+    def test_exibe_ranking_provisorio_sem_participacao_de_mercado(self):
+        """Antes da primeira rodada fechada não há market share consolidado."""
+        response = self.client.get(reverse("ranking"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Equipe Vega")
+        self.assertContains(response, "Maior participação de mercado")
