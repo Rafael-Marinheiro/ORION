@@ -35,6 +35,11 @@
     --o-series-3: #199e70;
     --o-series-4: #c98500;
     --o-series-5: #d55181;
+    --o-series-6: #9256b8;
+    --o-series-7: #16809b;
+    --o-series-8: #a85252;
+    --o-series-9: #4d8b49;
+    --o-series-10: #695fca;
 
     /* densidade alta: escala 4-48 */
     --o-1: 4px;  --o-2: 8px;  --o-3: 12px; --o-4: 16px;
@@ -80,6 +85,11 @@
     --o-series-3: #1baf7a;
     --o-series-4: #eda100;
     --o-series-5: #e87ba4;
+    --o-series-6: #8143aa;
+    --o-series-7: #0b718d;
+    --o-series-8: #984141;
+    --o-series-9: #397c35;
+    --o-series-10: #554db9;
     --o-shadow:    0 1px 2px rgba(20, 30, 60, 0.06), 0 8px 24px -14px rgba(20, 30, 60, 0.22);
 
     color-scheme: light;
@@ -285,7 +295,10 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     .o-nav__end { margin-top: auto; padding: var(--o-2); border-top: 1px solid var(--o-line); flex-wrap: wrap; }
     .o-nav__end > * { flex: 1 1 100%; }
     .o-nav__end .o-btn { width: 100%; }
-    .o-rail, .o-boletim, main, .o-foot { margin-left: 244px; }
+    .o-rail, .o-boletim, main, .o-foot {
+        width: calc(100% - 244px);
+        margin-left: 244px;
+    }
 }
 
 /* menu do staff */
@@ -430,6 +443,8 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     box-shadow: var(--o-shadow);
 }
 .o-panel > :last-child { margin-bottom: 0; }
+.o-panel--action { display: flex; align-items: center; justify-content: space-between; gap: var(--o-4); margin-top: var(--o-5); }
+.o-panel--action .o-panel__title { margin-bottom: var(--o-1); }
 .o-panel__title { display: flex; align-items: center; gap: var(--o-2); margin-bottom: var(--o-3); }
 .o-panel__hint { color: var(--o-ink-dim); font-size: 0.875rem; margin-bottom: var(--o-3); }
 
@@ -772,6 +787,7 @@ ul.errorlist {
     .o-rail__spacer { display: none; }
     .o-head__actions { width: 100%; }
     .o-head__actions .o-btn { flex: 1 1 auto; }
+    .o-panel--action { align-items: stretch; flex-direction: column; }
     .o-flow__heading { display: block; }
     .o-flow__heading > p { margin-top: var(--o-2); }
     .o-flow__steps { gap: 2px; }
@@ -1112,6 +1128,7 @@ ul.errorlist {
 .o-delta--mute { color: var(--o-ink-dim); }
 
 .o-chart--tall { height: 380px; }
+.o-chart--ranking { height: 360px; }
 
 .o-filters--bar { margin-bottom: var(--o-5); }
 

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Painel do grupo — ORION{% endblock %}
+{% block title %}{% if somente_decisoes %}Decisões por rodada{% else %}Painel do grupo{% endif %} — ORION{% endblock %}
 
 {% block content %}
 {% if sem_grupo %}
@@ -19,8 +19,8 @@
     <div class="o-head">
         <div class="o-head__row">
             <div>
-                <h1>Painel do grupo{% if grupo %} · {{ grupo.nome }}{% endif %}</h1>
-                <p class="o-head__sub">Registre as decisões da equipe e envie a submissão oficial antes do fechamento da rodada.</p>
+                <h1>{% if somente_decisoes %}Decisões por rodada{% else %}Painel geral{% endif %}{% if grupo %} · {{ grupo.nome }}{% endif %}</h1>
+                <p class="o-head__sub">{% if somente_decisoes %}Registre, confira e envie as decisões oficiais antes do fechamento da rodada.{% else %}Acompanhe a situação da fábrica e abra as decisões quando a equipe estiver pronta.{% endif %}</p>
             </div>
             <form method="get" class="o-filters" role="search">
                 <p>
@@ -29,12 +29,13 @@
                 </p>
                 <div class="o-btnrow">
                     <button type="submit" class="o-btn">Aplicar</button>
-                    <a href="{% url 'painel_grupo' %}" class="o-btn o-btn--ghost">Limpar</a>
+                    <a href="{% if somente_decisoes %}{% url 'decisoes_rodada' %}{% else %}{% url 'painel_grupo' %}{% endif %}" class="o-btn o-btn--ghost">Limpar</a>
                 </div>
             </form>
         </div>
     </div>
 
+    {% if not somente_decisoes %}
     <div class="o-kpis">
         <div class="o-kpi">
             <span class="o-kpi__label">Capital</span>
@@ -86,6 +87,7 @@
         <p id="fb-painel-desempenho" class="o-muted" hidden>Gráfico indisponível. Os resultados seguem listados na seção Financeiro.</p>
     </section>
     {% endif %}
+    {% endif %}
 
     {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
     <ul class="o-notes">
@@ -117,6 +119,17 @@
     </ul>
     {% endif %}
 
+    {% if not somente_decisoes %}
+    <section class="o-panel o-panel--action" aria-labelledby="decisoes-acesso-titulo">
+        <div>
+            <h2 id="decisoes-acesso-titulo" class="o-panel__title">Decisões por rodada</h2>
+            <p class="o-panel__hint">Compra, produção, distribuição, investimentos e revisão final ficam em um único fluxo para evitar dispersão.</p>
+        </div>
+        <a class="o-btn o-btn--primary" href="{% url 'decisoes_rodada' %}">Abrir decisões</a>
+    </section>
+    {% endif %}
+
+    {% if somente_decisoes %}
     <section class="o-flow" aria-labelledby="fluxo-titulo" data-decision-flow>
         <div class="o-flow__heading">
             <div>
@@ -262,44 +275,12 @@
         </section>
 
     </div>
-
-    <div class="o-grid">
-        <section class="o-panel">
-            <h2 class="o-panel__title">Financeiro</h2>
-
-            <h3>Compras de matéria-prima</h3>
-            <ul class="o-list">
-                {% for c in compras_mp %}
-                <li><span class="tag">R{{ c.rodada_pedido }}</span> {{ c.materia_prima.codigo }} · total <span class="num">{{ c.valor_total }}</span> · desconto <span class="num">{{ c.desconto_logistico }}</span></li>
-                {% empty %}
-                <li class="o-empty">Nenhuma compra registrada.</li>
-                {% endfor %}
-            </ul>
-
-            <h3>Produções</h3>
-            <ul class="o-list">
-                {% for p in producoes %}
-                <li><span class="tag">R{{ p.rodada }}</span> {{ p.produto.nome }} · <span class="num">{{ p.quantidade_produzida }}</span> un · custo <span class="num">{{ p.custo_total }}</span></li>
-                {% empty %}
-                <li class="o-empty">Nenhuma produção registrada.</li>
-                {% endfor %}
-            </ul>
-
-            <h3>Resultados por rodada</h3>
-            <ul class="o-list">
-                {% for r in resultados %}
-                <li><span class="tag">R{{ r.rodada }}</span> receita <span class="num">{{ r.receita }}</span> · custos <span class="num">{{ r.custos }}</span> · lucro <span class="num">{{ r.lucro }}</span> · caixa <span class="num">{{ r.saldo_caixa }}</span></li>
-                {% empty %}
-                <li class="o-empty">Nenhum resultado registrado.</li>
-                {% endfor %}
-            </ul>
-        </section>
-    </div>
+    {% endif %}
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
-{% if grafico_desempenho.labels %}
+{% if grafico_desempenho.labels and not somente_decisoes %}
 {{ grafico_desempenho|json_script:"dados-desempenho-painel" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 <script src="{% static 'js/charts.js' %}" defer></script>

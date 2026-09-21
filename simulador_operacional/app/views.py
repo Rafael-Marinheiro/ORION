@@ -727,6 +727,7 @@ class RankingView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["nav"] = "ranking"
         # Consolidado, nao Indicador: o desempate do 12.5 precisa de EO, SD,
         # DS e receita bruta, que so existem la.
         indicadores = ConsolidadoRodadaGrupo.objects.select_related("grupo", "grupo__jogo")
@@ -779,10 +780,34 @@ class RankingView(LoginRequiredMixin, TemplateView):
         context["ranking"] = ranking
         context["rodada_referencia"] = rodada_referencia
         context["destaques"] = self._destaques_da_rodada(ranking)
+        context["grafico_posicoes"] = self._grafico_posicoes(
+            indicadores, rodadas_fechadas
+        )
         context["evolucao_grupo"] = self._evolucao_do_grupo(
             indicadores, rodadas_fechadas, grupo_usuario
         )
         return context
+
+    def _grafico_posicoes(self, indicadores, rodadas_fechadas):
+        """Converte a classificação de cada rodada em trajetórias por equipe."""
+        series_por_grupo = {}
+        for indice, rodada in enumerate(rodadas_fechadas):
+            classificacao = self._ordenar_consolidados(
+                indicadores.filter(rodada=rodada)
+            )
+            for posicao, item in enumerate(classificacao, start=1):
+                nome = item["grupo"].nome
+                if nome not in series_por_grupo:
+                    series_por_grupo[nome] = [None] * len(rodadas_fechadas)
+                series_por_grupo[nome][indice] = posicao
+
+        return {
+            "labels": [f"R{rodada}" for rodada in rodadas_fechadas],
+            "series": [
+                {"label": nome, "data": posicoes, "type": "line"}
+                for nome, posicoes in sorted(series_por_grupo.items())
+            ],
+        }
 
     @staticmethod
     def _destaques_da_rodada(ranking):
@@ -998,6 +1023,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         permite_edicao = bool(grupo and rodada_ativa and pode_submeter and not submissao_realizada)
 
         return {
+            "nav": "painel",
             "grupo": grupo,
             "decisoes": decisoes,
             "envios": envios,
@@ -1382,6 +1408,24 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, contexto)
 
 
+class DecisoesRodadaView(PainelGrupoView):
+    """Tela própria das decisões, preservando as mesmas validações do painel."""
+
+    def montar_contexto(self, *args, **kwargs):
+        contexto = super().montar_contexto(*args, **kwargs)
+        contexto.update({"somente_decisoes": True, "nav": "decisoes"})
+        return contexto
+
+    def post(self, request, *args, **kwargs):
+        resposta = super().post(request, *args, **kwargs)
+        if (
+            resposta.status_code in {301, 302, 303, 307, 308}
+            and resposta.get("Location", "").endswith("/painel/")
+        ):
+            return redirect("decisoes_rodada")
+        return resposta
+
+
 class GrupoViewSet(viewsets.ModelViewSet):
     queryset = Grupo.objects.all()
     serializer_class = GrupoSerializer
@@ -1715,6 +1759,7 @@ class GrupoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 
 class RelatoriosView(LoginRequiredMixin, TemplateView):
     template_name = "financeiro/relatorios.html"
+    modo_comparativo = False
 
     def get(self, request, *args, **kwargs):
         form = ResultadoFilterForm(request.GET or None)
@@ -1761,6 +1806,7 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
                 dre_linhas = montar_dre(dre_consolidado)
 
         contexto = {
+            "nav": "comparativos" if self.modo_comparativo else "relatorios",
             "resultados": resultados.order_by("-rodada", "grupo__nome"),
             "consolidados": consolidados,
             "painel": montar_painel_financeiro(consolidados),
@@ -1770,12 +1816,14 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
             "dre_linhas": dre_linhas,
             "fluxo": fluxo,
             "fluxo_resumo": resumo_do_fluxo(fluxo),
+            "modo_comparativo": self.modo_comparativo,
         }
         return render(request, self.template_name, contexto)
 
 
 class RelatoriosComparativosView(RelatoriosView):
     """Entrada explícita para a leitura comparativa entre equipes do jogo."""
+    modo_comparativo = True
 
 
 class EncerramentoRodadaView(LoginRequiredMixin, TemplateView):
@@ -1802,7 +1850,7 @@ class EncerramentoRodadaView(LoginRequiredMixin, TemplateView):
                 grupo=grupo, rodada=rodada.numero
             ).first()
 
-        context.update({"rodada": rodada, "resultado": resultado})
+        context.update({"rodada": rodada, "resultado": resultado, "nav": "encerramento_rodada"})
         return context
 
 

@@ -1,15 +1,17 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Relatórios financeiros — ORION{% endblock %}
+{% block title %}{% if modo_comparativo %}Relatórios comparativos{% else %}Relatórios financeiros{% endif %} — ORION{% endblock %}
 
 {% block content %}
 <div class="o-head">
     <div class="o-head__row">
         <div>
-            <h1>Relatórios financeiros</h1>
+            <h1>{% if modo_comparativo %}Relatórios comparativos{% else %}Relatórios financeiros{% endif %}</h1>
             <p class="o-head__sub">
-                {% if painel.tem_dados %}
+                {% if modo_comparativo %}
+                    Compare lucro, participação de mercado e eficiência entre as equipes da turma.
+                {% elif painel.tem_dados %}
                     {{ painel.qtd_rodadas }} rodada{{ painel.qtd_rodadas|pluralize }} fechada{{ painel.qtd_rodadas|pluralize }}
                     {% if painel.multi_grupo %}· {{ painel.qtd_grupos }} equipes somadas{% endif %}.
                     Os números abaixo respondem por onde o dinheiro entrou e saiu.

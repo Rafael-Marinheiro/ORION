@@ -38,7 +38,12 @@
             token('--o-series-2'),
             token('--o-series-3'),
             token('--o-series-4'),
-            token('--o-series-5')
+            token('--o-series-5'),
+            token('--o-series-6'),
+            token('--o-series-7'),
+            token('--o-series-8'),
+            token('--o-series-9'),
+            token('--o-series-10')
         ];
     }
 
@@ -83,7 +88,8 @@
                             pointBorderColor: superficie,
                             pointBorderWidth: 2,
                             tension: 0.25,
-                            fill: false
+                            fill: false,
+                            spanGaps: true
                         };
                     }
                     return {
@@ -119,9 +125,16 @@
                     },
                     y: {
                         stacked: !!spec.stacked,
-                        ticks: { color: dim },
+                        ticks: {
+                            color: dim,
+                            stepSize: spec.integerY ? 1 : undefined,
+                            precision: spec.integerY ? 0 : undefined
+                        },
                         grid: { color: linha },
-                        beginAtZero: true
+                        beginAtZero: spec.yMin === undefined,
+                        min: spec.yMin,
+                        max: spec.yMax,
+                        reverse: !!spec.reverseY
                     }
                 }
             }

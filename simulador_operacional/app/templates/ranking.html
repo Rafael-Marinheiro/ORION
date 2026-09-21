@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Ranking — ORION{% endblock %}
 
@@ -74,6 +75,17 @@
 </section>
 {% endif %}
 
+{% if grafico_posicoes.labels %}
+<section class="o-section" aria-labelledby="posicoes-titulo">
+    <h2 id="posicoes-titulo" class="o-section-title">Progresso das equipes por rodada</h2>
+    <div class="o-panel o-panel--chart">
+        <p class="o-panel__hint">Cada linha mostra a posição alcançada por uma equipe em cada rodada fechada. A posição 1 permanece no topo.</p>
+        <div class="o-chart o-chart--ranking"><canvas id="ranking-posicoes"></canvas></div>
+        <p id="fb-ranking-posicoes" class="o-muted" hidden>Gráfico indisponível. Consulte a tabela de evolução abaixo.</p>
+    </div>
+</section>
+{% endif %}
+
 {% if evolucao_grupo %}
 <section class="o-section" aria-labelledby="evolucao-titulo">
     <h2 id="evolucao-titulo" class="o-section-title">Evolução do seu grupo</h2>
@@ -95,4 +107,24 @@
     Empate na pontuação é resolvido, nesta ordem, por maior EO, maior SD,
     maior DS, maior receita bruta e ordem alfabética do nome do grupo.
 </p>
+{% endblock %}
+
+{% block scripts %}
+{% if grafico_posicoes.labels %}
+{{ grafico_posicoes|json_script:"dados-posicoes-ranking" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260921f" defer></script>
+<script>
+    (function () {
+        var dados = JSON.parse(document.getElementById('dados-posicoes-ranking').textContent);
+        window.orionCharts = window.orionCharts || [];
+        window.orionCharts.push({
+            canvas: 'ranking-posicoes', fallback: 'fb-ranking-posicoes',
+            type: 'line', labels: dados.labels, series: dados.series,
+            reverseY: true, integerY: true,
+            yMin: 1, yMax: Math.max(2, dados.series.length)
+        });
+    }());
+</script>
+{% endif %}
 {% endblock %}

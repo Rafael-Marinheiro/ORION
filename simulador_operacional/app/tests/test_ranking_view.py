@@ -56,6 +56,16 @@ class RankingViewTest(TestCase):
                 {"rodada": 2, "posicao": 1, "pontuacao": Decimal("90")},
             ],
         )
+        self.assertEqual(
+            response.context["grafico_posicoes"],
+            {
+                "labels": ["R1", "R2"],
+                "series": [
+                    {"label": "Equipe Rigel", "data": [1, 2], "type": "line"},
+                    {"label": "Equipe Vega", "data": [2, 1], "type": "line"},
+                ],
+            },
+        )
 
     def test_exibe_ranking_provisorio_sem_participacao_de_mercado(self):
         """Antes da primeira rodada fechada não há market share consolidado."""
