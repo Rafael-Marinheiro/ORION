@@ -12,8 +12,8 @@
     </p>
 </div>
 
-<div class="o-tablewrap">
-    <table class="o-table">
+<div class="o-tablewrap o-tablewrap--ranking">
+    <table class="o-table o-table--ranking">
         <caption class="o-sr">Classificação dos grupos por pontuação multicritério</caption>
         <thead>
             <tr>
@@ -31,15 +31,15 @@
         <tbody>
             {% for item in ranking %}
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
-                <td class="rank">{{ forloop.counter }}</td>
-                <th scope="row">{{ item.grupo.nome }}</th>
-                <td class="num">{{ item.pontuacao|floatformat:2 }}</td>
-                <td class="num">{{ item.EO|floatformat:1 }}</td>
-                <td class="num">{{ item.DF|floatformat:1 }}</td>
-                <td class="num">{{ item.EE|floatformat:1 }}</td>
-                <td class="num">{{ item.SD|floatformat:1 }}</td>
-                <td class="num">{{ item.DS|floatformat:1 }}</td>
-                <td class="num">{{ item.lucro_rodada|floatformat:2 }}</td>
+                <td class="rank" data-label="Posição">{{ forloop.counter }}</td>
+                <th scope="row" data-label="Grupo">{{ item.grupo.nome }}</th>
+                <td class="num" data-label="Pontuação">{{ item.pontuacao|floatformat:2 }}</td>
+                <td class="num" data-label="Eficiência Operacional">{{ item.EO|floatformat:1 }}</td>
+                <td class="num" data-label="Desempenho Financeiro">{{ item.DF|floatformat:1 }}</td>
+                <td class="num" data-label="Eficiência de Estoques">{{ item.EE|floatformat:1 }}</td>
+                <td class="num" data-label="Satisfação da Demanda">{{ item.SD|floatformat:1 }}</td>
+                <td class="num" data-label="Sustentabilidade">{{ item.DS|floatformat:1 }}</td>
+                <td class="num" data-label="Lucro da rodada">{{ item.lucro_rodada|floatformat:2 }}</td>
             </tr>
             {% empty %}
             <tr>

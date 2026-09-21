@@ -708,6 +708,53 @@ ul.errorlist {
     .o-rail__spacer { display: none; }
     .o-head__actions { width: 100%; }
     .o-head__actions .o-btn { flex: 1 1 auto; }
+
+    /* O ranking tem nove métricas. Em vez de esconder eixos ou exigir gesto
+       lateral, cada grupo vira um cartão com rótulos explícitos no celular. */
+    .o-tablewrap--ranking { overflow-x: hidden; }
+    .o-table--ranking,
+    .o-table--ranking tbody,
+    .o-table--ranking tr,
+    .o-table--ranking th,
+    .o-table--ranking td { display: block; width: 100%; }
+    .o-table--ranking thead { display: none; }
+    .o-table--ranking tbody { padding: var(--o-2); }
+    .o-table--ranking tr {
+        border: 1px solid var(--o-line);
+        border-radius: calc(var(--o-radius) - 2px);
+        margin-bottom: var(--o-2);
+        overflow: hidden;
+    }
+    .o-table--ranking tbody tr:last-child { margin-bottom: 0; }
+    .o-table--ranking th,
+    .o-table--ranking td {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--o-3);
+        align-items: baseline;
+        padding: var(--o-2) var(--o-3);
+        white-space: normal;
+        text-align: right;
+    }
+    .o-table--ranking th::before,
+    .o-table--ranking td::before {
+        content: attr(data-label);
+        color: var(--o-ink-dim);
+        font-family: var(--o-sans);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-align: left;
+    }
+    .o-table--ranking th[scope="row"] {
+        background: var(--o-panel-2);
+        font-weight: 600;
+    }
+    .o-table--ranking td[colspan] {
+        display: block;
+        text-align: center;
+    }
+    .o-table--ranking td[colspan]::before { display: none; }
+    .o-table--ranking .rank { width: 100%; }
 }
 
 /* --- 20. Movimento ------------------------------------------------------- */
