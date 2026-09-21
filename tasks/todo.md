@@ -100,6 +100,9 @@ e guia de implementação. Não altera fórmulas nem decisões pedagógicas.
 - [x] Ensaiar inicialização HTTP e ciclo de rodadas em base descartável:
   migrações, seed, rotas `/` e `/login/`, uma rodada vencida e seu consolidado
   responderam corretamente em contêiner isolado (21/09/2026).
+- [x] Medir o requisito RF.05: `FechamentoRodadaCapacidadeTest` fechou uma
+  rodada de 12 grupos em 0,360 s no Docker, abaixo do máximo de 10 s do DOCX 3
+  (21/09/2026).
 
 ## Pendências registradas (prosseguir sem inventar decisões)
 

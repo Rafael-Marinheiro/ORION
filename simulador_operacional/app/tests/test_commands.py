@@ -1,4 +1,5 @@
 import tempfile
+from time import perf_counter
 from decimal import Decimal
 from pathlib import Path
 from unittest.mock import patch
@@ -55,6 +56,24 @@ class SortearEventosRodadaCommandTest(TestCase):
         call_command("sortear_eventos_rodada")
 
         self.assertEqual(EventoRodada.objects.filter(rodada=rodada.numero).count(), 1)
+
+
+class FechamentoRodadaCapacidadeTest(TestCase):
+    def test_fecha_rodada_de_doze_grupos_em_ate_dez_segundos(self):
+        """DOCX 3 RF.05: apuração de até 12 grupos em no máximo 10 segundos."""
+        Evento.objects.create(nome="Estabilidade", tipo="demanda", impacto_percentual=0)
+        Rodada.objects.create(numero=1, fim=timezone.now())
+        Grupo.objects.bulk_create(
+            [Grupo(nome=f"Equipe {numero}", capital=Decimal("1000000")) for numero in range(1, 13)]
+        )
+
+        inicio = perf_counter()
+        call_command("fechar_rodadas")
+        duracao = perf_counter() - inicio
+
+        self.assertTrue(Rodada.objects.get(numero=1).fechada)
+        self.assertEqual(12, Grupo.objects.count())
+        self.assertLessEqual(duracao, 10, f"Fechamento levou {duracao:.3f}s")
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
