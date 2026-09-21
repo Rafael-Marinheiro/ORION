@@ -75,6 +75,24 @@ class PainelGrupoViewTest(TestCase):
         response = self.client.get(reverse("painel_grupo"))
         self.assertEqual(response.status_code, 200)
 
+    def test_painel_expoe_dados_reais_para_grafico_de_desempenho(self):
+        grupo = self._create_group(3)
+        ResultadoFinanceiro.objects.create(
+            grupo=grupo,
+            rodada=1,
+            receita=Decimal("1200.50"),
+            custos=Decimal("800.00"),
+            lucro=Decimal("400.50"),
+        )
+        self.client.login(username="view0@example.com", password="secret")
+
+        response = self.client.get(reverse("painel_grupo"))
+
+        self.assertEqual(response.context["grafico_desempenho"], {
+            "labels": ["R1"], "receita": [1200.5], "lucro": [400.5],
+        })
+        self.assertContains(response, 'id="painel-desempenho"')
+
     def test_ranking_and_relatorios_access_for_authenticated_user(self):
         self.client.login(username="view0@example.com", password="secret")
         response_ranking = self.client.get(reverse("ranking"))

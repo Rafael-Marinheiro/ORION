@@ -938,6 +938,15 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             investimentos = investimentos.filter(rodada=rodada_filtrada)
             saldos_produto = saldos_produto.filter(rodada_entrada__lte=rodada_filtrada)
 
+        resultados_grafico = list(
+            resultados.order_by("rodada").values("rodada", "receita", "lucro")
+        )
+        grafico_desempenho = {
+            "labels": [f"R{linha['rodada']}" for linha in resultados_grafico],
+            "receita": [float(linha["receita"]) for linha in resultados_grafico],
+            "lucro": [float(linha["lucro"]) for linha in resultados_grafico],
+        }
+
         ultima_vista = request.session.get("ultima_rodada_vista", 0)
         nova = resultados.order_by("-rodada").first()
         notificacao = None
@@ -973,6 +982,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "envios": envios,
             "producoes": producoes,
             "resultados": resultados,
+            "grafico_desempenho": grafico_desempenho,
             "form": form or DecisaoForm(),
             "envio_form": envio_form or DistribuicaoForm(),
             "producao_form": producao_form or ProducaoForm(),

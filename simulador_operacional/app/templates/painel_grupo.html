@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Painel do grupo — ORION{% endblock %}
 
@@ -55,6 +56,15 @@
             <span class="o-kpi__foot">Rende 1,5% por rodada</span>
         </div>
     </div>
+
+    {% if grafico_desempenho.labels %}
+    <section class="o-panel o-panel--chart" aria-labelledby="desempenho-titulo">
+        <h2 id="desempenho-titulo" class="o-panel__title">Desempenho por rodada</h2>
+        <p class="o-panel__hint">Receita e lucro mostram se o crescimento das vendas está se convertendo em resultado.</p>
+        <div class="o-chart"><canvas id="painel-desempenho"></canvas></div>
+        <p id="fb-painel-desempenho" class="o-muted" hidden>Gráfico indisponível. Os resultados seguem listados na seção Financeiro.</p>
+    </section>
+    {% endif %}
 
     {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
     <ul class="o-notes">
@@ -237,5 +247,29 @@
             </ul>
         </section>
     </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if grafico_desempenho.labels %}
+{{ grafico_desempenho|json_script:"dados-desempenho-painel" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="{% static 'js/charts.js' %}" defer></script>
+<script>
+    (function () {
+        var dados = JSON.parse(document.getElementById('dados-desempenho-painel').textContent);
+        window.orionCharts = window.orionCharts || [];
+        window.orionCharts.push({
+            canvas: 'painel-desempenho',
+            fallback: 'fb-painel-desempenho',
+            type: 'bar',
+            labels: dados.labels,
+            series: [
+                { label: 'Receita', data: dados.receita },
+                { label: 'Lucro', type: 'line', data: dados.lucro }
+            ]
+        });
+    }());
+</script>
 {% endif %}
 {% endblock %}
