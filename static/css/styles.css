@@ -166,7 +166,7 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     letter-spacing: 0.08em;
 }
 .o-brand:hover { color: var(--o-ink); text-decoration: none; }
-.o-brand .o-mark { width: 26px; height: 31px; color: var(--o-star); }
+.o-brand .o-mark { width: 28px; height: 28px; color: var(--o-star); }
 
 /* --- 4. Navegacao -------------------------------------------------------- */
 
@@ -812,7 +812,7 @@ ul.errorlist {
     position: relative;
     justify-self: center;
     width: min(300px, 100%);
-    aspect-ratio: 100 / 120;
+    aspect-ratio: 1;
     color: var(--o-star);
 }
 .o-hero__mark::before {
@@ -925,7 +925,7 @@ ul.errorlist {
 .o-auth .o-note { margin-bottom: var(--o-4); }
 .o-auth__mark {
     width: 56px;
-    aspect-ratio: 100 / 120;
+    aspect-ratio: 1;
     color: var(--o-star);
     margin-bottom: var(--o-4);
 }
