@@ -574,7 +574,7 @@ antigos do `docs/BACKLOG.md`.
   `migrations/` permanece apenas como histórico e não é mais executada.
 - `ORION-C-23` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `export_resultados_pdf` e `export_resultados_excel`
   com teste (52 linhas sem execução; CSV e JSON já têm).
-- `ORION-C-24` `CONCLUIDO` (2026-09-18, verificado em 19/09) — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução). Seguem sem teste o bloqueio de produção por evento de estado e os multiplicadores percentuais de evento sobre custo.
+- `ORION-C-24` `CONCLUIDO` (2026-09-18, revalidado em 21/09) — Cobrir `PainelGrupoView.post` (63 de 176 linhas sem execução). `test_evento_estado_bloqueia_producao` protege o bloqueio por evento de estado e `test_evento_de_custo_de_transporte_encarece_o_frete` protege o multiplicador percentual do frete.
 - `ORION-C-25` `CONCLUIDO` (2026-09-19) — Gates elevados: núcleo de 85 para
   90 e periférico de 60 para 70. A medição de 239 testes alcançou 92% e 81%,
   respectivamente.
@@ -625,9 +625,9 @@ Estado da suíte ao final: **102 testes**, núcleo 91%, periférico 71%.
 - `ORION-C-05`: retenção de entregas de verdade, no lugar do corte de demanda
   que fingia representá-la.
 - `ORION-C-23` e `ORION-C-24`: cobertura de `export_resultados_pdf`/`excel` e
-  dos caminhos de erro de `PainelGrupoView.post` (capital, estoque e escopo).
-  Seguem sem teste o bloqueio de produção por evento de estado e os
-  multiplicadores percentuais de evento sobre custo.
+  dos caminhos de erro de `PainelGrupoView.post` (capital, estoque e escopo),
+  do bloqueio de produção por evento de estado e do multiplicador percentual
+  do frete por evento.
 
 Duas decisões que ficaram registradas como divergência, não como erro: as
 tabelas de exemplo do §12.6 e do §14.1.3 não reproduzem as próprias fórmulas
