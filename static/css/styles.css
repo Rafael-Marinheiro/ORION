@@ -16,6 +16,8 @@
     --o-ink-dim:   #97A1BD;
     --o-star:      #8FD0FF;
     --o-on-star:   #080A12;
+    --o-gold:      #D9A441;
+    --o-gold-bg:   rgba(217, 164, 65, 0.13);
     --o-ok:        #5BE49B;
     --o-warn:      #F5B74E;
     --o-bad:       #FF8A8A;
@@ -60,6 +62,8 @@
     --o-ink-dim:   #5A6482;
     --o-star:      #1C5FA8;
     --o-on-star:   #FFFFFF;
+    --o-gold:      #9A6400;
+    --o-gold-bg:   rgba(154, 100, 0, 0.10);
     --o-ok:        #0F7A4A;
     --o-warn:      #8A5A00;
     --o-bad:       #C02626;
@@ -158,15 +162,14 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-brand {
     display: inline-flex;
     align-items: center;
-    gap: var(--o-2);
+    width: 164px;
+    min-height: 40px;
     text-decoration: none;
     color: var(--o-ink);
-    font-weight: 700;
-    font-size: 1.125rem;
-    letter-spacing: 0.08em;
 }
 .o-brand:hover { color: var(--o-ink); text-decoration: none; }
-.o-brand .o-mark { width: 28px; height: 28px; color: var(--o-star); }
+.o-brand > img { display: block; width: 100%; height: auto; }
+.o-mark { object-fit: contain; }
 
 .o-factory__lines { display: grid; gap: var(--o-3); }
 .o-factory__line { padding: var(--o-3); border: 1px solid var(--o-line); border-radius: var(--o-radius); background: var(--o-panel-2); }
@@ -818,18 +821,14 @@ ul.errorlist {
 .o-hero__mark {
     position: relative;
     justify-self: center;
-    width: min(300px, 100%);
-    aspect-ratio: 1;
-    color: var(--o-star);
+    width: min(520px, 100%);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--o-line);
+    border-radius: var(--o-radius);
+    box-shadow: var(--o-shadow);
 }
-.o-hero__mark::before {
-    content: "";
-    position: absolute;
-    inset: -12%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 45%, var(--o-star-bg), transparent 62%);
-}
-.o-hero__mark .o-mark { position: relative; }
+.o-hero__mark > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 /* O ciclo de decisao desenhado como constelacao: nos ligados por uma linha.
    E uma sequencia real, entao numerar informa a ordem em vez de decorar. */
@@ -897,7 +896,7 @@ ul.errorlist {
         padding-block: var(--o-5) var(--o-6);
         margin-bottom: var(--o-6);
     }
-    .o-hero__mark { order: -1; width: min(200px, 60%); }
+    .o-hero__mark { order: -1; width: min(520px, 100%); }
 }
 
 @media (max-width: 560px) {
@@ -933,9 +932,9 @@ ul.errorlist {
 .o-auth__mark {
     width: 56px;
     aspect-ratio: 1;
-    color: var(--o-star);
     margin-bottom: var(--o-4);
 }
+.o-auth__mark .o-mark { width: 100%; height: 100%; }
 .o-auth__foot { margin: var(--o-4) 0 0; font-size: 0.875rem; }
 
 .o-btn--block { width: 100%; margin-top: var(--o-2); }

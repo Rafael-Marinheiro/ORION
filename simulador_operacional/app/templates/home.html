@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}ORION — simulador operacional para ensino de gestão{% endblock %}
 
@@ -26,7 +27,7 @@
     </div>
 
     <div class="o-hero__mark" aria-hidden="true">
-        {% include 'partials/mark.svg.html' %}
+        <img src="{% static 'img/orion-brand-hero.png' %}" alt="" width="1680" height="943" fetchpriority="high">
     </div>
 </div>
 
