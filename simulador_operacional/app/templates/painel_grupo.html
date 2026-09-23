@@ -44,11 +44,11 @@
     <div class="o-kpis">
         <div class="o-kpi">
             <span class="o-kpi__label">Capital</span>
-            <span class="o-kpi__value">{{ grupo.capital }}</span>
+            <span class="o-kpi__value">R$ {{ grupo.capital|floatformat:2 }}</span>
         </div>
         <div class="o-kpi">
             <span class="o-kpi__label">Estoque</span>
-            <span class="o-kpi__value">{{ grupo.estoque }}</span>
+            <span class="o-kpi__value">{{ grupo.estoque|floatformat:0 }} <span class="o-kpi__unit">un</span></span>
         </div>
         <div class="o-kpi">
             <span class="o-kpi__label">CEO da rodada</span>
@@ -58,7 +58,7 @@
         </div>
         <div class="o-kpi">
             <span class="o-kpi__label">Saldo aplicado</span>
-            <span class="o-kpi__value">{% if aplicacao_financeira %}{{ aplicacao_financeira.saldo_aplicado }}{% else %}0{% endif %}</span>
+            <span class="o-kpi__value">R$ {% if aplicacao_financeira %}{{ aplicacao_financeira.saldo_aplicado|floatformat:2 }}{% else %}0,00{% endif %}</span>
             <span class="o-kpi__foot">Rende 1,5% por rodada</span>
         </div>
     </div>
