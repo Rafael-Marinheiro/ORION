@@ -158,11 +158,19 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
   de edição: o conteúdo de um §12.3.5 (Sustentabilidade) que nunca existiu
   foi colado dentro do §12.3.4. **Resultado: o eixo SD, que vale 0,20 — o
   segundo maior peso —, não tem definição.** Precisa ser criado.
-- **B9 · EE é contado duas vezes.** `IE = Custo das Vendas / Estoque Médio`
-  (dentro de DF, peso 0,3 × 0,25 = 7,5%) e `EE = Custo das Vendas / Estoque
-  Médio Operacional` (eixo próprio, 15%) são praticamente a mesma razão. Cerca
-  de 22,5% da nota final mede giro de estoque. Pode ser intencional, mas vale
-  ratificar.
+- **B9 · EE contado duas vezes — `RESOLVIDO` (2026-09-23), era defeito nosso.**
+  A leitura anterior ("a especificação conta o giro duas vezes") estava errada.
+  O §12.3.2 nomeia `IE` de **Eficiência de Estoques (financeira)** sobre
+  "Estoque Médio"; o §12.3.3 define `EE` como **eficiência logística
+  operacional** sobre "Estoque Médio **Operacional**". São dois denominadores
+  distintos, nomeados de propósito. Quem colapsou os dois num valor só foi a
+  implementação, e aí o EE virou clone do IE — 24% da nota medindo a mesma
+  coisa.
+  Critério adotado: `IE` sobre o estoque total (MP + acabado, o ativo de
+  estoque) e `EE` sobre o acabado, que é o que gira na operação comercial. O
+  §7.4 e o §13.8 já tratam os dois estoques como coisas distintas, com custo de
+  armazenagem próprio para cada um. `ConsolidadoRodadaGrupo` passa a guardar os
+  dois valores, porque a média do §12.3.3 precisa da rodada anterior.
 - **B10 · O limiar de 1.000 km em DS₃ perdeu sentido na base regional.** Com a
   sede em Currais Novos, a praça mais distante é Fortaleza, a 470 km. Todas as
   cidades cumprem o critério, então DS₃ = 1 sempre e o subindicador vira
@@ -247,7 +255,7 @@ Três categorias, com dono diferente:
 | Categoria | Quem decide | Exemplos |
 |---|---|---|
 | **A especificação se contradiz** | Dr. Pio | B1–B5: composição, perecibilidade, capacidade, eventos por rodada, desempate |
-| **A especificação é omissa ou não fecha** | Dr. Pio | B8 (SD sem fórmula), B9 (giro duplo), B10 (limiar de 1.000 km), frete de produto |
+| **A especificação é omissa ou não fecha** | Dr. Pio | B8 (SD sem fórmula), B10 (limiar de 1.000 km), frete de produto |
 | **Contexto de aplicação da turma** | Rafael | D9.1–D9.3: sede, praças regionais, demanda por população |
 
 **Pendências para o Dr. Pio, por ordem de impacto:**
@@ -260,8 +268,9 @@ Três categorias, com dono diferente:
    do projeto, mas afasta-se da letra do documento.
 3. **D9.5 · Custo do operador.** Ele escreveu R$ 1.800/mês; a rodada virou o
    período de competência da folha. Leitura, não transcrição.
-4. **B9 e B10.** Giro de estoque contado duas vezes e o limiar de 1.000 km,
-   que a base regional tornou inócuo.
+4. **B10.** O limiar de 1.000 km em DS₃, que a base regional tornou inócuo.
+   (B9 saiu desta lista: o §12 distingue IE de EE e a implementação é que
+   havia colapsado os dois — corrigido em 2026-09-23.)
 
 O que **não** precisa dele: correções de bug que não tocam regra de negócio
 (imports quebrados, `Decimal` na sessão, fuso horário) e escolhas internas de
