@@ -1,3 +1,4 @@
+from collections import defaultdict
 import random
 import os
 import csv
@@ -780,21 +781,35 @@ class RankingView(LoginRequiredMixin, TemplateView):
         context["ranking"] = ranking
         context["rodada_referencia"] = rodada_referencia
         context["destaques"] = self._destaques_da_rodada(ranking)
+        classificacoes = self._classificacoes_por_rodada(indicadores, rodadas_fechadas)
         context["grafico_posicoes"] = self._grafico_posicoes(
-            indicadores, rodadas_fechadas
+            classificacoes, rodadas_fechadas
         )
         context["evolucao_grupo"] = self._evolucao_do_grupo(
-            indicadores, rodadas_fechadas, grupo_usuario
+            classificacoes, rodadas_fechadas, grupo_usuario
         )
         return context
 
-    def _grafico_posicoes(self, indicadores, rodadas_fechadas):
+    def _classificacoes_por_rodada(self, indicadores, rodadas_fechadas):
+        """Classificação de cada rodada fechada, com uma consulta só.
+
+        O gráfico de posições e a evolução do grupo percorriam a mesma lista
+        filtrando por rodada dentro do laço: duas idas ao banco por rodada
+        fechada, e a simulação tem uma rodada por aula.
+        """
+        por_rodada = defaultdict(list)
+        for consolidado in indicadores:
+            por_rodada[consolidado.rodada].append(consolidado)
+        return {
+            rodada: self._ordenar_consolidados(por_rodada.get(rodada, []))
+            for rodada in rodadas_fechadas
+        }
+
+    def _grafico_posicoes(self, classificacoes, rodadas_fechadas):
         """Converte a classificação de cada rodada em trajetórias por equipe."""
         series_por_grupo = {}
         for indice, rodada in enumerate(rodadas_fechadas):
-            classificacao = self._ordenar_consolidados(
-                indicadores.filter(rodada=rodada)
-            )
+            classificacao = classificacoes.get(rodada, [])
             for posicao, item in enumerate(classificacao, start=1):
                 nome = item["grupo"].nome
                 if nome not in series_por_grupo:
@@ -824,12 +839,12 @@ class RankingView(LoginRequiredMixin, TemplateView):
              "valor": maior_market_share["market_share"]},
         ]
 
-    def _evolucao_do_grupo(self, indicadores, rodadas_fechadas, grupo_usuario):
+    def _evolucao_do_grupo(self, classificacoes, rodadas_fechadas, grupo_usuario):
         if not grupo_usuario:
             return []
         evolucao = []
         for rodada in rodadas_fechadas:
-            ranking = self._ordenar_consolidados(indicadores.filter(rodada=rodada))
+            ranking = classificacoes.get(rodada, [])
             for posicao, item in enumerate(ranking, start=1):
                 if item["grupo"].id == grupo_usuario.id:
                     evolucao.append(
