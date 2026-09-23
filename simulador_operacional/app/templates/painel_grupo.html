@@ -145,10 +145,11 @@
     {% endif %}
 
     {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa or evento %}
+    {% if somente_decisoes %}<h2 class="o-attention-title">Atenção na rodada</h2>{% endif %}
     <ul class="o-notes {% if somente_decisoes %}o-notes--decision{% endif %}">
         {% if evento and somente_decisoes %}
             <li class="o-note o-note--event">
-                <p class="o-note__kicker">Manchete da rodada{% if rodada_ativa %} {{ rodada_ativa.numero }}{% endif %}</p>
+                <p class="o-note__kicker">Cenário da rodada{% if rodada_ativa %} {{ rodada_ativa.numero }}{% endif %}</p>
                 <h2>{{ evento.nome }}</h2>
                 <p>{% if evento.frase_indicativa %}{{ evento.frase_indicativa }}{% else %}{{ evento.descricao }}{% endif %}</p>
                 {% if evento.descricao and evento.frase_indicativa %}<p class="o-muted">{{ evento.descricao }}</p>{% endif %}
