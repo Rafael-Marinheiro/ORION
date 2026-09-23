@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      # CI nao e producao: a chave existe so para o settings validar.
+      DJANGO_SECRET_KEY: chave-de-integracao-continua
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4

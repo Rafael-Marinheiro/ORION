@@ -9,8 +9,17 @@ load_dotenv(os.environ.get("ENV_FILE", BASE_DIR / ".env"))
 # Caminho do arquivo de roadmap para registrar feedback dos usuários
 ROADMAP_FILE = BASE_DIR.parent / "docs" / "roadmap.md"
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-secret")
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
+# Falta de variavel nao pode virar producao insegura por omissao: sem
+# DJANGO_DEBUG a aplicacao assume producao, e sem chave ela recusa subir
+# em vez de usar uma constante que esta publicada no repositorio.
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() in ("1", "true", "yes")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or ("inseguro-apenas-em-debug" if DEBUG else "")
+if not SECRET_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY e obrigatorio quando DJANGO_DEBUG nao esta ligado."
+    )
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if os.getenv("DJANGO_ALLOWED_HOSTS") else []
 
 INSTALLED_APPS = [
