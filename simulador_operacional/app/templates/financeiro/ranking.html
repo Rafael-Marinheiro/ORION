@@ -20,7 +20,7 @@
         <tbody>
             {% for grupo in ranking %}
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
-                <td class="rank">{{ forloop.counter }}</td>
+                <td class="rank rank--{{ forloop.counter }}">{{ forloop.counter }}</td>
                 <th scope="row">{{ grupo.nome }}</th>
                 <td class="num">{{ grupo.total_lucro|default:"0" }}</td>
             </tr>

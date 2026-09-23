@@ -25,7 +25,12 @@
             <form method="get" class="o-filters" role="search">
                 <p>
                     <label for="rodada">Ver rodada</label>
-                    <input id="rodada" type="number" name="rodada" value="{{ rodada_filtro }}" min="1" inputmode="numeric">
+                    <select id="rodada" name="rodada">
+                        <option value="">Todas as rodadas</option>
+                        {% for rodada in rodadas_disponiveis %}
+                        <option value="{{ rodada.numero }}" {% if rodada_filtro == rodada.numero|stringformat:"s" %}selected{% endif %}>Rodada {{ rodada.numero }}{% if rodada.fechada %} · fechada{% endif %}</option>
+                        {% endfor %}
+                    </select>
                 </p>
                 <div class="o-btnrow">
                     <button type="submit" class="o-btn">Aplicar</button>
@@ -93,6 +98,18 @@
                 {% include 'partials/delta.html' with valor=painel_indicadores.kpis.margem_var tom=painel_indicadores.kpis.margem_tom pontos=True %}
             </article>
         </div>
+    </section>
+    {% endif %}
+
+    {% if evento %}
+    <section class="o-panel o-panel--event" aria-labelledby="evento-titulo">
+        <div>
+            <p class="o-eyebrow">Cenário da rodada{% if rodada_ativa %} {{ rodada_ativa.numero }}{% endif %}</p>
+            <h2 id="evento-titulo" class="o-panel__title">{{ evento.nome }}</h2>
+            <p>{% if evento.frase_indicativa %}{{ evento.frase_indicativa }}{% else %}{{ evento.descricao }}{% endif %}</p>
+            {% if evento.descricao and evento.frase_indicativa %}<p class="o-panel__hint">{{ evento.descricao }}</p>{% endif %}
+        </div>
+        <span class="o-badge o-badge--warn">Impacto ativo</span>
     </section>
     {% endif %}
 
@@ -321,7 +338,7 @@
 {% if grafico_desempenho.labels and not somente_decisoes %}
 {{ grafico_desempenho|json_script:"dados-desempenho-painel" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-<script src="{% static 'js/charts.js' %}" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260923a" defer></script>
 <script>
     (function () {
         var dados = JSON.parse(document.getElementById('dados-desempenho-painel').textContent);

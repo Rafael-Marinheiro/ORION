@@ -32,7 +32,7 @@
         <tbody>
             {% for item in ranking %}
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
-                <td class="rank" data-label="Posição">{% if forloop.counter <= 3 %}{% include 'partials/trophy.svg.html' %}{% endif %}<span>{{ forloop.counter }}</span></td>
+                <td class="rank rank--{{ forloop.counter }}" data-label="Posição">{% if forloop.counter <= 3 %}{% include 'partials/trophy.svg.html' %}{% endif %}<span>{{ forloop.counter }}</span></td>
                 <th scope="row" data-label="Grupo">{{ item.grupo.nome }}</th>
                 <td class="num" data-label="Pontuação">{{ item.pontuacao|floatformat:2 }}</td>
                 <td class="num" data-label="Eficiência Operacional">{{ item.EO|floatformat:1 }}</td>
@@ -116,7 +116,7 @@
 {% if grafico_posicoes.labels %}
 {{ grafico_posicoes|json_script:"dados-posicoes-ranking" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-<script src="{% static 'js/charts.js' %}?v=20260921f" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260923a" defer></script>
 <script>
     (function () {
         var dados = JSON.parse(document.getElementById('dados-posicoes-ranking').textContent);

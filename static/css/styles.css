@@ -18,6 +18,8 @@
     --o-on-star:   #080A12;
     --o-gold:      #D9A441;
     --o-gold-bg:   rgba(217, 164, 65, 0.13);
+    --o-silver:    #B9C4D4;
+    --o-bronze:    #C78552;
     --o-ok:        #5BE49B;
     --o-warn:      #F5B74E;
     --o-bad:       #FF8A8A;
@@ -69,6 +71,8 @@
     --o-on-star:   #FFFFFF;
     --o-gold:      #9A6400;
     --o-gold-bg:   rgba(154, 100, 0, 0.10);
+    --o-silver:    #526074;
+    --o-bronze:    #8A4F24;
     --o-ok:        #0F7A4A;
     --o-warn:      #8A5A00;
     --o-bad:       #C02626;
@@ -549,8 +553,9 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     color: var(--o-ink-dim);
     width: 1%;
 }
-.o-table tr[data-top="true"] .rank { color: var(--o-star); font-weight: 600; }
-.o-table tr[data-top="true"] .rank { color: var(--o-gold); }
+.o-table .rank--1 { color: var(--o-gold); font-weight: 700; }
+.o-table .rank--2 { color: var(--o-silver); font-weight: 700; }
+.o-table .rank--3 { color: var(--o-bronze); font-weight: 700; }
 .o-trophy { display: inline-block; width: 18px; height: 18px; margin-right: var(--o-1); vertical-align: -4px; }
 
 /* Linha de fechamento do DRE e do fluxo de caixa: e o numero que o aluno
@@ -721,6 +726,18 @@ ul.errorlist {
 .o-note--info    { border-left-color: var(--o-star); background: var(--o-star-bg); }
 .o-note--debug   { border-left-color: var(--o-ink-dim); }
 .o-note > :last-child { margin-bottom: 0; }
+
+.o-panel--event {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--o-4);
+    margin-bottom: var(--o-5);
+    border-color: color-mix(in srgb, var(--o-warn) 45%, var(--o-line));
+}
+.o-panel--event .o-eyebrow { color: var(--o-warn); }
+.o-panel--event p { margin: 0 0 var(--o-2); }
+@media (max-width: 640px) { .o-panel--event { flex-direction: column; } }
 
 /* --- 16. Rodape ---------------------------------------------------------- */
 

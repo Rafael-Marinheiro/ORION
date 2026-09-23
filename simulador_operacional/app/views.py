@@ -960,8 +960,14 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             else CapacidadeProdutoGrupo.objects.none()
         )
         aplicacao_financeira = obter_aplicacao_financeira_grupo(grupo) if grupo else None
-        rodada_filtro = request.GET.get("rodada")
-        if rodada_filtro and rodada_filtro.isdigit():
+        rodadas_disponiveis = (
+            list(Rodada.objects.filter(jogo_id=grupo.jogo_id).order_by("numero"))
+            if grupo and grupo.jogo_id
+            else []
+        )
+        numeros_rodadas_disponiveis = {rodada.numero for rodada in rodadas_disponiveis}
+        rodada_filtro = request.GET.get("rodada", "")
+        if rodada_filtro.isdigit() and int(rodada_filtro) in numeros_rodadas_disponiveis:
             rodada_filtrada = int(rodada_filtro)
             resultados = resultados.filter(rodada=rodada_filtrada)
             consolidados = consolidados.filter(rodada=rodada_filtrada)
@@ -1064,6 +1070,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 grupo, rodada_ativa.numero if rodada_ativa else None
             ),
             "rodada_filtro": rodada_filtro or "",
+            "rodadas_disponiveis": rodadas_disponiveis,
         }
 
     def get(self, request, *args, **kwargs):

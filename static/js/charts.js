@@ -89,7 +89,10 @@
                             pointBorderWidth: 2,
                             tension: 0.25,
                             fill: false,
-                            spanGaps: true
+                            spanGaps: true,
+                            // Chart.js desenha pesos menores por cima: a linha
+                            // deve continuar legível sobre as barras financeiras.
+                            order: s.order === undefined ? 1 : s.order
                         };
                     }
                     return {
@@ -101,7 +104,8 @@
                         borderColor: superficie,
                         borderWidth: spec.stacked ? 2 : 1,
                         borderRadius: 4,
-                        borderSkipped: false
+                        borderSkipped: false,
+                        order: s.order === undefined ? 2 : s.order
                     };
                 })
             },

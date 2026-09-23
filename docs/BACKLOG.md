@@ -106,6 +106,13 @@
   - resumo final antes de salvar;
   - bloqueio de inconsistencias.
 
+12. `ORION-P1-08` | `TODO`
+- Tema: Leitura de desempenho por rodada.
+- Escopo: apresentar receita e lucro como linhas no gráfico de desempenho por rodada.
+- Aceite:
+  - as duas séries seguem a mesma escala temporal;
+  - a legenda e os valores continuam distinguíveis em telas pequenas.
+
 ## P2 - Plataforma e governanca
 
 12. `ORION-P2-01` | `CONCLUIDO`

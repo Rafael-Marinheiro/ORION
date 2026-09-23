@@ -25,7 +25,7 @@
         <tbody>
         {% for g in grupos %}
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
-                <td class="rank">{{ forloop.counter }}</td>
+                <td class="rank rank--{{ forloop.counter }}">{{ forloop.counter }}</td>
                 <th scope="row">{{ g.grupo.nome }}</th>
                 <td class="num">{{ g.EO|floatformat:2 }}</td>
                 <td class="num">{{ g.DF|floatformat:2 }}</td>

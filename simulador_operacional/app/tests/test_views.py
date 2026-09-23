@@ -114,6 +114,51 @@ class PainelGrupoViewTest(TestCase):
         self.assertContains(response, "Market share")
         self.assertContains(response, "10,0 p.p.")
 
+    def test_filtro_de_rodadas_lista_apenas_rodadas_do_jogo(self):
+        jogo = Jogo.objects.create(nome="Jogo do painel", config=GameConfig.objects.create())
+        grupo = self._create_group(3)
+        grupo.jogo = jogo
+        grupo.save(update_fields=["jogo"])
+        Rodada.objects.create(jogo=jogo, numero=1, fechada=True, fim=timezone.now())
+        Rodada.objects.create(
+            jogo=jogo, numero=2, fechada=False, fim=timezone.now() + timedelta(days=1)
+        )
+        outro_jogo = Jogo.objects.create(nome="Outro jogo", config=GameConfig.objects.create())
+        Rodada.objects.create(jogo=outro_jogo, numero=3, fechada=True, fim=timezone.now())
+        self.client.login(username="view0@example.com", password="secret")
+
+        response = self.client.get(reverse("painel_grupo"))
+
+        self.assertContains(response, '<select id="rodada" name="rodada">', html=False)
+        self.assertContains(response, "Rodada 1 · fechada")
+        self.assertContains(response, "Rodada 2")
+        self.assertNotContains(response, "Rodada 3")
+
+    def test_painel_exibe_evento_da_rodada_ativa(self):
+        jogo = Jogo.objects.create(nome="Jogo com evento", config=GameConfig.objects.create())
+        grupo = self._create_group(3)
+        grupo.jogo = jogo
+        grupo.save(update_fields=["jogo"])
+        Rodada.objects.create(
+            jogo=jogo, numero=1, fechada=False, fim=timezone.now() + timedelta(days=1)
+        )
+        evento = Evento.objects.create(
+            nome="Demanda aquecida",
+            frase_indicativa="As praças registram procura acima do esperado.",
+            descricao="A demanda cresce nesta rodada.",
+            tipo="demanda",
+            impacto_percentual=10,
+            probabilidade=100,
+        )
+        EventoRodada.objects.create(jogo=jogo, rodada=1, evento=evento)
+        self.client.login(username="view0@example.com", password="secret")
+
+        response = self.client.get(reverse("painel_grupo"))
+
+        self.assertContains(response, "Cenário da rodada 1")
+        self.assertContains(response, "Demanda aquecida")
+        self.assertContains(response, "Impacto ativo")
+
     def test_ranking_and_relatorios_access_for_authenticated_user(self):
         self.client.login(username="view0@example.com", password="secret")
         response_ranking = self.client.get(reverse("ranking"))
