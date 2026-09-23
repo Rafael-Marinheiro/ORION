@@ -42,7 +42,7 @@ class PrimeiraTurmaTest(TestCase):
             "capital_inicial": "1000000", "estoque_inicial": 0,
             "maquinas_iniciais": 40, "maquinas_iniciais_a": 15,
             "maquinas_iniciais_b": 15, "maquinas_iniciais_c": 10,
-            "trabalhadores_iniciais": 80, "numero_rodadas": 3,
+            "trabalhadores_iniciais": 80, "numero_rodadas": 5,
             "produtos_habilitados": "A,B,C", "modulo_producao": "on",
             "modulo_distribuicao": "on", "modulo_financeiro": "on",
             "regra_eventos": "{}", "peso_eo": "1", "peso_df": "0",
@@ -52,7 +52,7 @@ class PrimeiraTurmaTest(TestCase):
         self.assertEqual(resposta.status_code, 302)
         jogo = Jogo.objects.get(nome="Jogo Principal")
         equipes = []
-        for nome in ("Vega", "Rigel"):
+        for nome in ("Vega", "Rigel", "Sirius", "Altair", "Deneb"):
             cadastro = {"nome": nome, "jogo": jogo.pk, "form-TOTAL_FORMS": 3,
                         "form-INITIAL_FORMS": 0}
             for i in range(3):
@@ -75,7 +75,7 @@ class PrimeiraTurmaTest(TestCase):
                         "MP3": ("Assu", 60), "MP4": ("Patos", 80)}
 
         with patch("app.services.eventos.random.choices", return_value=[estabilidade]):
-            for numero in (1, 2, 3):
+            for numero in (1, 2, 3, 4, 5):
                 self.login(prof)
                 resposta = self.client.post(reverse("abrir_rodada"), {
                     "jogo": jogo.pk, "numero": numero,
@@ -148,7 +148,7 @@ class PrimeiraTurmaTest(TestCase):
         antes = list(ResultadoFinanceiro.objects.order_by("pk").values())
         call_command("fechar_rodadas", stdout=StringIO())
         self.assertEqual(list(ResultadoFinanceiro.objects.order_by("pk").values()), antes)
-        self.assertEqual(ConsolidadoRodadaGrupo.objects.count(), 6)
+        self.assertEqual(ConsolidadoRodadaGrupo.objects.count(), 25)
         rival.refresh_from_db()
         self.assertEqual(rival.capital, 999)
         for grupo in equipes:
