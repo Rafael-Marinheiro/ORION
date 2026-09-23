@@ -35,13 +35,12 @@ from rest_framework import status
 
 from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_RODADA
 from .services.dre import montar_dre, montar_fluxo_de_caixa, resumo_do_fluxo
-from .services.eventos import sortear_evento
+from .services.eventos import evento_estado_ativo, sortear_evento
 from .services.investimentos import impedimento_para_investir, limite_de_expansao
 from .services.logistica import calcular_frete, calcular_frete_materia_prima, peso_do_envio
 from .services.marketing import fator_marketing
 from .services.perecibilidade import resumo_vencimento
 from .services.pontuacao import ordenar_classificacao
-from .services.retencao import aplicar_retencao_de_materia_prima
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
     ConfigWizardStep1Form,
@@ -152,23 +151,6 @@ def obter_ceo_rodada(grupo, rodada_numero):
     return grupo.membros.filter(status_usuario=True).order_by("id_usuario").first()
 
 
-def evento_estado_ativo(rodada_numero, efeito_estado, jogo_id=None):
-    eventos_rodada = EventoRodada.objects.filter(rodada__lte=rodada_numero).select_related("evento")
-    if jogo_id:
-        eventos_rodada = eventos_rodada.filter(jogo_id=jogo_id)
-    else:
-        eventos_rodada = eventos_rodada.filter(jogo__isnull=True)
-
-    for er in eventos_rodada.order_by("-rodada"):
-        evento = er.evento
-        if evento.modo_aplicacao != "estado" or evento.efeito_estado != efeito_estado:
-            continue
-        fim_vigencia = er.rodada + max(evento.duracao_rodadas, 1) - 1
-        if rodada_numero <= fim_vigencia:
-            return evento
-    return None
-
-
 def obter_demanda_cidade_produto(cidade, produto):
     demanda = DemandaCidadeProduto.objects.filter(cidade=cidade, produto=produto).first()
     if demanda:
@@ -234,40 +216,6 @@ def fornecedor_valido_para_mp(materia_prima, cidade):
         return True
     nome_cidade = normalizar_nome_cidade(cidade.nome)
     return nome_cidade in permitidas
-
-
-def processar_recebimentos_materia_prima(grupo, rodada_numero):
-    evento_atraso = evento_estado_ativo(
-        rodada_numero=rodada_numero,
-        efeito_estado="atraso_mp",
-        jogo_id=grupo.jogo_id,
-    )
-    pendentes = CompraMateriaPrima.objects.filter(
-        grupo=grupo,
-        recebida=False,
-        rodada_recebimento__lte=rodada_numero,
-    ).select_related("materia_prima")
-    # 8.4: greve e enchentes retem "entregas de MP e produtos". A parcela
-    # retida chega na rodada seguinte -- e quem planejou a producao contando
-    # com ela descobre o buraco agora.
-    evento_rodada = sortear_evento(rodada_numero, grupo.jogo_id)
-    percentual_retido = int(getattr(evento_rodada, "retencao_entregas_percent", 0) or 0)
-
-    for compra in pendentes:
-        if evento_atraso and compra.rodada_recebimento <= rodada_numero:
-            compra.rodada_recebimento = rodada_numero + 1
-            compra.save(update_fields=["rodada_recebimento"])
-            continue
-        recebido = aplicar_retencao_de_materia_prima(compra, percentual_retido, rodada_numero)
-        estoque, _ = EstoqueMateriaPrima.objects.get_or_create(
-            grupo=grupo,
-            materia_prima=compra.materia_prima,
-            defaults={"quantidade_kg": Decimal("0")},
-        )
-        estoque.quantidade_kg += recebido
-        estoque.save(update_fields=["quantidade_kg"])
-        compra.recebida = True
-        compra.save(update_fields=["recebida"])
 
 
 def consumir_materia_prima_para_producao(grupo, produto, quantidade_planejada, aplicar_consumo=True):
@@ -932,8 +880,6 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         investimento_form=None,
     ):
         rodada_ativa = obter_rodada_ativa(grupo) if grupo else None
-        if grupo and rodada_ativa:
-            processar_recebimentos_materia_prima(grupo, rodada_ativa.numero)
         if grupo:
             garantir_capacidades_grupo(grupo)
         resultados = grupo.resultados.all() if grupo else ResultadoFinanceiro.objects.none()
@@ -1122,7 +1068,6 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             messages.error(request, "Nao existe rodada ativa no momento.")
             return redirect("painel_grupo")
 
-        processar_recebimentos_materia_prima(grupo, rodada_ativa.numero)
         garantir_capacidades_grupo(grupo)
 
         if not self.usuario_pode_submeter(request.user, grupo, rodada_ativa.numero):

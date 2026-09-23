@@ -541,10 +541,12 @@ class MateriaPrimaFlowTest(TestCase):
             EstoqueMateriaPrima.objects.filter(grupo=self.grupo, materia_prima=self.mp1).exists()
         )
 
+        # 11.3.c: a entrada de MP no estoque e etapa do fechamento da rodada,
+        # nao efeito colateral de abrir o painel.
         rodada1.fim = timezone.now() - timedelta(minutes=1)
         rodada1.save(update_fields=["fim"])
         Rodada.objects.create(numero=2, fim=timezone.now() + timedelta(hours=1))
-        self.client.get(reverse("painel_grupo"))
+        call_command("fechar_rodadas")
 
         compra.refresh_from_db()
         self.assertTrue(compra.recebida)
