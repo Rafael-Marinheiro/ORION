@@ -1081,10 +1081,26 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, contexto)
 
     def post(self, request, *args, **kwargs):
+        """Toda submissao move capital: uma transacao so cobre os cinco ramos.
+
+        Cada ramo grava o registro, debita o capital do grupo e atualiza o
+        ResultadoFinanceiro em saves separados. Sem transacao, uma falha no
+        meio deixa compra sem debito ou debito sem lancamento contabil.
+        """
+        with transaction.atomic():
+            return self._processar_submissao(request)
+
+    def _processar_submissao(self, request):
         grupo = obter_grupo_do_usuario(request.user)
         if not grupo:
             messages.error(request, "Sem grupo vinculado. Solicite ajuste ao administrador.")
             return redirect("painel_grupo")
+
+        # Relê sob trava: o teste de saldo de cada ramo compara contra este
+        # objeto, e dois envios simultâneos debitariam o mesmo capital.
+        # ponytail: em SQLite o FOR UPDATE é ignorado e sobra a trava de
+        # escrita do próprio arquivo; a trava real vale ao migrar para Postgres.
+        grupo = Grupo.objects.select_for_update().get(pk=grupo.pk)
 
         rodada_ativa = obter_rodada_ativa(grupo)
         if not rodada_ativa:
