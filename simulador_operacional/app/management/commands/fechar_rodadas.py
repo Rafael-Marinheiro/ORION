@@ -10,7 +10,8 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from app.parametros import CUSTO_OPERADOR_POR_RODADA, PESOS_EIXOS
-from app.services.eventos import sortear_evento
+from app.services.eventos import evento_estado_ativo, sortear_evento
+from app.services.suprimentos import processar_recebimentos_materia_prima
 from app.services.marketing import fator_marketing
 from app.services.pontuacao import calcular_eixos, coletar_insumos, pontuacao_total
 from app.services.retencao import aplicar_retencao_de_entregas
@@ -48,19 +49,9 @@ class Command(BaseCommand):
 
     @staticmethod
     def obter_evento_estado_ativo(rodada_numero, jogo_id, efeito_estado):
-        historico = EventoRodada.objects.filter(rodada__lte=rodada_numero).select_related("evento")
-        if jogo_id:
-            historico = historico.filter(jogo_id=jogo_id)
-        else:
-            historico = historico.filter(jogo__isnull=True)
-        for evento_rodada in historico.order_by("-rodada"):
-            evento = evento_rodada.evento
-            if evento.modo_aplicacao != "estado" or evento.efeito_estado != efeito_estado:
-                continue
-            fim_vigencia = evento_rodada.rodada + max(evento.duracao_rodadas, 1) - 1
-            if rodada_numero <= fim_vigencia:
-                return evento
-        return None
+        return evento_estado_ativo(
+            rodada_numero=rodada_numero, efeito_estado=efeito_estado, jogo_id=jogo_id
+        )
 
     @staticmethod
     def calcular_custo_armazenagem_mp(grupo):
@@ -667,6 +658,15 @@ class Command(BaseCommand):
                                     "score_multicriterio": score,
                                 },
                             )
+
+                    # 11.3.f "Preparacao da Nova Rodada": a MP pedida agora
+                    # chega na rodada seguinte (7.3). Entra depois da
+                    # armazenagem e dos indicadores, senao a rodada que fecha
+                    # pagaria estoque que ainda nao existia nela.
+                    for grupo in grupos:
+                        processar_recebimentos_materia_prima(
+                            grupo, rodada.numero + 1, rodada_evento=rodada.numero
+                        )
 
                     rodada.fechada = True
                     rodada.save(update_fields=["fechada"])

@@ -91,3 +91,24 @@ def sortear_evento(rodada, jogo_id=None):
 
     EventoRodada.objects.create(rodada=rodada, jogo_id=jogo_id, evento=escolhido)
     return escolhido
+
+
+def evento_estado_ativo(rodada_numero, efeito_estado, jogo_id=None):
+    """Evento de estado ainda vigente na rodada, se houver.
+
+    Estava escrito duas vezes -- em `views.evento_estado_ativo` e em
+    `fechar_rodadas.obter_evento_estado_ativo` -- com o mesmo corpo. Fica um
+    so, pelo mesmo motivo que o sorteio ficou.
+    """
+    eventos_rodada = _filtro_do_jogo(
+        EventoRodada.objects.filter(rodada__lte=rodada_numero), jogo_id
+    ).select_related("evento")
+
+    for evento_rodada in eventos_rodada.order_by("-rodada"):
+        evento = evento_rodada.evento
+        if evento.modo_aplicacao != "estado" or evento.efeito_estado != efeito_estado:
+            continue
+        fim_vigencia = evento_rodada.rodada + max(evento.duracao_rodadas, 1) - 1
+        if rodada_numero <= fim_vigencia:
+            return evento
+    return None
