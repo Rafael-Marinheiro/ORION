@@ -101,7 +101,7 @@
     </section>
     {% endif %}
 
-    {% if evento %}
+    {% if evento and not somente_decisoes %}
     <section class="o-panel o-panel--event" aria-labelledby="evento-titulo">
         <div>
             <p class="o-eyebrow">Cenário da rodada{% if rodada_ativa %} {{ rodada_ativa.numero }}{% endif %}</p>
@@ -144,8 +144,16 @@
     {% endif %}
     {% endif %}
 
-    {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
-    <ul class="o-notes">
+    {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa or evento %}
+    <ul class="o-notes {% if somente_decisoes %}o-notes--decision{% endif %}">
+        {% if evento and somente_decisoes %}
+            <li class="o-note o-note--event">
+                <p class="o-note__kicker">Manchete da rodada{% if rodada_ativa %} {{ rodada_ativa.numero }}{% endif %}</p>
+                <h2>{{ evento.nome }}</h2>
+                <p>{% if evento.frase_indicativa %}{{ evento.frase_indicativa }}{% else %}{{ evento.descricao }}{% endif %}</p>
+                {% if evento.descricao and evento.frase_indicativa %}<p class="o-muted">{{ evento.descricao }}</p>{% endif %}
+            </li>
+        {% endif %}
         {% if vencimento_proximo %}
             <li class="o-note o-note--warning">
                 <p>
@@ -185,6 +193,12 @@
     {% endif %}
 
     {% if somente_decisoes %}
+    {% if rodada_filtro %}
+    <section class="o-panel o-panel--review-state" aria-label="Modo de revisão">
+        <strong>Revisão da rodada {{ rodada_filtro }}</strong>
+        <span>Esta rodada está fechada. Os registros abaixo permanecem disponíveis para conferência, mas não podem ser alterados.</span>
+    </section>
+    {% endif %}
     <section class="o-flow" aria-labelledby="fluxo-titulo" data-decision-flow>
         <div class="o-flow__heading">
             <div>
@@ -213,14 +227,16 @@
                 <button type="submit" name="enviar_compra_mp" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar compra</button>
             </form>
 
+            <section class="o-decision-card" aria-label="Saldo de matérias-primas">
             <h3>Saldo de matérias-primas</h3>
-            <ul class="o-list">
+            <ul class="o-list o-list--metrics">
                 {% for s in saldos_mp %}
                 <li><span class="tag">{{ s.materia_prima.codigo }}</span> <span class="num">{{ s.quantidade_kg }}</span> kg</li>
                 {% empty %}
                 <li class="o-empty">Nenhum saldo registrado.</li>
                 {% endfor %}
             </ul>
+            </section>
         </section>
 
         <section class="o-panel o-panel--step" data-flow-panel="producao" role="tabpanel" id="etapa-producao" aria-labelledby="tab-producao">
@@ -232,23 +248,27 @@
                 <button type="submit" name="enviar_producao" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar produção</button>
             </form>
 
+            <section class="o-decision-card" aria-label="Capacidade por linha">
             <h3>Capacidade por linha</h3>
-            <ul class="o-list">
+            <ul class="o-list o-list--metrics">
                 {% for c in capacidades_produto %}
                 <li><span class="tag">{{ c.produto.codigo }}</span> <span class="num">{{ c.maquinas }}</span> máq · <span class="num">{{ c.operadores }}</span> op · <span class="num">{{ c.capacidade_unidades_rodada }}</span> un</li>
                 {% empty %}
                 <li class="o-empty">Nenhuma capacidade configurada.</li>
                 {% endfor %}
             </ul>
+            </section>
 
+            <section class="o-decision-card" aria-label="Saldo de produtos">
             <h3>Saldo de produtos</h3>
-            <ul class="o-list">
+            <ul class="o-list o-list--metrics">
                 {% for s in saldos_produto %}
                 <li><span class="tag">{{ s.produto.codigo }}</span> lote R{{ s.rodada_entrada }} · <span class="num">{{ s.quantidade }}</span> un</li>
                 {% empty %}
                 <li class="o-empty">Nenhum saldo registrado.</li>
                 {% endfor %}
             </ul>
+            </section>
         </section>
 
         <section class="o-panel o-panel--step" data-flow-panel="distribuicao" role="tabpanel" id="etapa-distribuicao" aria-labelledby="tab-distribuicao">
@@ -260,14 +280,16 @@
                 <button type="submit" name="enviar_envio" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar distribuição</button>
             </form>
 
+            <section class="o-decision-card" aria-label="Envios realizados">
             <h3>Envios realizados</h3>
-            <ul class="o-list">
+            <ul class="o-list o-list--metrics">
                 {% for e in envios %}
                 <li><span class="tag">R{{ e.rodada }}</span> {{ e.cidade.nome }} · enviado <span class="num">{{ e.quantidade }}</span> · vendido <span class="num">{{ e.quantidade_vendida }}</span> · sobra <span class="num">{{ e.quantidade_sobra }}</span></li>
                 {% empty %}
                 <li class="o-empty">Nenhum envio registrado.</li>
                 {% endfor %}
             </ul>
+            </section>
         </section>
 
         <section class="o-panel o-panel--step" data-flow-panel="investimentos" role="tabpanel" id="etapa-investimentos" aria-labelledby="tab-investimentos">
@@ -287,8 +309,9 @@
                 <button type="submit" name="enviar_investimento" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Registrar investimento</button>
             </form>
 
+            <section class="o-decision-card" aria-label="Investimentos registrados">
             <h3>Investimentos registrados</h3>
-            <ul class="o-list">
+            <ul class="o-list o-list--metrics">
                 {% for i in investimentos %}
                 <li>
                     <span class="tag">R{{ i.rodada }}</span> {{ i.get_categoria_display }} · <span class="num">{{ i.valor }}</span> · ativa em R{{ i.rodada_ativacao }}
@@ -302,6 +325,7 @@
                 <li class="o-empty">Nenhum investimento registrado.</li>
                 {% endfor %}
             </ul>
+            </section>
         </section>
 
         <section class="o-panel o-panel--step" data-flow-panel="revisao" role="tabpanel" id="etapa-revisao" aria-labelledby="tab-revisao">
@@ -346,11 +370,11 @@
         window.orionCharts.push({
             canvas: 'painel-desempenho',
             fallback: 'fb-painel-desempenho',
-            type: 'bar',
+            type: 'line',
             labels: dados.labels,
             series: [
-                { label: 'Receita', data: dados.receita },
-                { label: 'Lucro', type: 'line', data: dados.lucro }
+                { label: 'Receita', type: 'line', data: dados.receita },
+                { label: 'Lucro / prejuízo', type: 'line', data: dados.lucro, color: 'gold' }
             ]
         });
     }());

@@ -50,7 +50,7 @@ def _tom(variacao, subir_e_bom=True):
     return "ok" if positiva == subir_e_bom else "bad"
 
 
-def montar_painel(consolidados):
+def montar_painel(consolidados, grupo_destaque=None):
     """Monta o painel financeiro a partir de um queryset ja filtrado.
 
     `consolidados` deve vir com o escopo de grupo/rodada que a view aplicou.
@@ -138,12 +138,12 @@ def montar_painel(consolidados):
         {
             "canvas": "gr-trajetoria",
             "fallback": "fb-trajetoria",
-            "type": "bar",
+            "type": "line",
             "labels": rotulos,
             "series": [
-                {"label": "Receita", "data": [float(v) for v in receita]},
-                {"label": "Custos totais", "data": [float(v) for v in custos]},
-                {"label": "Lucro", "data": [float(v) for v in lucro], "type": "line"},
+                {"label": "Receita", "data": [float(v) for v in receita], "type": "line"},
+                {"label": "Custos totais", "data": [float(v) for v in custos], "type": "line", "dash": [5, 4]},
+                {"label": "Lucro / prejuízo", "data": [float(v) for v in lucro], "type": "line", "color": "gold"},
             ],
         },
         {
@@ -170,6 +170,7 @@ def montar_painel(consolidados):
                     {
                         "label": "Lucro acumulado",
                         "data": [float(valor) for _, valor in por_grupo],
+                        "colors": ["gold" if nome == grupo_destaque else "series" for nome, _ in por_grupo],
                     }
                 ],
             }

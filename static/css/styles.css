@@ -213,6 +213,17 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-review-list li { display: grid; grid-template-columns: minmax(120px, .32fr) 1fr; gap: var(--o-3); padding: var(--o-3); border-bottom: 1px solid var(--o-line); }
 .o-review-list li:last-child { border-bottom: 0; }
 .o-review-list span { color: var(--o-ink-dim); }
+.o-decision-card { margin-top: var(--o-5); padding: var(--o-4); border: 1px solid var(--o-line); border-radius: var(--o-radius); background: var(--o-panel-2); }
+.o-decision-card h3 { margin: 0 0 var(--o-3); font-size: 1rem; }
+.o-list--metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--o-2); }
+.o-list--metrics li { min-height: 64px; display: flex; align-items: center; }
+.o-panel--review-state { display: flex; justify-content: space-between; align-items: center; gap: var(--o-4); margin-bottom: var(--o-4); border-left: 4px solid var(--o-gold); }
+.o-panel--review-state span { color: var(--o-ink-dim); max-width: 62ch; }
+.o-notes--decision { margin-top: 0; }
+.o-note--event { border-color: var(--o-gold); background: linear-gradient(105deg, var(--o-gold-bg), var(--o-panel)); }
+.o-note--event h2 { margin: 0 0 var(--o-2); font-size: 1.25rem; }
+.o-note__kicker { margin: 0 0 var(--o-1); color: var(--o-gold); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+@media (max-width: 640px) { .o-panel--review-state { align-items: flex-start; flex-direction: column; } }
 
 /* --- 4. Navegacao -------------------------------------------------------- */
 

@@ -1820,11 +1820,12 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
             if dre_consolidado:
                 dre_linhas = montar_dre(dre_consolidado)
 
+        grupo_destaque = obter_grupo_do_usuario(request.user) if not request.user.is_staff else None
         contexto = {
             "nav": "comparativos" if self.modo_comparativo else "relatorios",
             "resultados": resultados.order_by("-rodada", "grupo__nome"),
             "consolidados": consolidados,
-            "painel": montar_painel_financeiro(consolidados),
+            "painel": montar_painel_financeiro(consolidados, grupo_destaque.nome if grupo_destaque else None),
             "form": form,
             "grupo_foco": grupo_foco,
             "dre_consolidado": dre_consolidado,

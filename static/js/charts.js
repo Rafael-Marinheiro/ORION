@@ -55,6 +55,7 @@
         }
         return token('--o-ink-dim');
     }
+    function corEspecial(cor, padrao) { return cor === 'gold' ? token('--o-gold') : padrao; }
 
     function build(spec) {
         var canvas = document.getElementById(spec.canvas);
@@ -71,7 +72,8 @@
             data: {
                 labels: spec.labels || [],
                 datasets: (spec.series || []).map(function (s, i) {
-                    var cor = corDaSerie(cores, i);
+                    var cor = corEspecial(s.color, corDaSerie(cores, i));
+                    var coresDasBarras = s.colors && s.colors.map(function (item) { return corEspecial(item, cor); });
                     var linhaDaSerie = s.type === 'line';
                     if (linhaDaSerie) {
                         /* a linha fica sem preenchimento para nao competir
@@ -83,6 +85,7 @@
                             backgroundColor: 'transparent',
                             borderColor: cor,
                             borderWidth: 2,
+                            borderDash: s.dash || [],
                             pointRadius: 4,
                             pointBackgroundColor: cor,
                             pointBorderColor: superficie,
@@ -98,10 +101,10 @@
                     return {
                         label: s.label,
                         data: s.data,
-                        backgroundColor: cor,
+                        backgroundColor: coresDasBarras || cor,
                         /* 2px da cor da superficie separam os segmentos
                            empilhados e as barras vizinhas */
-                        borderColor: superficie,
+                        borderColor: coresDasBarras || superficie,
                         borderWidth: spec.stacked ? 2 : 1,
                         borderRadius: 4,
                         borderSkipped: false,
