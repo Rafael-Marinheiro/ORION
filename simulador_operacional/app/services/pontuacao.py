@@ -55,7 +55,11 @@ def eficiencia_operacional(*, produzido, planejado, vendidos, disponiveis, perda
 
 
 def eficiencia_estoques(*, custo_das_vendas, estoque_medio):
-    """12.3.3 -- giro: custo das vendas sobre estoque medio, em %."""
+    """Giro: custo das vendas sobre estoque medio, em %.
+
+    Serve ao IE do 12.3.2 e ao EE do 12.3.3 -- a formula e a mesma, o que
+    muda e o estoque no denominador (total ou operacional).
+    """
     return CEM * _razao(custo_das_vendas, estoque_medio)
 
 
@@ -122,19 +126,48 @@ def ordenar_classificacao(linhas):
 
 
 def valor_dos_estoques(grupo):
-    """Estoque de MP mais estoque de produto acabado, a preco de custo."""
+    """Estoque a preco de custo, separado em materia-prima e acabado.
+
+    O 12 pede dois denominadores diferentes, nao um: o IE do 12.3.2 e a
+    "Eficiencia de Estoques (financeira)" e olha o ativo de estoque inteiro;
+    o EE do 12.3.3 mede "eficiencia logistica operacional" sobre o "Estoque
+    Medio Operacional" -- o produto acabado, que e o que gira na operacao
+    comercial. O 7.4 e o 13.8 ja tratam os dois estoques como coisas
+    distintas, com custo de armazenagem proprio para cada um.
+
+    Devolve (total, operacional).
+    """
     from app.models import EstoqueMateriaPrima, EstoqueProduto
 
-    total = Decimal("0")
-    for lote in EstoqueMateriaPrima.objects.filter(grupo=grupo).select_related("materia_prima"):
-        total += _dec(lote.quantidade_kg) * lote.materia_prima.preco_unitario
-    for lote in EstoqueProduto.objects.filter(grupo=grupo).select_related("produto"):
-        total += Decimal(lote.quantidade) * lote.produto.custo_unitario_estimado
-    return total
+    materia_prima = sum(
+        (
+            _dec(lote.quantidade_kg) * lote.materia_prima.preco_unitario
+            for lote in EstoqueMateriaPrima.objects.filter(grupo=grupo).select_related(
+                "materia_prima"
+            )
+        ),
+        Decimal("0"),
+    )
+    operacional = sum(
+        (
+            Decimal(lote.quantidade) * lote.produto.custo_unitario_estimado
+            for lote in EstoqueProduto.objects.filter(grupo=grupo).select_related("produto")
+        ),
+        Decimal("0"),
+    )
+    return materia_prima + operacional, operacional
 
 
 def coletar_insumos(
-    *, grupo, rodada, perdas, lucro, receita, saldo_caixa, valor_estoques_anterior=None
+    *,
+    grupo,
+    rodada,
+    perdas,
+    lucro,
+    receita,
+    saldo_caixa,
+    valor_estoques_anterior=None,
+    valor_operacional_anterior=None,
 ):
     """Numeros brutos da rodada, prontos para as formulas do 12.
 
@@ -180,10 +213,16 @@ def coletar_insumos(
         Decimal("0"),
     )
 
-    valor_estoques = valor_dos_estoques(grupo)
+    valor_estoques, valor_operacional = valor_dos_estoques(grupo)
     if valor_estoques_anterior is None:
         valor_estoques_anterior = valor_estoques
+    if valor_operacional_anterior is None:
+        valor_operacional_anterior = valor_operacional
+    # 12.3.3: "Estoque Medio = (Estoque Inicial + Estoque Final) / 2"
     estoque_medio = (_dec(valor_estoques_anterior) + valor_estoques) / Decimal("2")
+    estoque_medio_operacional = (
+        _dec(valor_operacional_anterior) + valor_operacional
+    ) / Decimal("2")
 
     return {
         "produzido": producoes["produzido"] or 0,
@@ -198,7 +237,9 @@ def coletar_insumos(
         "ativos_medios": _dec(saldo_caixa) + estoque_medio,
         "custo_das_vendas": custo_das_vendas,
         "estoque_medio": estoque_medio,
+        "estoque_medio_operacional": estoque_medio_operacional,
         "valor_estoques": valor_estoques,
+        "valor_estoques_operacional": valor_operacional,
         "demanda_potencial": demanda_potencial,
         "pracas_atendidas": pracas_atendidas,
         "pracas_ativas": Cidade.objects.filter(demanda__gt=0).count(),
@@ -227,9 +268,11 @@ def calcular_eixos(insumos):
             custo_das_vendas=insumos["custo_das_vendas"],
             estoque_medio=insumos["estoque_medio"],
         ),
+        # 12.3.3: EE sobre o Estoque Medio OPERACIONAL. O IE de mesma
+        # formula vive dentro do DF e usa o estoque total (12.3.2).
         "EE": eficiencia_estoques(
             custo_das_vendas=insumos["custo_das_vendas"],
-            estoque_medio=insumos["estoque_medio"],
+            estoque_medio=insumos["estoque_medio_operacional"],
         ),
         "SD": satisfacao_demanda(
             vendidos=insumos["vendidos"],

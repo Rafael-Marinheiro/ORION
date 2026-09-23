@@ -18,6 +18,7 @@ from app.models import (
     ComposicaoProduto,
     Decisao,
     Distribuicao,
+    EstoqueMateriaPrima,
     EstoqueProduto,
     Grupo,
     MateriaPrima,
@@ -28,6 +29,7 @@ from app.models import (
 from app.parametros import PESOS_DF, PESOS_DS, PESOS_EIXOS, PESOS_EO, PESOS_SD
 from app.services.pontuacao import (
     calcular_eixos,
+    coletar_insumos,
     desempenho_financeiro,
     eficiencia_estoques,
     eficiencia_operacional,
@@ -35,6 +37,7 @@ from app.services.pontuacao import (
     pontuacao_total,
     satisfacao_demanda,
     sustentabilidade,
+    valor_dos_estoques,
 )
 
 
@@ -137,6 +140,7 @@ class FormulasTest(TestCase):
                 "ativos_medios",
                 "custo_das_vendas",
                 "estoque_medio",
+                "estoque_medio_operacional",
                 "demanda_potencial",
                 "pracas_atendidas",
                 "pracas_ativas",
@@ -277,3 +281,75 @@ class FechamentoGravaOsCincoEixosTest(TestCase):
 
         anterior = self.grupo.consolidados_rodada.get(rodada=1)
         self.assertGreater(anterior.valor_estoques, Decimal("0"))
+
+
+class EstoqueFinanceiroEOperacionalTest(TestCase):
+    """12.3.2 e 12.3.3 pedem denominadores diferentes.
+
+    O IE que vive dentro do DF e a "Eficiencia de Estoques (financeira)" e
+    olha o ativo de estoque inteiro. O EE do 12.3.3 mede "eficiencia
+    logistica operacional" sobre o "Estoque Medio Operacional". Enquanto os
+    dois recebiam o mesmo estoque medio, o EE era um clone do IE e o giro
+    pesava duas vezes na nota.
+    """
+
+    def setUp(self):
+        self.grupo = Grupo.objects.create(nome="Equipe Estoque", capital=Decimal("100000"))
+        self.materia_prima = MateriaPrima.objects.create(
+            codigo="MP1", nome="MP1", preco_unitario=Decimal("10")
+        )
+        # custo_unitario_estimado e derivado da composicao: 2 kg x R$ 10 = R$ 20
+        self.produto = Produto.objects.create(codigo="A", nome="Produto A")
+        ComposicaoProduto.objects.create(
+            produto=self.produto,
+            materia_prima=self.materia_prima,
+            quantidade_por_unidade=2,
+        )
+
+    def test_valor_dos_estoques_separa_materia_prima_do_acabado(self):
+        EstoqueMateriaPrima.objects.create(
+            grupo=self.grupo, materia_prima=self.materia_prima, quantidade_kg=Decimal("30")
+        )
+        EstoqueProduto.objects.create(
+            grupo=self.grupo, produto=self.produto, rodada_entrada=1, quantidade=10
+        )
+
+        total, operacional = valor_dos_estoques(self.grupo)
+
+        self.assertEqual(total, Decimal("500"))  # 30x10 de MP + 10x20 de acabado
+        self.assertEqual(operacional, Decimal("200"))
+
+    def test_ee_usa_o_estoque_operacional_e_ie_o_total(self):
+        insumos = {
+            "produzido": 0, "planejado": 0, "vendidos": 0, "disponiveis": 0,
+            "perdas": 0, "base_perdas": 0, "lucro": 0, "receita": 0,
+            "ativos_medios": 0, "demanda_potencial": 0, "pracas_atendidas": 0,
+            "pracas_ativas": 0, "distancia_media_compras": 0, "distancia_maxima": 0,
+            "enviados_regionais": 0, "enviados_total": 0,
+            "custo_das_vendas": Decimal("1000"),
+            "estoque_medio": Decimal("1000"),          # total: MP + acabado
+            "estoque_medio_operacional": Decimal("250"),  # so o acabado
+        }
+
+        eixos = calcular_eixos(insumos)
+
+        # EE gira sobre 250: 1000/250 = 400%
+        self.assertEqual(eixos["EE"], Decimal("400"))
+        # o IE dentro do DF gira sobre 1000 (100%) e entra com peso W3 = 0,3
+        self.assertEqual(eixos["DF"], Decimal("30.0"))
+
+    def test_estoque_medio_operacional_usa_a_rodada_anterior(self):
+        """12.3.3: "(Estoque Inicial + Estoque Final) / 2"."""
+        EstoqueProduto.objects.create(
+            grupo=self.grupo, produto=self.produto, rodada_entrada=1, quantidade=10
+        )
+
+        insumos = coletar_insumos(
+            grupo=self.grupo, rodada=1, perdas=0, lucro=0, receita=0, saldo_caixa=0,
+            valor_estoques_anterior=Decimal("600"),
+            valor_operacional_anterior=Decimal("400"),
+        )
+
+        self.assertEqual(insumos["valor_estoques_operacional"], Decimal("200"))
+        self.assertEqual(insumos["estoque_medio_operacional"], Decimal("300"))
+        self.assertEqual(insumos["estoque_medio"], Decimal("400"))

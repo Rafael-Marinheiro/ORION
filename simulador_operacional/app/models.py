@@ -542,8 +542,13 @@ class ConsolidadoRodadaGrupo(models.Model):
     df_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     sd_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
     ds_percent = models.DecimalField(max_digits=7, decimal_places=2, default=0)
-    # Guardado para a rodada seguinte calcular estoque medio (12.3.3).
+    # Guardados para a rodada seguinte calcular o estoque medio (12.3.3).
+    # Sao dois porque o 12 pede dois denominadores: o IE do 12.3.2 usa o
+    # estoque total e o EE do 12.3.3 usa o "Estoque Medio Operacional".
     valor_estoques = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    valor_estoques_operacional = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0
+    )
     score_multicriterio = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     data_registro = models.DateTimeField(auto_now_add=True)
 

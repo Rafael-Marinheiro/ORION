@@ -582,6 +582,9 @@ class Command(BaseCommand):
                             receita=rf.receita,
                             saldo_caixa=rf.saldo_caixa,
                             valor_estoques_anterior=anterior.valor_estoques if anterior else None,
+                            valor_operacional_anterior=(
+                                anterior.valor_estoques_operacional if anterior else None
+                            ),
                         )
                         eixos = calcular_eixos(insumos)
 
@@ -602,6 +605,7 @@ class Command(BaseCommand):
                             "atendimento": atendimento,
                             "eixos": eixos,
                             "valor_estoques": insumos["valor_estoques"],
+                            "valor_estoques_operacional": insumos["valor_estoques_operacional"],
                         }
 
                         if motivos:
@@ -641,6 +645,9 @@ class Command(BaseCommand):
                                     "sd_percent": self.limitar(eixos["SD"]),
                                     "ds_percent": self.limitar(eixos["DS"]),
                                     "valor_estoques": dados["valor_estoques"],
+                                    "valor_estoques_operacional": dados[
+                                        "valor_estoques_operacional"
+                                    ],
                                     "receita_vendas": dados["receita_rodada"],
                                     "custos_operacionais": dados["custos_operacionais"],
                                     "penalidade_sem_submissao": dados["penalidade_sem_submissao"],
