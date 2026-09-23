@@ -40,7 +40,7 @@ from .services.investimentos import impedimento_para_investir, limite_de_expansa
 from .services.logistica import calcular_frete, calcular_frete_materia_prima, peso_do_envio
 from .services.marketing import fator_marketing
 from .services.perecibilidade import resumo_vencimento
-from .services.pontuacao import ordenar_classificacao
+from .services.pontuacao import ordenar_classificacao, satisfacao_por_praca
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
     ConfigWizardStep1Form,
@@ -928,6 +928,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         )
         numeros_rodadas_disponiveis = {rodada.numero for rodada in rodadas_disponiveis}
         rodada_filtro = request.GET.get("rodada", "")
+        rodada_mapa = rodada_ativa.numero if rodada_ativa else None
         if rodada_filtro.isdigit() and int(rodada_filtro) in numeros_rodadas_disponiveis:
             rodada_filtrada = int(rodada_filtro)
             resultados = resultados.filter(rodada=rodada_filtrada)
@@ -937,6 +938,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             producoes = producoes.filter(rodada=rodada_filtrada)
             compras_mp = compras_mp.filter(rodada_pedido=rodada_filtrada)
             investimentos = investimentos.filter(rodada=rodada_filtrada)
+            rodada_mapa = rodada_filtrada
             saldos_produto = saldos_produto.filter(rodada_entrada__lte=rodada_filtrada)
 
         resultados_grafico = list(
@@ -1025,6 +1027,13 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "saldos_mp": saldos_mp,
             "saldos_produto": saldos_produto,
             "capacidades_produto": capacidades,
+            # 12.3.4: a nota usa a SD Global, mas o grupo decide olhando praca
+            # a praca -- e aqui que ele ve onde deixou demanda na mesa.
+            "satisfacao_pracas": (
+                satisfacao_por_praca(grupo=grupo, rodada=rodada_mapa)
+                if grupo and rodada_mapa
+                else []
+            ),
             "linhas_fabrica": linhas_fabrica,
             "aplicacao_financeira": aplicacao_financeira,
             "vencimento_proximo": resumo_vencimento(

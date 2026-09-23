@@ -17,6 +17,7 @@ from app.models import (
     Cidade,
     ComposicaoProduto,
     Decisao,
+    DemandaCidadeProduto,
     Distribuicao,
     EstoqueMateriaPrima,
     EstoqueProduto,
@@ -26,7 +27,7 @@ from app.models import (
     Produto,
     Rodada,
 )
-from app.parametros import PESOS_DF, PESOS_DS, PESOS_EIXOS, PESOS_EO, PESOS_SD
+from app.parametros import PESOS_DF, PESOS_DS, PESOS_EIXOS, PESOS_EO
 from app.services.pontuacao import (
     calcular_eixos,
     coletar_insumos,
@@ -36,6 +37,7 @@ from app.services.pontuacao import (
     ordenar_classificacao,
     pontuacao_total,
     satisfacao_demanda,
+    satisfacao_por_praca,
     sustentabilidade,
     valor_dos_estoques,
 )
@@ -59,7 +61,7 @@ class PesosDoDocumentoTest(TestCase):
         )
 
     def test_pesos_internos_somam_um(self):
-        for pesos in (PESOS_EO, PESOS_DF, PESOS_DS, PESOS_SD):
+        for pesos in (PESOS_EO, PESOS_DF, PESOS_DS):
             self.assertEqual(sum(pesos), Decimal("1"), pesos)
 
 
@@ -87,20 +89,20 @@ class FormulasTest(TestCase):
         self.assertEqual(df, Decimal("69.5"))
 
     def test_satisfacao_da_demanda(self):
-        # 0,6x0,6 + 0,5x0,4
-        sd = satisfacao_demanda(
-            vendidos=60, demanda_potencial=100, pracas_atendidas=2, pracas_ativas=4
+        """12.3.4: vendidas sobre a soma das demandas maximas."""
+        self.assertEqual(
+            satisfacao_demanda(vendidos=1600, demanda_total=64000), Decimal("2.5")
         )
-
-        self.assertEqual(sd, Decimal("56.0"))
 
     def test_satisfacao_da_demanda_nao_passa_de_cem(self):
-        """Vender acima da demanda prevista nao vira credito extra."""
-        sd = satisfacao_demanda(
-            vendidos=500, demanda_potencial=100, pracas_atendidas=4, pracas_ativas=4
+        """Marketing e o boom de consumo elevam a demanda na hora da venda;
+        o denominador e a demanda catalogada, entao a razao pode estourar."""
+        self.assertEqual(
+            satisfacao_demanda(vendidos=500, demanda_total=100), Decimal("100")
         )
 
-        self.assertEqual(sd, Decimal("100"))
+    def test_mercado_sem_demanda_nao_divide_por_zero(self):
+        self.assertEqual(satisfacao_demanda(vendidos=10, demanda_total=0), Decimal("0"))
 
     def test_sustentabilidade(self):
         # 0,9x0,5 + (1-0,25)x0,3 + 0,5x0,2
@@ -141,9 +143,7 @@ class FormulasTest(TestCase):
                 "custo_das_vendas",
                 "estoque_medio",
                 "estoque_medio_operacional",
-                "demanda_potencial",
-                "pracas_atendidas",
-                "pracas_ativas",
+                "demanda_total",
                 "distancia_media_compras",
                 "distancia_maxima",
                 "enviados_regionais",
@@ -158,6 +158,8 @@ class FormulasTest(TestCase):
         self.assertEqual(eixos["EO"], Decimal("20.0"))
         self.assertEqual(eixos["DS"], Decimal("80.0"))
         self.assertEqual(eixos["EE"], Decimal("0"))
+        # sem venda e sem mercado configurado, nada foi atendido
+        self.assertEqual(eixos["SD"], Decimal("0"))
 
 
 class DesempateTest(TestCase):
@@ -323,8 +325,8 @@ class EstoqueFinanceiroEOperacionalTest(TestCase):
         insumos = {
             "produzido": 0, "planejado": 0, "vendidos": 0, "disponiveis": 0,
             "perdas": 0, "base_perdas": 0, "lucro": 0, "receita": 0,
-            "ativos_medios": 0, "demanda_potencial": 0, "pracas_atendidas": 0,
-            "pracas_ativas": 0, "distancia_media_compras": 0, "distancia_maxima": 0,
+            "ativos_medios": 0, "demanda_total": 0, "distancia_media_compras": 0,
+            "distancia_maxima": 0,
             "enviados_regionais": 0, "enviados_total": 0,
             "custo_das_vendas": Decimal("1000"),
             "estoque_medio": Decimal("1000"),          # total: MP + acabado
@@ -353,3 +355,59 @@ class EstoqueFinanceiroEOperacionalTest(TestCase):
         self.assertEqual(insumos["valor_estoques_operacional"], Decimal("200"))
         self.assertEqual(insumos["estoque_medio_operacional"], Decimal("300"))
         self.assertEqual(insumos["estoque_medio"], Decimal("400"))
+
+
+class SatisfacaoPorPracaTest(TestCase):
+    """O mapa de calor do painel: SD Local, praca a praca.
+
+    A nota usa a SD Global; esta leitura existe para o grupo decidir onde
+    reforcar a distribuicao na proxima rodada.
+    """
+
+    def setUp(self):
+        self.grupo = Grupo.objects.create(nome="Equipe Mapa", capital=Decimal("100000"))
+        self.produto = Produto.objects.create(codigo="A", nome="Produto A")
+        self.natal = Cidade.objects.create(nome="Natal", distancia_km=181, demanda=1000)
+        self.acari = Cidade.objects.create(nome="Acari", distancia_km=29, demanda=100)
+        for cidade, demanda in ((self.natal, 1000), (self.acari, 100)):
+            DemandaCidadeProduto.objects.create(
+                cidade=cidade, produto=self.produto, demanda_maxima=demanda
+            )
+
+    def _enviar(self, cidade, quantidade, vendida):
+        Distribuicao.objects.create(
+            grupo=self.grupo,
+            cidade=cidade,
+            produto=self.produto,
+            rodada=1,
+            quantidade=quantidade,
+            preco_unitario=Decimal("10"),
+            custo_transporte=Decimal("0"),
+            quantidade_vendida=vendida,
+        )
+
+    def test_ordena_da_praca_mais_atendida_para_a_menos(self):
+        self._enviar(self.natal, 300, 250)
+        self._enviar(self.acari, 100, 90)
+
+        linhas = satisfacao_por_praca(grupo=self.grupo, rodada=1)
+
+        self.assertEqual([linha["cidade"].nome for linha in linhas], ["Acari", "Natal"])
+        self.assertEqual(linhas[0]["percentual"], Decimal("90"))
+        self.assertEqual(linhas[1]["percentual"], Decimal("25"))
+
+    def test_so_lista_pracas_para_onde_houve_envio(self):
+        self._enviar(self.acari, 50, 50)
+
+        linhas = satisfacao_por_praca(grupo=self.grupo, rodada=1)
+
+        self.assertEqual(len(linhas), 1)
+        self.assertEqual(linhas[0]["cidade"].nome, "Acari")
+
+    def test_venda_acima_da_demanda_nao_passa_de_cem(self):
+        """Marketing eleva a demanda na venda; a praca nao fica acima de 100%."""
+        self._enviar(self.acari, 200, 150)
+
+        linhas = satisfacao_por_praca(grupo=self.grupo, rodada=1)
+
+        self.assertEqual(linhas[0]["percentual"], Decimal("100"))

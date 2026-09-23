@@ -715,7 +715,15 @@ class MateriaPrimaFlowTest(TestCase):
 
         ind1 = IndicadorRodadaGrupo.objects.get(grupo=self.grupo, rodada=3)
         ind2 = IndicadorRodadaGrupo.objects.get(grupo=grupo2, rodada=3)
-        self.assertGreater(ind1.score_multicriterio, ind2.score_multicriterio)
+        # Quem vendeu mais atende mais demanda: o eixo SD tem que refletir isso.
+        # A pontuacao TOTAL nao e comparada de proposito -- o 12.1 diz que a
+        # classificacao "nao se limita ao lucro ou a producao", e aqui o grupo 2
+        # ganha no DF porque tem R$ 396 de ativos contra meio milhao de caixa
+        # parado do grupo 1, o que dispara o ROA do 12.3.2.
+        con1 = ConsolidadoRodadaGrupo.objects.get(grupo=self.grupo, rodada=3)
+        con2 = ConsolidadoRodadaGrupo.objects.get(grupo=grupo2, rodada=3)
+        self.assertGreater(con1.sd_percent, con2.sd_percent)
+        self.assertGreater(con1.eo_percent, con2.eo_percent)
         self.assertEqual(ind1.market_share_percent, Decimal("67.00"))
         self.assertEqual(ind2.market_share_percent, Decimal("33.00"))
 

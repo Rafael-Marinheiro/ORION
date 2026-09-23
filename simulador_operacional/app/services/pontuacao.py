@@ -25,7 +25,6 @@ from app.parametros import (
     PESOS_DS,
     PESOS_EIXOS,
     PESOS_EO,
-    PESOS_SD,
 )
 
 CEM = Decimal("100")
@@ -72,12 +71,77 @@ def desempenho_financeiro(*, lucro, receita, ativos_medios, custo_das_vendas, es
     return il * w1 + ir * w2 + ie * w3
 
 
-def satisfacao_demanda(*, vendidos, demanda_potencial, pracas_atendidas, pracas_ativas):
-    """Profundidade x cobertura. Formula do projeto -- ver PESOS_SD."""
-    s1, s2 = PESOS_SD
-    profundidade = min(_razao(vendidos, demanda_potencial), Decimal("1"))
-    cobertura = min(_razao(pracas_atendidas, pracas_ativas), Decimal("1"))
-    return CEM * (profundidade * s1 + cobertura * s2)
+def satisfacao_demanda(*, vendidos, demanda_total):
+    """12.3.4 -- "grau de atendimento ao mercado", ratificado em 2026-09-23.
+
+    SD = (unidades vendidas / soma das demandas maximas) x 100, somando os
+    pares cidade x produto. Tres escolhas do Product Owner:
+
+    - VENDIDAS, nao entregues: despejar 5.000 unidades numa praca de demanda
+      1.000 entrega cinco vezes mais e satisfaz o mesmo. Entregue/disponivel
+      ja e o segundo termo do EO.
+    - Denominador com TODAS as pracas, nao so as atendidas: quem opera
+      concentrado nao passa da fatia da sua cidade, e a cobertura entra
+      embutida sem precisar de um segundo termo.
+    - Denominador calculado, nunca digitado: a soma muda com a base de
+      pracas em uso.
+
+    Teto em 100: marketing (14.1) e o evento de boom (8.4) elevam a demanda
+    no momento da venda, e o denominador aqui e a demanda catalogada.
+    """
+    return CEM * min(_razao(vendidos, demanda_total), Decimal("1"))
+
+
+def demanda_total_do_mercado():
+    """Soma das demandas maximas de todos os pares cidade x produto ativos."""
+    from app.models import Cidade, DemandaCidadeProduto
+
+    total = DemandaCidadeProduto.objects.filter(produto__ativo=True).aggregate(
+        total=Sum("demanda_maxima")
+    )["total"]
+    if total:
+        return int(total)
+    # Base sem demanda por produto: cai na demanda da cidade, como o
+    # `obter_demanda_cidade_produto` do fechamento.
+    return int(Cidade.objects.aggregate(total=Sum("demanda"))["total"] or 0)
+
+
+def satisfacao_por_praca(*, grupo, rodada):
+    """SD Local de cada praca atendida, para o mapa de calor do painel.
+
+    A nota usa a SD Global; isto aqui e diagnostico -- mostra ao grupo onde
+    ele deixou demanda na mesa.
+    """
+    from app.models import DemandaCidadeProduto, Distribuicao
+
+    envios = Distribuicao.objects.filter(grupo=grupo, rodada=rodada).select_related(
+        "cidade", "produto"
+    )
+    vendidas = {}
+    cidades = {}
+    for envio in envios:
+        cidades[envio.cidade_id] = envio.cidade
+        vendidas[envio.cidade_id] = vendidas.get(envio.cidade_id, 0) + envio.quantidade_vendida
+
+    demandas = {}
+    for linha in DemandaCidadeProduto.objects.filter(
+        produto__ativo=True, cidade_id__in=cidades
+    ):
+        demandas[linha.cidade_id] = demandas.get(linha.cidade_id, 0) + linha.demanda_maxima
+
+    linhas = []
+    for cidade_id, cidade in cidades.items():
+        demanda = demandas.get(cidade_id) or cidade.demanda
+        vendida = vendidas.get(cidade_id, 0)
+        linhas.append(
+            {
+                "cidade": cidade,
+                "vendidas": vendida,
+                "demanda": demanda,
+                "percentual": CEM * min(_razao(vendida, demanda), Decimal("1")),
+            }
+        )
+    return sorted(linhas, key=lambda linha: -linha["percentual"])
 
 
 def sustentabilidade(
@@ -198,9 +262,6 @@ def coletar_insumos(
         ),
         Decimal("0"),
     )
-    cidades_alvo = {envio.cidade_id: envio.cidade for envio in envios}
-    pracas_atendidas = len({envio.cidade_id for envio in envios if envio.quantidade_vendida > 0})
-    demanda_potencial = sum(cidade.demanda for cidade in cidades_alvo.values())
 
     compras = list(
         CompraMateriaPrima.objects.filter(grupo=grupo, rodada_pedido=rodada).select_related(
@@ -240,9 +301,7 @@ def coletar_insumos(
         "estoque_medio_operacional": estoque_medio_operacional,
         "valor_estoques": valor_estoques,
         "valor_estoques_operacional": valor_operacional,
-        "demanda_potencial": demanda_potencial,
-        "pracas_atendidas": pracas_atendidas,
-        "pracas_ativas": Cidade.objects.filter(demanda__gt=0).count(),
+        "demanda_total": demanda_total_do_mercado(),
         "distancia_media_compras": _razao(km_ponderado, kg_comprado),
         "distancia_maxima": Cidade.objects.aggregate(m=Max("distancia_km"))["m"] or 0,
         "enviados_regionais": regionais,
@@ -276,9 +335,7 @@ def calcular_eixos(insumos):
         ),
         "SD": satisfacao_demanda(
             vendidos=insumos["vendidos"],
-            demanda_potencial=insumos["demanda_potencial"],
-            pracas_atendidas=insumos["pracas_atendidas"],
-            pracas_ativas=insumos["pracas_ativas"],
+            demanda_total=insumos["demanda_total"],
         ),
         "DS": sustentabilidade(
             perdas=insumos["perdas"],

@@ -134,6 +134,33 @@
     </section>
     {% endif %}
 
+    {% if satisfacao_pracas %}
+    <section class="o-panel" aria-labelledby="satisfacao-titulo">
+        <h2 id="satisfacao-titulo" class="o-panel__title">Satisfação da demanda por praça</h2>
+        <p class="o-panel__hint">
+            Quanto da demanda de cada cidade o grupo atendeu nesta rodada. A nota do eixo SD
+            usa o total do mercado; esta leitura mostra onde sobrou demanda na mesa.
+        </p>
+        <ul class="o-heat">
+            {% for praca in satisfacao_pracas %}
+            <li class="o-heat__row"
+                data-nivel="{% if praca.percentual >= 75 %}alto{% elif praca.percentual >= 40 %}medio{% else %}baixo{% endif %}">
+                <span class="o-heat__nome">{{ praca.cidade.nome }}</span>
+                <span class="o-heat__track"
+                      role="progressbar"
+                      aria-label="Demanda atendida em {{ praca.cidade.nome }}"
+                      aria-valuemin="0" aria-valuemax="100"
+                      aria-valuenow="{{ praca.percentual|floatformat:0 }}">
+                    <span style="--o-fill: {{ praca.percentual|floatformat:0 }}%"></span>
+                </span>
+                <span class="o-heat__valor o-num">{{ praca.percentual|floatformat:0 }}%</span>
+                <span class="o-heat__detalhe o-muted">{{ praca.vendidas }} de {{ praca.demanda }} un</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
     {% if grafico_desempenho.labels %}
     <section class="o-panel o-panel--chart" aria-labelledby="desempenho-titulo">
         <h2 id="desempenho-titulo" class="o-panel__title">Desempenho por rodada</h2>

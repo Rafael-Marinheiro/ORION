@@ -192,6 +192,31 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-factory__track { height: 8px; margin-top: var(--o-2); border-radius: 999px; overflow: hidden; background: var(--o-line); }
 .o-factory__track span { display: block; width: var(--o-fill); height: 100%; border-radius: inherit; background: var(--o-star); }
 
+/* Mapa de calor da satisfação da demanda (12.3.4). A cor é reforço, nunca a
+   única pista: o percentual e o "X de Y un" ficam escritos ao lado, para
+   quem não distingue as faixas por cor. */
+.o-heat { list-style: none; margin: var(--o-4) 0 0; padding: 0; display: grid; gap: var(--o-2); }
+.o-heat__row {
+    display: grid;
+    grid-template-columns: minmax(7rem, 1fr) minmax(4rem, 2fr) auto;
+    grid-template-areas: "nome track valor" "detalhe detalhe detalhe";
+    align-items: center;
+    gap: var(--o-1) var(--o-3);
+}
+.o-heat__nome { grid-area: nome; }
+.o-heat__track { grid-area: track; height: 8px; border-radius: 999px; overflow: hidden; background: var(--o-line); }
+.o-heat__track span { display: block; width: var(--o-fill); height: 100%; border-radius: inherit; background: var(--o-bad); }
+.o-heat__valor { grid-area: valor; font-variant-numeric: tabular-nums; }
+.o-heat__detalhe { grid-area: detalhe; font-size: 0.8125rem; }
+.o-heat__row[data-nivel="alto"] .o-heat__track span { background: var(--o-ok); }
+.o-heat__row[data-nivel="medio"] .o-heat__track span { background: var(--o-warn); }
+@media (min-width: 640px) {
+    .o-heat__row {
+        grid-template-columns: minmax(7rem, 1fr) minmax(6rem, 3fr) auto auto;
+        grid-template-areas: "nome track valor detalhe";
+    }
+}
+
 /* Fluxo O-O-O-O-O: reduz a carga cognitiva sem esconder a ordem real das
    decisões. JavaScript apenas troca painéis; sem ele, os painéis seguem
    legíveis porque o HTML continua sendo a fonte de verdade. */

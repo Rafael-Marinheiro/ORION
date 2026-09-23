@@ -94,14 +94,12 @@ PESOS_EO = (Decimal("0.4"), Decimal("0.4"), Decimal("0.2"))
 PESOS_DF = (Decimal("0.4"), Decimal("0.3"), Decimal("0.3"))
 PESOS_DS = (Decimal("0.5"), Decimal("0.3"), Decimal("0.2"))
 
-# O 12.3.4 se intitula "Satisfacao da Demanda (SD)" mas o corpo define DS --
-# a formula do SD nao existe em nenhum dos 15 documentos. Decisao do projeto
-# (autorizada por Rafael em 2026-09-18): profundidade + cobertura.
-#   SD = (vendido / demanda potencial das pracas-alvo) x 0,6
-#      + (pracas atendidas / pracas ativas) x 0,4
-# Nao reaproveita `atendimento_demanda_percent`, que e vendido/ofertado --
-# metrica de oferta, e duplicata do segundo componente do EO.
-PESOS_SD = (Decimal("0.6"), Decimal("0.4"))
+# SD nao tem pesos internos: o 12.3.4 traz titulo e glosa do SD sobre a
+# formula do DS, e a formula do SD nao existe em nenhum dos 15 documentos.
+# O Product Owner definiu em 2026-09-23:
+#   SD = (unidades vendidas / soma das demandas maximas) x 100
+# Denominador sobre TODAS as pracas e calculado em tempo de execucao --
+# ver `satisfacao_demanda` e `demanda_total_do_mercado`.
 
 # O DS3 do 12.3.4 premia entregas ate 1.000 km. No mapa regional a praca mais
 # distante esta a 470 km, entao o limiar do documento daria 100% para todo
