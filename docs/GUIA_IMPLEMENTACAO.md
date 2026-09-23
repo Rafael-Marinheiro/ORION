@@ -132,7 +132,7 @@ DF = (IL × W₁) + (IR × W₂) + (IE × W₃)                    W₁=0,4 W₂
 EE = (Custo das Vendas / Estoque Médio Operacional) × 100
      Estoque Médio = (Estoque Inicial + Estoque Final) / 2
 
-SD = SEM FÓRMULA NO DOCUMENTO  (ver B8)
+SD = (Σ vendidas / Σ demandas máximas) × 100   definida pelo PO, ver B8
 
 DS = (DS₁ × S₁) + (DS₂ × S₂) + (DS₃ × S₃)                 S₁=0,5 S₂=0,3 S₃=0,2
   DS₁ = 1 − (Perdas Totais / (MP + Produtos))
@@ -144,7 +144,8 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
 
 #### Problemas que a leitura das fórmulas revelou
 
-- **B8 · SD não tem fórmula. Verificado na fonte, não na conversão.**
+- **B8 · SD não tinha fórmula no documento. `RESOLVIDO` em 23/09/2026 pelo
+  Product Owner — ver a seção B8 adiante.**
   "Satisfação da Demanda" aparece **4 vezes em toda a especificação de 15
   documentos**, todas no doc 12, e todas são menção — nunca definição: a lista
   de eixos (§12.2), o título da seção (§12.3.4), a tabela de pesos (§12.4) e o
@@ -180,43 +181,55 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
   facilidade — a própria tabela de exemplo do §12.6 traz EE de 110 e 105. A
   soma ponderada precisa saber lidar com isso.
 
-### B8 · Fórmula de SD — aguardando ratificação do Product Owner
+### B8 · Fórmula de SD — `RATIFICADA` pelo Product Owner em 23/09/2026
 
-**Constatação em 20/09/2026:** o código já implementa SD 60/40 e o limiar
-regional de 200 km (`parametros.py` registra autorização anterior do Rafael).
-O estado anterior deste guia dizia que SD não estava implementado. A automação
-preservou o código e registrou a ratificação pedagógica pendente; a passagem
-dos testes não implica aprovação da fórmula pelo Dr. Pio.
+O §12.3.4 traz **título e glosa do SD sobre a fórmula do DS**. Verificado na
+imagem original (`word/media/image8.png`), não na conversão: a transcrição em
+Markdown é fiel, o erro é de edição do documento. Como não existe §12.3.5, a
+leitura coerente é que ali deveriam ser duas seções — a que sobrou é a do DS,
+e a do SD se perdeu.
 
-O eixo vale 0,20, o segundo maior peso, e não pode ficar indefinido. A
-proposta abaixo parte da única frase que o documento oferece sobre ele —
-"avalia o grau de atendimento ao mercado nas praças-alvo" (§12.3.4) — e evita
-sobreposição com os outros quatro eixos.
+Confirmado pela própria tabela do §12.6, que dá valores **diferentes** para os
+dois eixos (G1: SD 85, DS 92; G3 chega a inverter, SD 82 contra DS 75). Se
+compartilhassem fórmula, as colunas seriam idênticas.
+
+**A fórmula, definida pelo Dr. Pio:**
 
 ```
-SD = (SD₁ × T₁) + (SD₂ × T₂)                             T₁ = 0,6  T₂ = 0,4
-
-SD₁ = Produtos Vendidos / Demanda Potencial das praças ativas
-      quanto do mercado disponível a equipe capturou
-
-SD₂ = Praças Atendidas / Praças Ativas
-      em quantos mercados a equipe se fez presente
+SD Local  = (Unidades vendidas na praça / Demanda máxima da praça) × 100
+SD Global = (Σ unidades vendidas / Σ demandas máximas) × 100
 ```
 
-Por que só dois componentes, e não três como nos demais eixos: qualquer
-terceiro candidato colide com um eixo existente. "Vendido / Enviado" é o
-segundo componente de EO. "Sobra / Enviado" é o mesmo, invertido. Giro de
-estoque já aparece duas vezes (B9). Padronizar a forma ao custo de medir a
-mesma coisa três vezes seria pior que a assimetria.
+somando os pares cidade × produto. A **SD Global** é a que pontua; a **SD
+Local** alimenta o mapa de calor do painel, como apoio à decisão.
 
-**SD₂ é o que dá caráter próprio ao eixo:** pune concentrar tudo na praça
-mais rentável e ignorar o resto do mercado — decisão que hoje não tem
-consequência nenhuma na nota.
+**Três pontos decididos junto com ele, e o porquê:**
 
-**Atenção ao implementar:** o campo `atendimento_demanda_percent` que existe
-hoje **não serve** para SD. Ele calcula `vendidos / ofertados`, isto é, se o
-que a equipe enviou vendeu — métrica de oferta, não de demanda, e duplicata
-do segundo componente de EO. O nome engana.
+| Ponto | Decisão | Razão |
+|---|---|---|
+| Vendidas ou entregues | **Vendidas** | O §9.2 limita a absorção à demanda. Com "entregues", despejar 5.000 numa praça de demanda 1.000 daria SD = 500%. E `entregue/disponível` já é o segundo termo do EO. |
+| Denominador | **Todas as praças** | Quem opera concentrado não passa da fatia da sua cidade. A cobertura entra embutida, sem o segundo termo artificial que a fórmula anterior precisava. |
+| Valor do denominador | **Calculado** | A proposta original trazia 64.000 fixo. A soma do §9.1 dá 66.000, e é *por produto* — com três produtos, 198.000. Na base regional, outro número. Fixo quebraria em silêncio. |
+
+**Teto em 100:** marketing (§14.1) e o evento de boom (§8.4) elevam a demanda
+no momento da venda, e o denominador aqui é a demanda catalogada. Sem o teto,
+o eixo passaria de 100 por efeito de outro módulo.
+
+**O que saiu:** a fórmula anterior (`profundidade × 0,6 + cobertura × 0,4`)
+era invenção do projeto. O termo de cobertura dava **+40 pontos fixos** a quem
+atendesse uma praça de uma praça ativa — bônus artificial que mascarava o
+comportamento real dos outros eixos.
+
+**Efeito colateral registrado:** com o bônus fora, o cenário de
+`test_fechamento_distribui_demanda_por_preco` inverteu. O grupo que vendeu
+mais (67 contra 33) vence em EO e SD, mas perde no DF, porque tem meio milhão
+de caixa parado e o IR (ROA) do §12.3.2 pune ativo ocioso. É a fórmula do
+documento funcionando; o teste deixou de comparar a pontuação total e passou a
+comparar eixo a eixo.
+
+**Atenção:** o campo `atendimento_demanda_percent` **não serve** para SD. Ele
+calcula `vendidos / ofertados` — métrica de oferta, não de demanda, e
+duplicata do segundo componente de EO. O nome engana.
 
 ### Critérios de desempate: existem, e são dois
 
@@ -240,8 +253,8 @@ Decisão B5 mantida no **§12.5**, agora com três apoios em vez de um:
 3. com a fórmula de DS recuperada, o critério 3 do §12.5 deixou de ser
    inimplementável.
 
-**Mas o critério 2 do §12.5 depende de SD, que não tem fórmula (B8).** Até
-isso ser resolvido, o desempate só roda do critério 1 ao 5 pulando o 2.
+O critério 2 do §12.5 depende de SD, que ganhou fórmula em 23/09/2026 (B8).
+O desempate roda agora do critério 1 ao 5, sem pular nenhum.
 
 ### Quem decide o quê
 
@@ -255,20 +268,18 @@ Três categorias, com dono diferente:
 | Categoria | Quem decide | Exemplos |
 |---|---|---|
 | **A especificação se contradiz** | Dr. Pio | B1–B5: composição, perecibilidade, capacidade, eventos por rodada, desempate |
-| **A especificação é omissa ou não fecha** | Dr. Pio | B8 (SD sem fórmula), B10 (limiar de 1.000 km), frete de produto |
+| **A especificação é omissa ou não fecha** | Dr. Pio | B10 (limiar de 1.000 km), frete de produto |
 | **Contexto de aplicação da turma** | Rafael | D9.1–D9.3: sede, praças regionais, demanda por população |
 
 **Pendências para o Dr. Pio, por ordem de impacto:**
 
-1. **B8 · Fórmula de SD.** A proposta registrada é invenção minha, não dele.
-   Vale 0,20 da nota. Não deve ser implementada sem ratificação.
-2. **D11 · Variedade de eventos.** O §8.2 pede probabilidade constante; a
+1. **D11 · Variedade de eventos.** O §8.2 pede probabilidade constante; a
    redução de peso do evento recente a torna levemente dependente do
    histórico (até 1,3 p.p. de desvio). Atende ao pedido de variedade do dono
    do projeto, mas afasta-se da letra do documento.
-3. **D9.5 · Custo do operador.** Ele escreveu R$ 1.800/mês; a rodada virou o
+2. **D9.5 · Custo do operador.** Ele escreveu R$ 1.800/mês; a rodada virou o
    período de competência da folha. Leitura, não transcrição.
-4. **B10.** O limiar de 1.000 km em DS₃, que a base regional tornou inócuo.
+3. **B10.** O limiar de 1.000 km em DS₃, que a base regional tornou inócuo.
    (B9 saiu desta lista: o §12 distingue IE de EE e a implementação é que
    havia colapsado os dois — corrigido em 2026-09-23.)
 
