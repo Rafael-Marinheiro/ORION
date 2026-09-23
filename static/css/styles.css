@@ -294,28 +294,31 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 
 /* Em telas amplas, a navegação vira uma coluna estável. Assim, o aluno não
    perde o contexto ao percorrer relatórios e decisões. No tablet/celular a
-   mesma estrutura volta ao topo e abre somente quando solicitada. */
+   mesma estrutura volta ao topo e abre somente quando solicitada.
+
+   Só vale dentro do app (body[data-app]): em home e login a coluna de 244px
+   carregaria dois links e um botão Entrar ao lado do formulário de entrar. */
 @media (min-width: 1024px) {
-    .o-nav {
+    [data-app] .o-nav {
         position: fixed;
         inset: 0 auto 0 0;
         width: 244px;
         border-right: 1px solid var(--o-line);
         border-bottom: 0;
     }
-    .o-nav__inner {
+    [data-app] .o-nav__inner {
         width: 100%; height: 100%; max-width: none;
         padding: var(--o-5) var(--o-3);
         flex-direction: column; align-items: stretch; gap: var(--o-4);
     }
-    .o-brand { width: 188px; min-height: 52px; margin: 0 var(--o-2); }
-    .o-nav__links { width: 100%; flex: 0 1 auto; flex-direction: column; align-items: stretch; gap: var(--o-1); flex-wrap: nowrap; overflow-y: auto; }
-    .o-nav__link { display: flex; align-items: center; min-height: 44px; padding: var(--o-2) var(--o-3); }
-    .o-nav__link[aria-current="page"] { box-shadow: inset 3px 0 0 var(--o-star); }
-    .o-nav__end { margin-top: auto; padding: var(--o-2); border-top: 1px solid var(--o-line); flex-wrap: wrap; }
-    .o-nav__end > * { flex: 1 1 100%; }
-    .o-nav__end .o-btn { width: 100%; }
-    .o-rail, .o-boletim, main, .o-foot {
+    [data-app] .o-brand { width: 188px; min-height: 52px; margin: 0 var(--o-2); }
+    [data-app] .o-nav__links { width: 100%; flex: 0 1 auto; flex-direction: column; align-items: stretch; gap: var(--o-1); flex-wrap: nowrap; overflow-y: auto; }
+    [data-app] .o-nav__link { display: flex; align-items: center; min-height: 44px; padding: var(--o-2) var(--o-3); }
+    [data-app] .o-nav__link[aria-current="page"] { box-shadow: inset 3px 0 0 var(--o-star); }
+    [data-app] .o-nav__end { margin-top: auto; padding: var(--o-2); border-top: 1px solid var(--o-line); flex-wrap: wrap; }
+    [data-app] .o-nav__end > * { flex: 1 1 100%; }
+    [data-app] .o-nav__end .o-btn { width: 100%; }
+    [data-app] .o-rail, [data-app] .o-boletim, [data-app] main, [data-app] .o-foot {
         width: calc(100% - 244px);
         margin-left: 244px;
     }
@@ -525,6 +528,7 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 }
 .o-kpi__value--text { font-family: var(--o-sans); font-size: 1.0625rem; }
 .o-kpi__foot { font-size: 0.8125rem; color: var(--o-ink-dim); margin-top: var(--o-1); }
+.o-kpi__unit { font-size: 0.75em; font-weight: 400; color: var(--o-ink-dim); }
 
 /* --- 10. Tabelas --------------------------------------------------------- */
 

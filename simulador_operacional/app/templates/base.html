@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260923a">
     {% block head_extra %}{% endblock %}
 </head>
-<body>
+<body{% if user.is_authenticated %} data-app="true"{% endif %}>
 <a class="o-skip" href="#conteudo">Pular para o conteúdo</a>
 
 <header>
@@ -141,7 +141,7 @@
 <main id="conteudo" tabindex="-1">
     <div class="o-shell">
         {% if messages %}
-        <ul class="o-notes">
+        <ul class="o-notes" role="status">
             {% for m in messages %}
             <li class="o-note o-note--{{ m.tags|default:'info' }}">{{ m }}</li>
             {% endfor %}
