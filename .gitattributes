@@ -1,0 +1,4 @@
+# Scripts de container precisam de LF: com CRLF o sh do Linux
+# morre em "set: Illegal option -" e a aplicacao nao sobe.
+*.sh text eol=lf
+Dockerfile text eol=lf
