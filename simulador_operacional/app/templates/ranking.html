@@ -116,7 +116,7 @@
 {% if grafico_posicoes.labels %}
 {{ grafico_posicoes|json_script:"dados-posicoes-ranking" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-<script src="{% static 'js/charts.js' %}?v=20260923a" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260923b" defer></script>
 <script>
     (function () {
         var dados = JSON.parse(document.getElementById('dados-posicoes-ranking').textContent);

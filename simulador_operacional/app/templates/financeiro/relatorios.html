@@ -75,7 +75,7 @@
     <div class="o-stack">
         <section class="o-panel">
             <h2 class="o-panel__title">Trajetória por rodada</h2>
-            <p class="o-panel__hint">Barras de receita e custo com o lucro sobreposto. Receita subindo não garante lucro subindo.</p>
+            <p class="o-panel__hint">Linhas de receita, custo e lucro/prejuízo. Receita subindo não garante resultado positivo.</p>
             <div class="o-chart"><canvas id="gr-trajetoria"></canvas></div>
             <p id="fb-trajetoria" class="o-muted" hidden>Gráfico indisponível: a biblioteca externa não carregou. Os números seguem nas tabelas abaixo.</p>
         </section>
@@ -260,7 +260,7 @@
 {% if painel.tem_dados %}
 {{ painel.graficos|json_script:"dados-graficos" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-<script src="{% static 'js/charts.js' %}?v=20260923a" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260923b" defer></script>
 <script>
     window.orionCharts = (window.orionCharts || []).concat(
         JSON.parse(document.getElementById('dados-graficos').textContent)
