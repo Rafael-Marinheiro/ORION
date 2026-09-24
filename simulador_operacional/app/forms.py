@@ -118,7 +118,10 @@ class DistribuicaoForm(RotuloSemDoisPontos, forms.ModelForm):
     # Rotulo vai na declaracao: `Meta.labels` so alcanca campo gerado do modelo.
     produto = forms.ModelChoiceField(queryset=Produto.objects.filter(ativo=True), label="Produto")
     cidade = forms.ModelChoiceField(
-        queryset=Cidade.objects.all(),
+        # So praca em jogo. Praca aposentada pelo 9.1 fica com demanda zero
+        # e o `seed_dados_base` mantem isso; oferece-la seria um destino que
+        # cobra frete e nao vende nada.
+        queryset=Cidade.objects.filter(demanda__gt=0),
         label="Praça de destino",
         help_text="A distância define o frete e o foco regional.",
     )
@@ -154,7 +157,9 @@ class CompraMateriaPrimaForm(RotuloSemDoisPontos, forms.ModelForm):
         queryset=MateriaPrima.objects.filter(ativa=True), label="Matéria-prima"
     )
     cidade_fornecedora = forms.ModelChoiceField(
-        queryset=Cidade.objects.all(),
+        # Mesma regra do destino: praca fora da base do 9.1 nao e fornecedora
+        # valida no 7.1, e listar uma so produz submissao recusada.
+        queryset=Cidade.objects.filter(demanda__gt=0),
         label="Comprar de",
         help_text="A distância até a sede define o frete.",
     )

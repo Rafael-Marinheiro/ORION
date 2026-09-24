@@ -5,18 +5,71 @@ from django.core.management.base import BaseCommand
 from app.models import (
     Cidade,
     ComposicaoProduto,
+    CompraMateriaPrima,
     DemandaCidadeProduto,
+    Distribuicao,
     Evento,
     GameConfig,
     Jogo,
+    Investimento,
+    MarketShareCidadeProduto,
     MateriaPrima,
     Produto,
     default_ranking_pesos,
 )
 
 
+# A base regional que o 9.1 substituiu (D9.2). Nomeada, e nao deduzida por
+# "tudo que nao esta no 9.1", porque o professor pode cadastrar praca propria
+# e ela nao pode ser varrida junto. Recife e Fortaleza estavam nas duas bases
+# com distancias diferentes -- essas o seed corrige no lugar, nao remove.
+PRACAS_DA_BASE_REGIONAL = (
+    "Currais Novos", "Acari", "Caico", "Santa Cruz", "Patos", "Assu",
+    "Natal", "Campina Grande", "Mossoro", "Joao Pessoa",
+)
+
+
 class Command(BaseCommand):
     help = "Popula dados base do simulador (idempotente)."
+
+    def aposentar_pracas_legadas(self):
+        """Tira de jogo as pracas da base regional que o 9.1 substituiu.
+
+        Praca sem movimento e apagada. Praca com movimento fica: apagar
+        levaria junto o historico de envios das turmas passadas, porque
+        `Distribuicao.cidade` e CASCADE. Ela sai de jogo por demanda zero,
+        que e o que o fechamento consulta -- e o formulario de destino so
+        oferece praca com demanda, entao ela some da tela tambem.
+        """
+        legadas = Cidade.objects.filter(nome__in=PRACAS_DA_BASE_REGIONAL)
+        apagadas, aposentadas = [], []
+        for cidade in legadas:
+            tem_historico = (
+                Distribuicao.objects.filter(cidade=cidade).exists()
+                or CompraMateriaPrima.objects.filter(cidade_fornecedora=cidade).exists()
+                or MarketShareCidadeProduto.objects.filter(cidade=cidade).exists()
+                or Investimento.objects.filter(cidade=cidade).exists()
+            )
+            if tem_historico:
+                DemandaCidadeProduto.objects.filter(cidade=cidade).update(demanda_maxima=0)
+                if cidade.demanda:
+                    cidade.demanda = 0
+                    cidade.save(update_fields=["demanda"])
+                aposentadas.append(cidade.nome)
+            else:
+                DemandaCidadeProduto.objects.filter(cidade=cidade).delete()
+                apagadas.append(cidade.nome)
+                cidade.delete()
+
+        if apagadas:
+            self.stdout.write(
+                "Praças fora do §9.1 removidas: " + ", ".join(sorted(apagadas))
+            )
+        if aposentadas:
+            self.stdout.write(
+                "Praças fora do §9.1 com histórico — demanda zerada, histórico "
+                "preservado: " + ", ".join(sorted(aposentadas))
+            )
 
     def handle(self, *args, **options):
         config, _ = GameConfig.objects.get_or_create(
@@ -115,6 +168,13 @@ class Command(BaseCommand):
                 nome=nome,
                 defaults={"distancia_km": distancia, "demanda": demanda},
             )
+
+        # A base do 9.1 substitui a anterior -- nao convive com ela.
+        # `update_or_create` so acrescenta, entao quem ja tinha rodado a
+        # versao regional ficava com as dez pracas do 9.1 MAIS as nove
+        # antigas, "Joao Pessoa" duplicando "Joao Pessoa" com outra
+        # distancia e Currais Novos a 0 km -- frete zero, que anula o 9.2a.
+        self.aposentar_pracas_legadas()
 
         # 9.1: o mesmo teto para cada produto ativo.
         for nome, _, demanda in cidades:
