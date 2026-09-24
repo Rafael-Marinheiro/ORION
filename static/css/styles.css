@@ -533,6 +533,10 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     align-items: start;
 }
 
+/* Painel com tabela larga ocupa a linha inteira do grid, em vez de espremer
+   a tabela numa coluna de 340px. */
+.o-panel--wide { grid-column: 1 / -1; }
+
 .o-stack > * + * { margin-top: var(--o-5); }
 
 /* --- 9. KPIs ------------------------------------------------------------- */

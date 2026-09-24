@@ -116,6 +116,14 @@ DISTANCIA_REGIONAL_KM = 1000
 INVESTIMENTO_MARKETING_TETO = Decimal("10000")
 GANHO_MAXIMO_MARKETING = Decimal("0.20")
 
+# --- Armazenagem (6.4 e 7.4) -----------------------------------------------
+#
+# "Sera aplicado um custo de 2% sobre o valor de producao unitario de cada
+# unidade estocada" (6.4) e os mesmos 2% "sobre o valor de compra das MPs
+# estocadas" (7.4). O 6.4 isenta o perecivel: ele nao foi feito para ficar
+# estocado. RN-07: nao ha limite minimo nem maximo de estoque.
+CUSTO_ARMAZENAGEM_PERCENT = Decimal("2")
+
 # --- Investimentos: limites (14.2.1 e RN-09) -------------------------------
 #
 # 14.2.1: "ate 50% sobre a quantidade inicial instalada", por restricao fisica

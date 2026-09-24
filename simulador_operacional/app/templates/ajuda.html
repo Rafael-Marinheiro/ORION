@@ -19,6 +19,81 @@
         </ul>
     </section>
 
+    {% comment %}
+        6.1, 6.2, 6.4 e 13.3 -- as caracteristicas dos produtos ficam no
+        manual, iguais para todos e disponiveis antes da decisao. Nao em
+        aviso durante a jogada: conhecer o produto e parte do que se avalia.
+    {% endcomment %}
+    <section class="o-panel o-prose o-panel--wide">
+        <h2 class="o-panel__title">Os produtos</h2>
+        <p class="o-muted">
+            Cada produto tem composição, peso, tempo de máquina e regra de validade
+            próprios. As linhas de produção são exclusivas: máquina de A não produz B.
+        </p>
+
+        <div class="o-tablewrap">
+            <table class="o-table">
+                <caption class="o-sr">Características técnicas dos produtos</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Produto</th>
+                        <th scope="col">Composição por unidade</th>
+                        <th scope="col" class="num">Peso</th>
+                        <th scope="col" class="num">Tempo de máquina</th>
+                        <th scope="col" class="num">Custo estimado</th>
+                        <th scope="col">Validade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for produto in produtos %}
+                    <tr>
+                        <th scope="row" data-label="Produto">{{ produto.codigo }} — {{ produto.nome }}</th>
+                        <td data-label="Composição">
+                            {% for item in produto.composicoes.all %}{{ item.materia_prima.codigo }}
+                            {{ item.quantidade_por_unidade|floatformat:"-2" }} kg{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}
+                        </td>
+                        <td class="num" data-label="Peso">{{ produto.peso_unitario_kg|floatformat:"-2" }} kg</td>
+                        <td class="num" data-label="Tempo de máquina">{{ produto.tempo_producao_min }} min</td>
+                        <td class="num" data-label="Custo estimado">R$ {{ produto.custo_unitario_estimado|floatformat:2 }}</td>
+                        <td data-label="Validade">
+                            {% if produto.perecivel %}
+                                Perecível — vence no fechamento da rodada em que foi produzido
+                            {% else %}
+                                Não perecível — pode ser estocado por tempo indefinido
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">Nenhum produto cadastrado ainda.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Validade e descarte</h3>
+        <p class="o-muted">
+            Produto perecível não comercializado até o encerramento da rodada é
+            descartado automaticamente, sem compensação: vira perda no resultado
+            daquela rodada. Produto não perecível permanece em estoque.
+        </p>
+
+        <h3>Armazenagem</h3>
+        <p class="o-muted">
+            Ao final de cada rodada incide {{ custo_armazenagem_percent|floatformat:"-2" }}%
+            sobre o valor do que ficou estocado — tanto matéria-prima quanto produto
+            acabado não perecível. O perecível não paga armazenagem, porque não
+            atravessa a rodada. Não há limite mínimo nem máximo de estoque.
+        </p>
+
+        <h3>Custo de produção</h3>
+        <p class="o-muted">
+            O custo de uma unidade é o valor das matérias-primas consumidas. Tempo de
+            máquina não gera custo por si; máquina nova é investimento. Os preços das
+            matérias-primas são parametrizáveis e podem mudar entre rodadas, então o
+            custo estimado acima acompanha o preço vigente.
+        </p>
+    </section>
+
     <section class="o-panel o-prose">
         <h2 class="o-panel__title">Perguntas frequentes</h2>
 

@@ -34,6 +34,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .parametros import (
+    CUSTO_ARMAZENAGEM_PERCENT,
     CUSTO_MAQUINA,
     CUSTO_OPERADOR_POR_RODADA,
     OPERADORES_POR_MAQUINA,
@@ -270,6 +271,28 @@ class HomeView(TemplateView):
 
 class AjudaView(TemplateView):
     template_name = "ajuda.html"
+
+    def get_context_data(self, **kwargs):
+        """As caracteristicas dos produtos, do 6.1, 6.2, 6.4 e 13.3.
+
+        Elas nao apareciam em tela nenhuma. Ficam aqui, no manual, e nao em
+        aviso durante a decisao: conhecer o produto e o efeito da escolha e
+        parte do que se avalia, entao a regra tem que estar disponivel a
+        todos, antes, e nao sussurrada a quem ja errou.
+
+        Lidas do banco, nao escritas a mao: o 6.1 avisa que os precos de MP
+        "sao parametrizaveis e podem variar entre rodadas", e uma tabela fixa
+        no template envelheceria na primeira alteracao do professor.
+        """
+        context = super().get_context_data(**kwargs)
+        context["nav"] = "ajuda"
+        context["produtos"] = (
+            Produto.objects.filter(ativo=True)
+            .prefetch_related("composicoes__materia_prima")
+            .order_by("codigo")
+        )
+        context["custo_armazenagem_percent"] = CUSTO_ARMAZENAGEM_PERCENT
+        return context
 
 
 

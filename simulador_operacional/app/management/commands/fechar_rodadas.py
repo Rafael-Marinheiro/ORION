@@ -9,7 +9,11 @@ from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
-from app.parametros import CUSTO_OPERADOR_POR_RODADA, PESOS_EIXOS
+from app.parametros import (
+    CUSTO_ARMAZENAGEM_PERCENT,
+    CUSTO_OPERADOR_POR_RODADA,
+    PESOS_EIXOS,
+)
 from app.services.eventos import evento_estado_ativo, sortear_evento
 from app.services.suprimentos import processar_recebimentos_materia_prima
 from app.services.distribuicao_service import executar_expedicao
@@ -62,7 +66,8 @@ class Command(BaseCommand):
         estoques = EstoqueMateriaPrima.objects.filter(grupo=grupo).select_related("materia_prima")
         for estoque in estoques:
             total_valor += estoque.quantidade_kg * estoque.materia_prima.preco_unitario
-        return total_valor * Decimal("0.02")
+        # 7.4: 2% sobre o valor de compra das MPs estocadas.
+        return total_valor * CUSTO_ARMAZENAGEM_PERCENT / Decimal("100")
 
     @staticmethod
     def calcular_custo_armazenagem_produtos(grupo):
@@ -74,7 +79,8 @@ class Command(BaseCommand):
         ).select_related("produto")
         for lote in lotes:
             total_valor += Decimal(lote.quantidade) * lote.produto.custo_unitario_estimado
-        return total_valor * Decimal("0.02")
+        # 6.4: 2% sobre o valor de producao unitario, so no nao perecivel.
+        return total_valor * CUSTO_ARMAZENAGEM_PERCENT / Decimal("100")
 
     @staticmethod
     def processar_perecibilidade(grupo, rodada_numero):
