@@ -172,11 +172,13 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
   §7.4 e o §13.8 já tratam os dois estoques como coisas distintas, com custo de
   armazenagem próprio para cada um. `ConsolidadoRodadaGrupo` passa a guardar os
   dois valores, porque a média do §12.3.3 precisa da rodada anterior.
-- **B10 · O limiar de 1.000 km em DS₃ perdeu sentido na base regional.** Com a
-  sede em Currais Novos, a praça mais distante é Fortaleza, a 470 km. Todas as
-  cidades cumprem o critério, então DS₃ = 1 sempre e o subindicador vira
-  constante. O limiar precisa ser recalibrado para a nova geografia — algo
-  como 200 km separaria o Seridó das capitais.
+- **B10 · O limiar de 1.000 km em DS₃ — `ENCERRADO` em 24/09/2026.** O limiar
+  tinha perdido sentido porque a base regional (D9.2) punha a praça mais
+  distante a 437 km: todas cumpriam o critério e DS₃ virava constante 1. Com a
+  reversão para o §9.1, São Paulo (2.896 km) e Porto Alegre (4.034 km) ficam
+  fora e Recife (290 km) e Fortaleza (527 km) dentro — o subindicador volta a
+  discriminar, e o parâmetro voltou ao valor do §12.3.4. O problema era da
+  base, não do documento.
 - **EE não é limitado a 100.** Sendo uma razão de giro, passa de 100 com
   facilidade — a própria tabela de exemplo do §12.6 traz EE de 110 e 105. A
   soma ponderada precisa saber lidar com isso.
@@ -268,7 +270,7 @@ Três categorias, com dono diferente:
 | Categoria | Quem decide | Exemplos |
 |---|---|---|
 | **A especificação se contradiz** | Dr. Pio | B1–B5: composição, perecibilidade, capacidade, eventos por rodada, desempate |
-| **A especificação é omissa ou não fecha** | Dr. Pio | B10 (limiar de 1.000 km), frete de produto |
+| **A especificação é omissa ou não fecha** | Dr. Pio | frete de produto |
 | **Contexto de aplicação da turma** | Rafael | D9.1–D9.3: sede, praças regionais, demanda por população |
 
 **Pendências para o Dr. Pio, por ordem de impacto:**
@@ -279,7 +281,6 @@ Três categorias, com dono diferente:
    do projeto, mas afasta-se da letra do documento.
 2. **D9.5 · Custo do operador.** Ele escreveu R$ 1.800/mês; a rodada virou o
    período de competência da folha. Leitura, não transcrição.
-3. **B10.** O limiar de 1.000 km em DS₃, que a base regional tornou inócuo.
    (B9 saiu desta lista: o §12 distingue IE de EE e a implementação é que
    havia colapsado os dois — corrigido em 2026-09-23.)
 
@@ -294,22 +295,43 @@ Ficam registradas aqui para ninguém as confundir com divergência acidental.
 
 | # | Tema | O que a spec diz | O que vale | Motivo |
 |---|---|---|---|---|
-| D9.1 | Sede da fábrica | §9: Natal/RN | **Currais Novos/RN** | contexto real da turma |
-| D9.2 | Praças de venda | §9.1: 10 capitais nacionais | **12 cidades da região** (Seridó, RN, PB, PE, CE) | idem |
-| D9.3 | Demanda por praça | §9.1: tabela digitada | **derivada da população** pelo fator 0,207%, extraído da própria tabela do §9.1 | regra explícita e auditável no lugar de número por cidade |
-| D9.4 | Fornecedores de MP | §7.1: cidades nacionais | **cidades da região**, cada MP com fornecedor perto e longe | preserva a escolha de fornecedor como decisão logística |
+| ~~D9.1~~ | Sede da fábrica | §9: Natal/RN | **§9: Natal/RN** | `REVERTIDO` em 24/09/2026 |
+| ~~D9.2~~ | Praças de venda | §9.1: 10 capitais nacionais | **§9.1: as 10 capitais** | `REVERTIDO` em 24/09/2026 |
+| ~~D9.3~~ | Demanda por praça | §9.1: tabela digitada | **§9.1: a tabela, por produto** | `REVERTIDO` em 24/09/2026 |
+| ~~D9.4~~ | Fornecedores de MP | §7.1: cidades nacionais | **§7.1: a tabela dele** | `REVERTIDO` em 24/09/2026 |
 | D9.5 | Custo do operador por rodada | §14.2.4: R$ 1.800/mês + RN-06: rodada = 1 semana | **R$ 1.800 por rodada**, sem conversão por tempo | o professor define o prazo livremente; converter por tempo decorrido faria o custo da mesma decisão mudar conforme o prazo |
 | D9.6 | Sigilo da rodada aberta | não previsto | **resultado só aparece após o fechamento** | é um jogo de competição; desempenho alheio antes da submissão muda a decisão de quem ainda não decidiu |
 | D11 | Variedade de eventos | §8.2: "probabilidade **constante** de ocorrência" | **peso reduzido do evento recente** (×0,05 / ×0,30 / ×0,65), nunca bloqueio | bloquear achata os pesos: com 3 eventos de 60/30/10, cooldown duro os transforma em 33/33/33 |
 | D10 | Unidade do frete | §7.2: R$ 1,50 por km **por kg** | **§7.2 literal: R$ 1,50 por km por kg** | a regra está expressa no documento e prevalece |
 
-**Consequência de D9.2 e D9.3 no equilíbrio do jogo.** O mercado regional é
-cerca de 5x menor que o nacional, e a capacidade produtiva não mudou:
+**Reversão de D9.1–D9.4 em 24/09/2026.** A pedido do dono do projeto, a base
+voltou a ser a do documento: fábrica em Natal, as dez praças do §9.1 com a
+distância e o teto de absorção tabelados, e os fornecedores do §7.1.
+
+Duas correções vieram junto:
+
+- O §9.1 tabela **"Demanda Máxima (unid./produto)"** — o mesmo teto vale para
+  cada produto. O rateio 50/30/20 entre A, B e C que o seed aplicava não
+  existe em documento nenhum.
+- **B10 encerrado.** O limiar de 1.000 km do DS₃ ficara inócuo na base
+  regional (máximo de 437 km) e tinha sido recalibrado para 200 km. Com São
+  Paulo a 2.896 km e Porto Alegre a 4.034 km ele volta a discriminar, e o
+  parâmetro voltou ao valor do §12.3.4.
+
+**Natal não é praça de venda.** Aparece duas vezes em dezesseis documentos, e
+nas duas como origem: "de onde partem todos os envios" (§9) e "o custo de
+envio de produtos **de Natal-RN para** cada cidade" (§9.2a). Não há dado de
+consumo local. Incluí-la criaria uma praça de frete zero — `calcular_frete`
+devolve custo zero em distância zero —, o que tornaria "escoar tudo em casa" a
+jogada dominante e esvaziaria o §9.2a e o DS₃. Decisão do dono do projeto em
+24/09/2026: fica só como origem.
+
+O equilíbrio do jogo volta ao do documento: o recurso escasso é a capacidade
+produtiva, não a demanda.
 
 | Cenário | Capacidade de A (5 grupos) | Demanda de A | Razão |
 |---|---|---|---|
-| Nacional (§9.1) | 15.000 | 33.000 | 0,45x — falta capacidade |
-| Regional (D9.2) | 15.000 | 6.750 | 2,2x — sobra capacidade |
+| §9.1 (em vigor) | 15.000 | 66.000 por produto | 0,23x — falta capacidade |
 
 O recurso escasso deixa de ser produção e passa a ser demanda. Isso ativa a
 curva de sensibilidade a preço e o investimento em marketing, que estavam
@@ -416,7 +438,7 @@ Consequências já mapeadas das decisões:
 
 | Regra | Origem | Status | Onde |
 |---|---|---|---|
-| 12 cidades regionais com distância e demanda derivada | §9.1 + D9.1–D9.3 | `CONFORME` | `seed_dados_base`, `test_base_regional`; fontes e data em `docs/BASE_REGIONAL.md` |
+| 10 praças do §9.1, com distância até Natal e teto por produto | §9.1 | `CONFORME` | `seed_dados_base`, `test_base_pracas` |
 | Curva de sensibilidade a preço 5x / 3x / 2x / 1x / 0,5x | §9.2c | `CONFORME` | `fechar_rodadas.calcular_peso_preco` |
 | Alocação proporcional ao peso, limitada ao enviado | §9.2b, §9.2c | `CONFORME` | `fechar_rodadas` |
 | Demanda máxima por cidade e produto | §9.1 | `CONFORME` | `DemandaCidadeProduto` |

@@ -97,7 +97,7 @@ LANGUAGE_CODE = 'pt-br'
 # Capital de grupo chega a sete digitos: sem separador de milhar o aluno le
 # "1000000,00" e precisa contar zero no olho para saber a ordem de grandeza.
 USE_THOUSAND_SEPARATOR = True
-# Currais Novos/RN. Nao use America/Sao_Paulo: as duas estao em UTC-3 hoje,
+# Natal/RN, sede da fabrica (§9). Nao use America/Sao_Paulo: as duas estao em UTC-3 hoje,
 # mas se o horario de verao voltar, Sao Paulo vai para UTC-2 no verao e o
 # Nordeste continua em UTC-3.
 TIME_ZONE = 'America/Fortaleza'

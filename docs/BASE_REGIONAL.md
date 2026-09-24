@@ -1,3 +1,9 @@
+> **Documento histórico.** A base regional do Seridó (D9.1–D9.3) foi revertida
+> em 24/09/2026 a pedido do dono do projeto: o simulador voltou a usar a
+> fábrica em Natal e as dez praças do §9.1, com a distância e o teto de
+> absorção tabelados pelo Dr. Pio. As fontes abaixo ficam registradas porque
+> explicam de onde vieram os números que estiveram em uso até essa data.
+
 # Base regional validada — 20/09/2026
 
 Fonte de regra: original DOCX 9, §9.1–9.2, confrontado com D9.1–D9.3 do guia de implementação. A sede e as 12 praças regionais são decisões já aprovadas.
