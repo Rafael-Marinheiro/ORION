@@ -722,13 +722,17 @@ class RankingView(LoginRequiredMixin, TemplateView):
             return []
         maior_lucro = max(ranking, key=lambda item: item["lucro_rodada"])
         maior_market_share = max(ranking, key=lambda item: item["market_share"])
+        # `formato` acompanha o dado. Antes a unidade era escolhida no
+        # template pela POSICAO na lista (o segundo item virava R$, o
+        # terceiro virava %), entao trocar a ordem dos destaques ou omitir
+        # um deles trocava a unidade dos outros sem ninguem perceber.
         return [
             {"titulo": "Líder da rodada", "grupo": ranking[0]["grupo"].nome,
-             "valor": f'{ranking[0]["pontuacao"]:.2f} pontos'},
+             "valor": ranking[0]["pontuacao"], "formato": "pontos"},
             {"titulo": "Maior lucro", "grupo": maior_lucro["grupo"].nome,
-             "valor": maior_lucro["lucro_rodada"]},
+             "valor": maior_lucro["lucro_rodada"], "formato": "moeda"},
             {"titulo": "Maior participação de mercado", "grupo": maior_market_share["grupo"].nome,
-             "valor": maior_market_share["market_share"]},
+             "valor": maior_market_share["market_share"], "formato": "percentual"},
         ]
 
     def _evolucao_do_grupo(self, classificacoes, rodadas_fechadas, grupo_usuario):

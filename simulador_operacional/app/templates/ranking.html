@@ -35,7 +35,7 @@
                 <th scope="col" class="num" title="Eficiência de Estoques (peso 0,15)">EE</th>
                 <th scope="col" class="num" title="Satisfação da Demanda (peso 0,20)">SD</th>
                 <th scope="col" class="num" title="Sustentabilidade (peso 0,10)">DS</th>
-                <th scope="col" class="num">Lucro da rodada</th>
+                <th scope="col" class="num">Lucro da rodada <span class="o-kpi__unit">R$</span></th>
             </tr>
         </thead>
         <tbody>
@@ -49,7 +49,7 @@
                 <td class="num" data-label="Eficiência de Estoques">{{ item.EE|floatformat:1 }}</td>
                 <td class="num" data-label="Satisfação da Demanda">{{ item.SD|floatformat:1 }}</td>
                 <td class="num" data-label="Sustentabilidade">{{ item.DS|floatformat:1 }}</td>
-                <td class="num" data-label="Lucro da rodada">{{ item.lucro_rodada|floatformat:2 }}</td>
+                <td class="num" data-label="Lucro da rodada">{% include 'partials/valor.html' with valor=item.lucro_rodada %}</td>
             </tr>
             {% empty %}
             <tr>
@@ -74,9 +74,9 @@
             <span class="o-kpi__label">{{ destaque.titulo }}</span>
             <strong class="o-kpi__value o-kpi__value--text">{{ destaque.grupo }}</strong>
             <span class="o-kpi__foot">
-                {% if forloop.counter == 2 %}R$ {{ destaque.valor|floatformat:2 }}
-                {% elif forloop.counter == 3 %}{{ destaque.valor|floatformat:1 }}%
-                {% else %}{{ destaque.valor }}{% endif %}
+                {% if destaque.formato == 'moeda' %}R$ {% include 'partials/valor.html' with valor=destaque.valor %}
+                {% elif destaque.formato == 'percentual' %}{{ destaque.valor|floatformat:1 }}%
+                {% else %}{{ destaque.valor|floatformat:2 }} pontos{% endif %}
             </span>
         </article>
         {% endfor %}

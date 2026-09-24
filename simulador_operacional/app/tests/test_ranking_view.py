@@ -44,9 +44,14 @@ class RankingViewTest(TestCase):
         self.assertEqual(
             response.context["destaques"],
             [
-                {"titulo": "Líder da rodada", "grupo": "Equipe Vega", "valor": "90.00 pontos"},
-                {"titulo": "Maior lucro", "grupo": "Equipe Rigel", "valor": Decimal("200")},
-                {"titulo": "Maior participação de mercado", "grupo": "Equipe Vega", "valor": Decimal("55")},
+                # `formato` acompanha o dado: ate 24/09/2026 a unidade era
+                # escolhida no template pela POSICAO na lista.
+                {"titulo": "Líder da rodada", "grupo": "Equipe Vega",
+                 "valor": Decimal("90.00"), "formato": "pontos"},
+                {"titulo": "Maior lucro", "grupo": "Equipe Rigel",
+                 "valor": Decimal("200"), "formato": "moeda"},
+                {"titulo": "Maior participação de mercado", "grupo": "Equipe Vega",
+                 "valor": Decimal("55"), "formato": "percentual"},
             ],
         )
         self.assertEqual(

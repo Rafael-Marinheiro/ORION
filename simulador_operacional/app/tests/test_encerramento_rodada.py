@@ -51,6 +51,30 @@ class EncerramentoRodadaViewTest(TestCase):
         self.assertEqual(response.context["resultado"], resultado_fechado)
         self.assertContains(response, "Receita")
         self.assertNotContains(response, "9999")
+        # A convencao de moeda foi adotada no painel em 23/09/2026 e nao
+        # chegou aqui: os quatro numeros sairam por meses sem simbolo.
+        self.assertContains(response, "R$ 1.500,00")
+        # Lucro e saldo passam pelo partial de sinal, entao o simbolo e o
+        # numero nao sao texto contiguo.
+        self.assertContains(response, '<span class="o-money">10.800,00</span>')
+        self.assertContains(response, '<span class="o-money">800,00</span>')
+
+    def test_prejuizo_sai_marcado_como_negativo(self):
+        """Prejuizo e a informacao que o aluno precisa ver primeiro; ate
+        24/09/2026 saia na mesma tinta do lucro."""
+        Rodada.objects.create(
+            numero=1, fim=timezone.now() - timedelta(minutes=2), fechada=True
+        )
+        ResultadoFinanceiro.objects.create(
+            grupo=self.grupo, rodada=1, receita=Decimal("300"),
+            custos=Decimal("900"), lucro=Decimal("-600"),
+            saldo_caixa=Decimal("-100"),
+        )
+
+        response = self.client.get(reverse("encerramento_rodada"))
+
+        self.assertContains(response, '<span class="o-money o-money--neg">-600,00</span>')
+        self.assertContains(response, '<span class="o-money o-money--neg">-100,00</span>')
 
     def test_sem_rodada_fechada_exibe_estado_vazio(self):
         Rodada.objects.create(

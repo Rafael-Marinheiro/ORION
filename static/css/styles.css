@@ -574,6 +574,11 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-kpi__foot { font-size: 0.8125rem; color: var(--o-ink-dim); margin-top: var(--o-1); }
 .o-kpi__unit { font-size: 0.75em; font-weight: 400; color: var(--o-ink-dim); }
 
+/* Dinheiro negativo. O menos permanece no texto: a cor reforca, nao
+   substitui. `tabular-nums` alinha as colunas numericas sem fonte mono. */
+.o-money { font-variant-numeric: tabular-nums; }
+.o-money--neg { color: var(--o-bad); }
+
 /* --- 10. Tabelas --------------------------------------------------------- */
 
 .o-tablewrap {

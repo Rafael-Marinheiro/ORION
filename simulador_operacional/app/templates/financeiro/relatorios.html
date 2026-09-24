@@ -44,17 +44,17 @@
         <div class="o-kpis">
             <div class="o-kpi">
                 <span class="o-kpi__label">Receita de vendas</span>
-                <span class="o-kpi__value">{{ painel.kpis.receita|floatformat:2 }}</span>
+                <span class="o-kpi__value">R$ {{ painel.kpis.receita|floatformat:2 }}</span>
                 {% include 'partials/delta.html' with valor=painel.kpis.receita_var tom=painel.kpis.receita_tom %}
             </div>
             <div class="o-kpi">
                 <span class="o-kpi__label">Custos totais</span>
-                <span class="o-kpi__value">{{ painel.kpis.custos|floatformat:2 }}</span>
+                <span class="o-kpi__value">R$ {{ painel.kpis.custos|floatformat:2 }}</span>
                 {% include 'partials/delta.html' with valor=painel.kpis.custos_var tom=painel.kpis.custos_tom %}
             </div>
             <div class="o-kpi">
                 <span class="o-kpi__label">Lucro da rodada</span>
-                <span class="o-kpi__value">{{ painel.kpis.lucro|floatformat:2 }}</span>
+                <span class="o-kpi__value">R$ {% include 'partials/valor.html' with valor=painel.kpis.lucro %}</span>
                 {% include 'partials/delta.html' with valor=painel.kpis.lucro_var tom=painel.kpis.lucro_tom %}
             </div>
             <div class="o-kpi">
@@ -66,7 +66,7 @@
             </div>
             <div class="o-kpi">
                 <span class="o-kpi__label">Lucro acumulado</span>
-                <span class="o-kpi__value">{{ painel.kpis.lucro_acumulado|floatformat:2 }}</span>
+                <span class="o-kpi__value">R$ {% include 'partials/valor.html' with valor=painel.kpis.lucro_acumulado %}</span>
                 <span class="o-kpi__foot">Soma das {{ painel.qtd_rodadas }} rodada{{ painel.qtd_rodadas|pluralize }}</span>
             </div>
         </div>
@@ -115,11 +115,17 @@
     <div class="o-tablewrap">
         <table class="o-table o-table--dre">
             <caption class="o-sr">DRE da rodada {{ dre_consolidado.rodada }}</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Conta</th>
+                    <th scope="col" class="num">Valor <span class="o-kpi__unit">R$</span></th>
+                </tr>
+            </thead>
             <tbody>
                 {% for linha in dre_linhas %}
                 <tr{% if linha.tipo == 'total' %} data-total="true"{% endif %}>
                     <th scope="row">{{ linha.rotulo }}</th>
-                    <td class="num">{{ linha.valor|floatformat:2 }}</td>
+                    <td class="num">{% include 'partials/valor.html' with valor=linha.valor %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -137,22 +143,22 @@
             <thead>
                 <tr>
                     <th scope="col">Rodada</th>
-                    <th scope="col" class="num">Saldo inicial</th>
-                    <th scope="col" class="num">Entradas</th>
-                    <th scope="col" class="num">Saídas</th>
-                    <th scope="col" class="num" title="Compras, investimentos e aplicações feitas durante a rodada">Compras e investimentos</th>
-                    <th scope="col" class="num">Saldo final</th>
+                    <th scope="col" class="num">Saldo inicial <span class="o-kpi__unit">R$</span></th>
+                    <th scope="col" class="num">Entradas <span class="o-kpi__unit">R$</span></th>
+                    <th scope="col" class="num">Saídas <span class="o-kpi__unit">R$</span></th>
+                    <th scope="col" class="num" title="Compras, investimentos e aplicações feitas durante a rodada">Compras e investimentos <span class="o-kpi__unit">R$</span></th>
+                    <th scope="col" class="num">Saldo final <span class="o-kpi__unit">R$</span></th>
                 </tr>
             </thead>
             <tbody>
                 {% for linha in fluxo %}
                 <tr>
                     <th scope="row">R{{ linha.rodada }}</th>
-                    <td class="num">{{ linha.saldo_inicial|floatformat:2 }}</td>
+                    <td class="num">{% include 'partials/valor.html' with valor=linha.saldo_inicial %}</td>
                     <td class="num">{{ linha.entradas|floatformat:2 }}</td>
                     <td class="num">-{{ linha.saidas|floatformat:2 }}</td>
-                    <td class="num">{{ linha.outras_movimentacoes|floatformat:2 }}</td>
-                    <td class="num">{{ linha.saldo_final|floatformat:2 }}</td>
+                    <td class="num">{% include 'partials/valor.html' with valor=linha.outras_movimentacoes %}</td>
+                    <td class="num">{% include 'partials/valor.html' with valor=linha.saldo_final %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -163,8 +169,8 @@
                     <td class="num"></td>
                     <td class="num">{{ fluxo_resumo.entradas|floatformat:2 }}</td>
                     <td class="num">-{{ fluxo_resumo.saidas|floatformat:2 }}</td>
-                    <td class="num">{{ fluxo_resumo.outras_movimentacoes|floatformat:2 }}</td>
-                    <td class="num">{{ fluxo_resumo.saldo_final|floatformat:2 }}</td>
+                    <td class="num">{% include 'partials/valor.html' with valor=fluxo_resumo.outras_movimentacoes %}</td>
+                    <td class="num">{% include 'partials/valor.html' with valor=fluxo_resumo.saldo_final %}</td>
                 </tr>
             </tfoot>
             {% endif %}

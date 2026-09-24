@@ -14,19 +14,19 @@
 <div class="o-kpis">
     <div class="o-kpi">
         <span class="o-kpi__label">Receita</span>
-        <span class="o-kpi__value">{{ resultado.receita }}</span>
+        <span class="o-kpi__value">R$ {{ resultado.receita|floatformat:2 }}</span>
     </div>
     <div class="o-kpi">
         <span class="o-kpi__label">Custos</span>
-        <span class="o-kpi__value">{{ resultado.custos }}</span>
+        <span class="o-kpi__value">R$ {{ resultado.custos|floatformat:2 }}</span>
     </div>
     <div class="o-kpi">
         <span class="o-kpi__label">Lucro</span>
-        <span class="o-kpi__value">{{ resultado.lucro }}</span>
+        <span class="o-kpi__value">R$ {% include 'partials/valor.html' with valor=resultado.lucro %}</span>
     </div>
     <div class="o-kpi">
         <span class="o-kpi__label">Saldo em caixa</span>
-        <span class="o-kpi__value">{{ resultado.saldo_caixa }}</span>
+        <span class="o-kpi__value">R$ {% include 'partials/valor.html' with valor=resultado.saldo_caixa %}</span>
     </div>
 </div>
 {% else %}

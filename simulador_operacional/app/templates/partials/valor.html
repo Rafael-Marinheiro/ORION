@@ -1,0 +1,12 @@
+{% comment %}
+Valor monetario com o sinal visivel.
+
+Prejuizo e saida de caixa sao a informacao que o aluno precisa enxergar
+primeiro numa tabela financeira, e ate aqui "-468.461,52" saia na mesma
+tinta de "6,98". A cor nao carrega o sinal sozinha: o menos continua no
+texto, entao quem nao distingue a cor le a mesma coisa.
+
+O simbolo R$ fica no chamador -- no KPI ele acompanha o numero, na tabela
+ele vive no cabecalho da coluna, para nao se repetir em cada celula.
+{% endcomment %}
+<span class="o-money{% if valor < 0 %} o-money--neg{% endif %}">{{ valor|floatformat:2 }}</span>
