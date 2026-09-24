@@ -592,6 +592,44 @@ rodadas fechadas:
 o documento traz texto **e** exemplo numérico: a mudança se afasta da letra e
 preserva os valores. Fica anotado para ele ratificar.
 
+### D12 · A matéria-prima sai do caixa uma vez — corrigido em 24/09/2026
+
+**O defeito.** O mesmo desembolso era cobrado duas vezes:
+
+- na **compra**, `views` debitava `compra.valor_total` (MP + logística) do
+  capital e lançava em `ResultadoFinanceiro.custos`;
+- na **produção**, o fechamento debitava de novo o valor da matéria-prima
+  consumida, devolvido por `executar_producao`.
+
+**O que o §7 define.** O documento não deixa margem, e em dois pontos:
+
+> §7.2 — *"O custo total será imediatamente debitado do saldo do grupo **na
+> rodada da compra**."*
+>
+> §7.5 — *"Financeiro: **saída de caixa por compras, armazenagem e
+> logística**."*
+
+O §7.5 enumera as saídas de caixa que a matéria-prima gera, e **consumo não
+está entre elas**. O §7.3 o descreve como movimento de estoque: *"o consumo é
+automático e proporcional ao plano de produção e à ficha técnica de cada
+produto"*.
+
+**E o §13.9?** Ele diz que *"o custo corresponde ao valor das matérias-primas
+consumidas"* — e continua valendo, porque descreve o **custo do produto**, não
+um pagamento. É dele que saem o custo unitário gravado na ordem de produção, o
+valor do estoque e o **custo das vendas** que o §12.3.2 e o §12.3.3 usam no IE
+e no EE. Nada disso foi tocado: a produção continua calculando e gravando o
+custo; o que deixou de existir é o segundo débito no caixa.
+
+**Efeito.** O frete de distribuição (§9.2a) continua saindo no fechamento,
+porque é despesa da rodada e não foi paga antes. A linha do DRE que somava os
+dois passou a se chamar "Compras, investimentos e frete", que é o que ela de
+fato contém.
+
+**Não é desvio da especificação** — é a especificação aplicada sem contar o
+mesmo dinheiro duas vezes. Fica registrado aqui porque muda o resultado das
+rodadas e porque o §13.9, lido isolado, sugere o contrário.
+
 ### Quem decide o quê
 
 O Dr. Pio Marinheiro é o Product Owner e autor da especificação. **O desenho

@@ -17,7 +17,7 @@ from decimal import Decimal
 def montar_dre(consolidado):
     """Linhas do DRE de uma rodada, da receita ao lucro liquido."""
     deducoes = [
-        ("Custos operacionais (produção e frete)", consolidado.custos_operacionais),
+        ("Compras, investimentos e frete", consolidado.custos_operacionais),
         ("Armazenagem de matéria-prima", consolidado.custo_armazenagem_mp),
         ("Armazenagem de produtos e mão de obra", consolidado.custo_armazenagem_produtos),
         ("Perdas de estoque (perecibilidade e quebra)", consolidado.perda_pereciveis),

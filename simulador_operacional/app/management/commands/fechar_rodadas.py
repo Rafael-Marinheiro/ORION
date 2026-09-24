@@ -477,13 +477,23 @@ class Command(BaseCommand):
                         # 13.4/RN-02: o parque de largada existe mesmo para o
                         # grupo cujo CEO nunca abriu o painel.
                         garantir_capacidades_grupo(grupo)
-                        custo_producao, _ = executar_producao(
+                        # A producao CONSOME estoque; nao paga nada de novo.
+                        # O 7.2 ja debitou a materia-prima "na rodada da
+                        # compra", e o 7.5 enumera as saidas de caixa que a MP
+                        # gera: "compras, armazenagem e logistica" -- consumo
+                        # nao esta na lista, e o 7.3 o descreve como movimento
+                        # de estoque. O custo do 13.9 fica gravado na ordem de
+                        # producao, que e de onde sai o custo unitario do
+                        # produto, o valor do estoque e o custo das vendas do
+                        # 12.3.2. Ate 24/09/2026 ele tambem era debitado, e a
+                        # mesma materia-prima saia do caixa duas vezes.
+                        executar_producao(
                             grupo=grupo, rodada=rodada.numero, evento=evento
                         )
                         custo_frete, _ = executar_expedicao(
                             grupo=grupo, rodada=rodada.numero, evento=evento
                         )
-                        operacional = custo_producao + custo_frete
+                        operacional = custo_frete
                         if operacional > 0:
                             grupo.capital -= operacional
                             grupo.save(update_fields=["capital"])
