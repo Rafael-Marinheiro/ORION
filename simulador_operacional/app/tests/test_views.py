@@ -444,8 +444,9 @@ class MateriaPrimaFlowTest(TestCase):
         )
         self.grupo = Grupo.objects.create(nome="Equipe MP", capital=500000, estoque=0)
         self.grupo.membros.add(self.ceo)
-        # Caico fornece MP1 e MP2 na base regional (sede em Currais Novos/RN)
-        self.cidade = Cidade.objects.create(nome="Caico", distancia_km=75, demanda=150)
+        # 7.1: Fortaleza fornece MP1. A fabrica fica em Natal (9) e a
+        # distancia vem da tabela do 9.1.
+        self.cidade = Cidade.objects.create(nome="Fortaleza", distancia_km=527, demanda=6000)
         self.mp1 = MateriaPrima.objects.create(codigo="MP1", nome="MP1", preco_unitario=3)
         self.mp2 = MateriaPrima.objects.create(codigo="MP2", nome="MP2", preco_unitario=5.5)
         self.produto = Produto.objects.create(codigo="A", nome="Produto A", ativo=True)

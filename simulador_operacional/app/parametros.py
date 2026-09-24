@@ -40,17 +40,6 @@ OPERADORES_POR_MAQUINA = 2
 # para C, totalizando as 40 do RN-02.
 MAQUINAS_INICIAIS_POR_PRODUTO = {"A": 15, "B": 15, "C": 10}
 
-# 9.1 nao da uma formula, da uma tabela. Dividindo demanda por populacao nas
-# 10 cidades listadas, a razao fica em 0,207% em media (min 0,148%, max
-# 0,241%). E esse o fator usado para derivar a demanda das pracas a partir
-# da populacao, em vez de digitar numero por cidade.
-FATOR_DEMANDA_POR_HABITANTE = 0.00207
-
-# Piso de demanda por praca. Sem ele, cidade pequena arredonda para zero e
-# vira um destino onde o grupo envia e nao vende nada -- mercado quebrado,
-# nao mercado pequeno.
-DEMANDA_MINIMA_POR_PRACA = 50
-
 # --- Logistica -------------------------------------------------------------
 #
 # MP: §7.2 define R$ 1,50 por km e por kg adquirido. Produto acabado: §9.2a
@@ -105,10 +94,12 @@ PESOS_DS = (Decimal("0.5"), Decimal("0.3"), Decimal("0.2"))
 # Denominador sobre TODAS as pracas e calculado em tempo de execucao --
 # ver `satisfacao_demanda` e `demanda_total_do_mercado`.
 
-# O DS3 do 12.3.4 premia entregas ate 1.000 km. No mapa regional a praca mais
-# distante esta a 470 km, entao o limiar do documento daria 100% para todo
-# mundo -- indicador inerte. Recalibrado para a escala do mapa que usamos.
-DISTANCIA_REGIONAL_KM = 200
+# 12.3.4, DS3: "Produtos Enviados para pracas <= 1.000 km / Total Enviado".
+# Com a base do 9.1 o limiar discrimina de verdade -- Recife (290 km) e
+# Fortaleza (527 km) contam, Sao Paulo (2.896 km) e Porto Alegre (4.034 km)
+# nao. Era 200 km enquanto o mapa era regional e o limiar do documento
+# ficava inerte; voltou ao valor do 12.3.4 junto com a base.
+DISTANCIA_REGIONAL_KM = 1000
 
 # --- Marketing (14.1) ------------------------------------------------------
 #

@@ -46,10 +46,9 @@ class PainelPostErrosTest(TestCase):
         )
         self.grupo = Grupo.objects.create(nome="Equipe Erros", capital=Decimal("1000000"))
         self.grupo.membros.add(self.ceo)
-        # Caico fornece MP1; MP2 e de Campina Grande/Recife (ver
-        # MATERIA_PRIMA_FORNECEDORES em views.py) -- usado no teste de
-        # fornecedor invalido.
-        self.cidade = Cidade.objects.create(nome="Caico", distancia_km=75, demanda=150)
+        # 7.1: Fortaleza fornece MP1; MP2 vem de Recife ou Porto Alegre --
+        # usado no teste de fornecedor invalido.
+        self.cidade = Cidade.objects.create(nome="Fortaleza", distancia_km=527, demanda=6000)
         self.mp1 = MateriaPrima.objects.create(codigo="MP1", nome="MP1", preco_unitario=Decimal("3"))
         self.mp2 = MateriaPrima.objects.create(codigo="MP2", nome="MP2", preco_unitario=Decimal("5.5"))
         self.produto = Produto.objects.create(codigo="A", nome="Produto A", ativo=True)
@@ -67,7 +66,7 @@ class PainelPostErrosTest(TestCase):
         self.client.login(username="ceo-erros@example.com", password="pass")
 
     def test_compra_mp_barrada_por_fornecedor_invalido(self):
-        """MP2 nao e fornecida por Caico: a compra nao pode ser aceita nesta cidade."""
+        """MP2 nao e fornecida por Fortaleza: a compra nao pode ser aceita la."""
         response = self.client.post(
             reverse("painel_grupo"),
             {

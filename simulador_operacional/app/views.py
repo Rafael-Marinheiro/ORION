@@ -134,11 +134,14 @@ from .serializers import (
 # decisao do dono do projeto, registrada no guia (D9). Cada MP tem ao menos
 # um fornecedor perto e um longe, para a escolha continuar sendo uma decisao
 # logistica e nao um detalhe.
+# 7.1, tabela "Tipos, Custos Iniciais e Localizacao dos Fornecedores".
+# Sem acento porque `fornecedor_valido_para_mp` normaliza o nome da cidade
+# antes de comparar.
 MATERIA_PRIMA_FORNECEDORES = {
-    "MP1": {"Caico", "Mossoro"},
-    "MP2": {"Campina Grande", "Recife"},
-    "MP3": {"Assu", "Natal", "Fortaleza"},
-    "MP4": {"Patos", "Joao Pessoa"},
+    "MP1": {"Fortaleza", "Maceio"},
+    "MP2": {"Recife", "Porto Alegre"},
+    "MP3": {"Rio de Janeiro", "Aracaju", "Belem"},
+    "MP4": {"Sao Paulo", "Joao Pessoa", "Goiania"},
 }
 
 

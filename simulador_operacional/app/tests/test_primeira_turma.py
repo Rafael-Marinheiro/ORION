@@ -71,8 +71,9 @@ class PrimeiraTurmaTest(TestCase):
         rival = Grupo.objects.create(nome="Fora da turma", jogo=outro, capital=999)
         produto = Produto.objects.get(codigo="A")
         estabilidade = Evento.objects.get(nome="Estabilidade econômica")
-        fornecedores = {"MP1": ("Caico", 120), "MP2": ("Campina Grande", 40),
-                        "MP3": ("Assu", 60), "MP4": ("Patos", 80)}
+        # 7.1, tabela de fornecedores por materia-prima
+        fornecedores = {"MP1": ("Fortaleza", 120), "MP2": ("Recife", 40),
+                        "MP3": ("Aracaju", 60), "MP4": ("João Pessoa", 80)}
 
         with patch("app.services.eventos.random.choices", return_value=[estabilidade]):
             for numero in (1, 2, 3, 4, 5):
@@ -114,7 +115,8 @@ class PrimeiraTurmaTest(TestCase):
                         self.assertEqual(Producao.objects.get(grupo=grupo, rodada=2).quantidade_produzida, 0)
                         self.assertFalse(CompraMateriaPrima.objects.filter(grupo=grupo, recebida=False).exists())
                         self.painel({"enviar_envio": "1", "produto": produto.pk,
-                                     "cidade": Cidade.objects.get(nome="Natal").pk,
+                                     # Natal e a fabrica (9), nao praca de venda
+                                     "cidade": Cidade.objects.get(nome="Recife").pk,
                                      "quantidade": 1, "preco_unitario": "5000"})
                         self.assertEqual(Distribuicao.objects.get(grupo=grupo, rodada=2).quantidade_vendida, 0)
 

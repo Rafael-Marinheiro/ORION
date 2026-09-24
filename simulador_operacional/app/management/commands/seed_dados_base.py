@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 
-from app.parametros import DEMANDA_MINIMA_POR_PRACA, FATOR_DEMANDA_POR_HABITANTE
 from app.models import (
     Cidade,
     ComposicaoProduto,
@@ -91,56 +90,40 @@ class Command(BaseCommand):
                 defaults={"quantidade_por_unidade": quantidade},
             )
 
-        # Sede da fabrica: Currais Novos/RN. As pracas sao cidades da regiao,
-        # nao as capitais nacionais do 9.1 -- decisao do dono do projeto
-        # registrada no guia de implementacao (D9).
+        # 9: "A unidade produtiva de cada grupo participante esta localizada
+        # na cidade de Natal-RN, de onde partem todos os envios". Natal nao e
+        # praca de venda: e a fabrica. As dez pracas abaixo sao a tabela do
+        # 9.1, com a distancia ate Natal e o teto de absorcao por rodada.
         #
-        # A demanda nao e digitada: sai da populacao pelo fator extraido da
-        # propria tabela do 9.1, onde demanda/populacao fica em 0,207% em
-        # media nas 10 cidades listadas. Assim a regra "demanda proporcional
-        # a populacao" fica explicita e auditavel.
-        #
-        # Populacao: Censo 2022, malha 2023 (IBGE). Distancias rodoviarias
-        # consultadas em 2026-09-20. Fontes e divergencias por cidade em
-        # docs/BASE_REGIONAL.md; manter a mesma edicao populacional nas 12 pracas.
+        # A coluna do 9.1 e "Demanda Maxima (unid./PRODUTO)": o teto vale
+        # para cada produto, nao e um total a ser rateado entre A, B e C.
         cidades = [
-            # (nome, distancia_km desde Currais Novos, populacao Censo 2022)
-            ("Currais Novos", 0, 41313),
-            ("Acari", 29, 10597),
-            ("Caico", 88, 61146),
-            ("Santa Cruz", 64, 37313),
-            ("Patos", 143, 103165),
-            ("Assu", 139, 56496),
-            ("Natal", 181, 751300),
-            ("Campina Grande", 167, 419379),
-            ("Mossoro", 198, 264577),
-            ("Joao Pessoa", 263, 833932),
-            ("Recife", 342, 1488920),
-            ("Fortaleza", 437, 2428708),
+            # (nome, distancia_km ate Natal, demanda maxima por produto)
+            ("São Paulo", 2896, 27000),
+            ("Rio de Janeiro", 2588, 15000),
+            ("Recife", 290, 4000),
+            ("João Pessoa", 181, 2000),
+            ("Aracaju", 782, 1000),
+            ("Fortaleza", 527, 6000),
+            ("Goiânia", 1949, 3000),
+            ("Belém", 1952, 3000),
+            ("Maceió", 542, 2000),
+            ("Porto Alegre", 4034, 3000),
         ]
-        for nome, distancia, populacao in cidades:
-            demanda = max(
-                DEMANDA_MINIMA_POR_PRACA,
-                int(round(populacao * FATOR_DEMANDA_POR_HABITANTE / 50.0) * 50),
-            )
+        for nome, distancia, demanda in cidades:
             Cidade.objects.update_or_create(
                 nome=nome,
                 defaults={"distancia_km": distancia, "demanda": demanda},
             )
 
-        for cidade in Cidade.objects.all():
+        # 9.1: o mesmo teto para cada produto ativo.
+        for nome, _, demanda in cidades:
+            cidade = Cidade.objects.get(nome=nome)
             for produto in Produto.objects.filter(ativo=True):
-                if produto.codigo == "A":
-                    fator = Decimal("0.50")
-                elif produto.codigo == "B":
-                    fator = Decimal("0.30")
-                else:
-                    fator = Decimal("0.20")
-                demanda_maxima = int(Decimal(cidade.demanda) * fator)
                 DemandaCidadeProduto.objects.update_or_create(
                     cidade=cidade,
                     produto=produto,
-                    defaults={"demanda_maxima": demanda_maxima},
+                    defaults={"demanda_maxima": demanda},
                 )
 
         # Os 6 eventos do 8.4, com a manchete, o impacto e a probabilidade

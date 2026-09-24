@@ -38,8 +38,8 @@ class SubmissaoAtomicaTest(TestCase):
         )
         self.grupo = Grupo.objects.create(nome="Equipe Atomica", capital=Decimal("1000000"))
         self.grupo.membros.add(self.ceo)
-        # Caico fornece MP1 (ver MATERIA_PRIMA_FORNECEDORES em views.py).
-        self.cidade = Cidade.objects.create(nome="Caico", distancia_km=75, demanda=150)
+        # 7.1: MP1 vem de Fortaleza ou Maceio. Distancia ate Natal pelo 9.1.
+        self.cidade = Cidade.objects.create(nome="Fortaleza", distancia_km=527, demanda=6000)
         self.mp1 = MateriaPrima.objects.create(
             codigo="MP1", nome="MP1", preco_unitario=Decimal("3")
         )
