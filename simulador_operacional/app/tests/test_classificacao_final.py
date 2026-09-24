@@ -48,3 +48,55 @@ class ClassificacaoFinalViewTest(TestCase):
 
         self.assertEqual(response.context["grupos"][0]["grupo"], self.rigel)
         self.assertEqual(response.context["grupos"][0]["pontuacao"], Decimal("140"))
+
+
+class AcessoAClassificacaoFinalTest(TestCase):
+    """A tela existia sem link: so se chegava nela digitando a URL.
+
+    RN-12: "Ao fim de cada rodada, o sistema gera um ranking provisorio [...]
+    Ao termino do jogo, e apresentado um ranking final". O 10.4 poe "Ranking"
+    no menu do CEO e "Ranking Geral" no do administrador -- as duas telas sao
+    da mesma familia, entao o caminho para a final sai do ranking por rodada.
+    """
+
+    def setUp(self):
+        config = GameConfig.objects.create(numero_rodadas=1)
+        self.jogo = Jogo.objects.create(nome="Turma A", config=config)
+        self.grupo = Grupo.objects.create(nome="Equipe Vega", jogo=self.jogo)
+        Rodada.objects.create(
+            jogo=self.jogo, numero=1, fim=timezone.now() - timedelta(minutes=1), fechada=True
+        )
+        ConsolidadoRodadaGrupo.objects.create(
+            grupo=self.grupo, rodada=1, score_multicriterio=Decimal("70")
+        )
+
+    def _logar(self, email, **extra):
+        usuario = User.objects.create_user(
+            email_usuario=email, nome_usuario="Usuario", password="senha123", **extra
+        )
+        self.client.force_login(usuario)
+        return usuario
+
+    def test_o_ranking_por_rodada_leva_a_classificacao_final(self):
+        usuario = self._logar("ceo-link@teste.com")
+        self.grupo.membros.add(usuario)
+
+        resposta = self.client.get(reverse("ranking"))
+
+        self.assertContains(resposta, reverse("classificacao_final"))
+
+    def test_o_administrador_ve_a_classificacao_sem_pertencer_a_grupo(self):
+        """10.3: "Visualizacao de Ranking Geral" e tela do perfil administrador."""
+        self._logar("admin-final@teste.com", tipo_usuario="gamemaster")
+
+        resposta = self.client.get(reverse("classificacao_final"))
+
+        self.assertContains(resposta, "Equipe Vega")
+
+    def test_a_classificacao_mantem_o_ranking_marcado_no_menu(self):
+        usuario = self._logar("ceo-nav@teste.com")
+        self.grupo.membros.add(usuario)
+
+        resposta = self.client.get(reverse("classificacao_final"))
+
+        self.assertEqual(resposta.context["nav"], "ranking")

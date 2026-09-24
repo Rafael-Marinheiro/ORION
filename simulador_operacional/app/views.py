@@ -730,15 +730,25 @@ class ClassificacaoFinalView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # A classificacao final fecha a familia do ranking (RN-12): o menu
+        # continua marcando "Ranking" como a secao corrente.
+        context["nav"] = "ranking"
         grupo_usuario = obter_grupo_do_usuario(self.request.user)
-        if not grupo_usuario:
+        if grupo_usuario:
+            jogo = grupo_usuario.jogo
+        elif self.request.user.is_staff:
+            # 10.3 poe "Visualizacao de Ranking Geral" no perfil do
+            # administrador, que nao pertence a grupo nenhum -- sem isso a
+            # tela nascia vazia justamente para quem ela foi pedida.
+            jogo = Jogo.objects.order_by("-id").first()
+        else:
             context["grupos"] = []
             return context
 
-        if grupo_usuario.jogo_id:
-            grupos = Grupo.objects.filter(jogo_id=grupo_usuario.jogo_id)
-            rodadas = Rodada.objects.filter(jogo_id=grupo_usuario.jogo_id)
-            numero_rodadas = grupo_usuario.jogo.config.numero_rodadas
+        if jogo:
+            grupos = Grupo.objects.filter(jogo=jogo)
+            rodadas = Rodada.objects.filter(jogo=jogo)
+            numero_rodadas = jogo.config.numero_rodadas
         else:
             grupos = Grupo.objects.filter(jogo__isnull=True)
             rodadas = Rodada.objects.filter(jogo__isnull=True)

@@ -4,8 +4,20 @@
 
 {% block content %}
 <div class="o-head">
-    <h1>Classificação final</h1>
-    <p class="o-head__sub">Resultado consolidado da simulação, somando os critérios de todas as rodadas.</p>
+    <div class="o-head__row">
+        <div>
+            <h1>Classificação final</h1>
+            <p class="o-head__sub">
+                Resultado consolidado da simulação, somando os critérios de todas as rodadas.
+                Empate na pontuação é decidido pelo critério do §12.5, nesta ordem:
+                eficiência operacional, satisfação da demanda, sustentabilidade,
+                receita bruta e nome do grupo.
+            </p>
+        </div>
+        <div class="o-head__actions">
+            <a class="o-btn o-btn--ghost" href="{% url 'ranking' %}">Ranking por rodada</a>
+        </div>
+    </div>
 </div>
 
 <div class="o-tablewrap">

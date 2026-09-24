@@ -5,12 +5,21 @@
 
 {% block content %}
 <div class="o-head">
-    <h1>Ranking de grupos</h1>
-    <p class="o-head__sub">
-        A pontuação combina cinco eixos — eficiência operacional, desempenho
-        financeiro, eficiência de estoques, satisfação da demanda e
-        sustentabilidade{% if rodada_referencia %}, com base na rodada {{ rodada_referencia }}{% endif %}.
-    </p>
+    <div class="o-head__row">
+        <div>
+            <h1>Ranking de grupos</h1>
+            <p class="o-head__sub">
+                A pontuação combina cinco eixos — eficiência operacional, desempenho
+                financeiro, eficiência de estoques, satisfação da demanda e
+                sustentabilidade{% if rodada_referencia %}, com base na rodada {{ rodada_referencia }}{% endif %}.
+                Este é o ranking provisório da rodada; a classificação final soma o ciclo inteiro.
+            </p>
+        </div>
+        {# RN-12: o ranking provisorio sai a cada rodada, o final ao termino do jogo. #}
+        <div class="o-head__actions">
+            <a class="o-btn o-btn--ghost" href="{% url 'classificacao_final' %}">Classificação final</a>
+        </div>
+    </div>
 </div>
 
 <div class="o-tablewrap o-tablewrap--ranking">
