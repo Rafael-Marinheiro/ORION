@@ -12,7 +12,8 @@ from django.utils import timezone
 from app.parametros import CUSTO_OPERADOR_POR_RODADA, PESOS_EIXOS
 from app.services.eventos import evento_estado_ativo, sortear_evento
 from app.services.suprimentos import processar_recebimentos_materia_prima
-from app.services.producao import garantir_capacidades_grupo
+from app.services.distribuicao_service import executar_expedicao
+from app.services.producao import executar_producao, garantir_capacidades_grupo
 from app.services.marketing import fator_marketing
 from app.services.pontuacao import calcular_eixos, coletar_insumos, pontuacao_total
 from app.services.retencao import aplicar_retencao_de_entregas
@@ -458,6 +459,36 @@ class Command(BaseCommand):
                     grupos = list(grupos_qs)
                     grupos_ids = [grupo.id for grupo in grupos]
                     evento = self.obter_evento_rodada(rodada.numero, jogo_id=rodada.jogo_id)
+
+                    # 11.3.b executa "Producao, vendas, compras, distribuicao"
+                    # nesta ordem. Producao primeiro (13.7), expedicao depois
+                    # -- senao a equipe nao poderia enviar o que produziu na
+                    # mesma rodada, e o 6.2 exige que possa: o produto B
+                    # "perde validade apos 1 rodada".
+                    for grupo in grupos:
+                        # 13.4/RN-02: o parque de largada existe mesmo para o
+                        # grupo cujo CEO nunca abriu o painel.
+                        garantir_capacidades_grupo(grupo)
+                        custo_producao, _ = executar_producao(
+                            grupo=grupo, rodada=rodada.numero, evento=evento
+                        )
+                        custo_frete, _ = executar_expedicao(
+                            grupo=grupo, rodada=rodada.numero, evento=evento
+                        )
+                        operacional = custo_producao + custo_frete
+                        if operacional > 0:
+                            grupo.capital -= operacional
+                            grupo.save(update_fields=["capital"])
+                            rf_operacional, _ = ResultadoFinanceiro.objects.get_or_create(
+                                grupo=grupo, rodada=rodada.numero
+                            )
+                            rf_operacional.custos += operacional
+                            rf_operacional.saldo_caixa = grupo.capital
+                            rf_operacional.lucro = (
+                                rf_operacional.receita - rf_operacional.custos
+                            )
+                            rf_operacional.save()
+
                     stats_venda = self.processar_vendas_por_demanda(
                         rodada=rodada,
                         grupos_ids=grupos_ids,
@@ -479,10 +510,6 @@ class Command(BaseCommand):
                     metricas = {}
 
                     for grupo in grupos:
-                        # 13.4: o parque de largada existe mesmo para o grupo
-                        # cujo CEO nunca abriu o painel. Sem isto o primeiro
-                        # termo do EO zerava por falta de cadastro.
-                        garantir_capacidades_grupo(grupo)
                         custos_extras = Decimal("0")
                         motivos = []
                         penalidade_sem_submissao = Decimal("0")

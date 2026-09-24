@@ -58,6 +58,9 @@ def aplicar_retencao_de_entregas(envios, percentual, rodada_numero):
 
         # o frete ja foi pago quando o envio saiu: a carga esta na estrada,
         # nao no deposito. Cobrar de novo puniria duas vezes o mesmo evento.
+        # Pelo mesmo motivo nasce `expedida=True`: a baixa do estoque de
+        # acabados aconteceu na expedicao desta rodada, e expedir de novo na
+        # rodada seguinte consumiria o mesmo produto duas vezes.
         Distribuicao.objects.create(
             grupo_id=envio.grupo_id,
             produto_id=envio.produto_id,
@@ -66,6 +69,7 @@ def aplicar_retencao_de_entregas(envios, percentual, rodada_numero):
             quantidade=retido,
             preco_unitario=envio.preco_unitario,
             custo_transporte=Decimal("0"),
+            expedida=True,
         )
 
     return perdas_por_grupo

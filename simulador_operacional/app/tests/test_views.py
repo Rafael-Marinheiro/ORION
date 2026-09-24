@@ -398,6 +398,29 @@ class RodadaSubmissionRulesTest(TestCase):
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
 class MateriaPrimaFlowTest(TestCase):
     @staticmethod
+    def estocar(grupo, produto, quantidade, rodada=1):
+        """Acabado em estoque. A expedicao acontece no fechamento (11.3.b) e
+        so tira do que existe -- o 13.10 admite "a venda de produtos validos
+        e DISPONIVEIS"."""
+        EstoqueProduto.objects.create(
+            grupo=grupo, produto=produto, rodada_entrada=rodada, quantidade=quantidade
+        )
+        grupo.estoque = quantidade
+        grupo.save(update_fields=["estoque"])
+
+    @staticmethod
+    def produzir_no_fechamento(grupo, rodada=1):
+        from app.services.producao import executar_producao
+
+        return executar_producao(grupo=grupo, rodada=rodada)
+
+    @staticmethod
+    def expedir_no_fechamento(grupo, rodada=1):
+        from app.services.distribuicao_service import executar_expedicao
+
+        return executar_expedicao(grupo=grupo, rodada=rodada)
+
+    @staticmethod
     def folha(grupo):
         """Folha de pagamento da rodada, em reais.
 
@@ -446,7 +469,7 @@ class MateriaPrimaFlowTest(TestCase):
             CapacidadeProdutoGrupo.objects.filter(grupo=self.grupo, produto=self.produto).exists()
         )
 
-    def test_producao_bloqueia_quando_excede_capacidade_da_linha(self):
+    def test_producao_acima_da_linha_e_aparada_no_fechamento(self):
         Rodada.objects.create(numero=1, fim=timezone.now() + timedelta(hours=1))
         self.produto.tempo_producao_min = 100
         self.produto.save(update_fields=["tempo_producao_min"])
@@ -470,10 +493,15 @@ class MateriaPrimaFlowTest(TestCase):
             },
             follow=True,
         )
+        # RN-05: acima do limite o sistema "ajusta automaticamente, com alerta
+        # ao CEO"; o 13.11 manda produzir o que o tempo permitir. A linha tem
+        # 400 min e o produto leva 100, entao saem 4 das 5 pedidas.
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            Producao.objects.filter(grupo=self.grupo, produto=self.produto, rodada=1).exists()
-        )
+        self.assertIn("comporta 4 de 4 un", response.content.decode())
+        self.produzir_no_fechamento(self.grupo)
+        ordem = Producao.objects.get(grupo=self.grupo, produto=self.produto, rodada=1)
+        self.assertEqual(ordem.quantidade_planejada, 5)
+        self.assertEqual(ordem.quantidade_produzida, 4)
 
     def test_capacidade_de_a_nao_consume_linha_de_b(self):
         produto_b = Produto.objects.create(
@@ -529,6 +557,9 @@ class MateriaPrimaFlowTest(TestCase):
 
         self.assertEqual(response_a.status_code, 200)
         self.assertEqual(response_b.status_code, 200)
+        # 13.11: "cada produto so pode ser produzido em sua linha" -- as duas
+        # ordens cabem porque cada linha tem os seus 400 minutos.
+        self.produzir_no_fechamento(self.grupo)
         self.assertTrue(
             Producao.objects.filter(grupo=self.grupo, produto=self.produto, rodada=1, quantidade_produzida=4).exists()
         )
@@ -586,6 +617,8 @@ class MateriaPrimaFlowTest(TestCase):
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
+        # 11.3.b: quem consome a MP e o fechamento, nao a submissao.
+        self.produzir_no_fechamento(self.grupo)
 
         saldo_mp1 = EstoqueMateriaPrima.objects.get(grupo=self.grupo, materia_prima=self.mp1)
         saldo_mp2 = EstoqueMateriaPrima.objects.get(grupo=self.grupo, materia_prima=self.mp2)
@@ -616,6 +649,8 @@ class MateriaPrimaFlowTest(TestCase):
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
+        # 11.3.b: a baixa do acabado sai na expedicao, no fechamento.
+        self.expedir_no_fechamento(self.grupo)
         lote = EstoqueProduto.objects.get(grupo=self.grupo, produto=self.produto, rodada_entrada=1)
         self.assertEqual(lote.quantidade, 15)
 
@@ -684,6 +719,8 @@ class MateriaPrimaFlowTest(TestCase):
         Decisao.objects.create(grupo=self.grupo, rodada=3, descricao="ok", quantidade=0)
         Decisao.objects.create(grupo=grupo2, rodada=3, descricao="ok", quantidade=0)
 
+        self.estocar(self.grupo, self.produto, 100, rodada=3)
+        self.estocar(grupo2, self.produto, 100, rodada=3)
         Distribuicao.objects.create(
             grupo=self.grupo,
             produto=self.produto,
@@ -716,8 +753,16 @@ class MateriaPrimaFlowTest(TestCase):
 
         self.grupo.refresh_from_db()
         grupo2.refresh_from_db()
-        self.assertEqual(self.grupo.capital, Decimal("500670.00") - self.folha(self.grupo))
-        self.assertEqual(grupo2.capital, Decimal("396.00") - self.folha(grupo2))
+        # 11.3.b: alem da folha, o frete tambem sai no fechamento agora --
+        # antes o cenario gravava custo_transporte=0 e nada era cobrado.
+        self.assertEqual(
+            self.grupo.capital,
+            Decimal("500670.00") - self.folha(self.grupo) - envio1.custo_transporte,
+        )
+        self.assertEqual(
+            grupo2.capital,
+            Decimal("396.00") - self.folha(grupo2) - envio2.custo_transporte,
+        )
 
         rf1 = ResultadoFinanceiro.objects.get(grupo=self.grupo, rodada=3)
         rf2 = ResultadoFinanceiro.objects.get(grupo=grupo2, rodada=3)
@@ -772,6 +817,8 @@ class MateriaPrimaFlowTest(TestCase):
         Decisao.objects.create(grupo=self.grupo, rodada=4, descricao="ok", quantidade=0)
         Decisao.objects.create(grupo=grupo2, rodada=4, descricao="ok", quantidade=0)
 
+        self.estocar(self.grupo, self.produto, 100, rodada=4)
+        self.estocar(grupo2, self.produto, 100, rodada=4)
         Distribuicao.objects.create(
             grupo=self.grupo,
             produto=self.produto,
@@ -826,6 +873,8 @@ class MateriaPrimaFlowTest(TestCase):
             processado=True,
         )
 
+        self.estocar(self.grupo, self.produto, 100, rodada=5)
+        self.estocar(grupo2, self.produto, 100, rodada=5)
         Distribuicao.objects.create(
             grupo=self.grupo,
             produto=self.produto,

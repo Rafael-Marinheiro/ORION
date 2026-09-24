@@ -454,6 +454,10 @@ class Distribuicao(models.Model):
     quantidade_vendida = models.PositiveIntegerField(default=0)
     quantidade_sobra = models.PositiveIntegerField(default=0)
     receita_realizada = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    # `expedida` marca a baixa do acabado e a cobranca do frete (11.3.b);
+    # `processada` marca a venda por demanda (9.2.c). Sao dois momentos
+    # distintos do mesmo fechamento, nessa ordem.
+    expedida = models.BooleanField(default=False)
     processada = models.BooleanField(default=False)
     data_envio = models.DateTimeField(auto_now_add=True)
 

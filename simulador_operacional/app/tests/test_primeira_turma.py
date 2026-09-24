@@ -100,11 +100,18 @@ class PrimeiraTurmaTest(TestCase):
                         self.assertEqual(set(compras.values_list("rodada_recebimento", flat=True)), {2})
                         self.assertFalse(compras.filter(recebida=True).exists())
                         self.assertFalse(EstoqueMateriaPrima.objects.filter(grupo=grupo, quantidade_kg__gt=0).exists())
+                        # 11.3.b: a ordem e aceita; quem produz e o fechamento.
+                        # Na rodada 1 nao ha MP -- ela chega na seguinte (7.3) --
+                        # entao a ordem fica registrada e produz zero (13.11).
                         self.painel({"enviar_producao": "1", "produto": produto.pk, "quantidade_planejada": 1})
-                        self.assertFalse(Producao.objects.filter(grupo=grupo).exists())
+                        ordem = Producao.objects.get(grupo=grupo, rodada=1)
+                        self.assertEqual(ordem.quantidade_planejada, 1)
+                        self.assertEqual(ordem.quantidade_produzida, 0)
                     elif numero == 2:
                         self.painel({"enviar_producao": "1", "produto": produto.pk, "quantidade_planejada": 1})
-                        self.assertEqual(Producao.objects.get(grupo=grupo, rodada=2).quantidade_produzida, 1)
+                        # Agora ha MP: a ordem so vira produto no fechamento.
+                        self.assertEqual(Producao.objects.get(grupo=grupo, rodada=2).quantidade_planejada, 1)
+                        self.assertEqual(Producao.objects.get(grupo=grupo, rodada=2).quantidade_produzida, 0)
                         self.assertFalse(CompraMateriaPrima.objects.filter(grupo=grupo, recebida=False).exists())
                         self.painel({"enviar_envio": "1", "produto": produto.pk,
                                      "cidade": Cidade.objects.get(nome="Natal").pk,

@@ -14,6 +14,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from app.models import (
+    EstoqueProduto,
     Cidade,
     ComposicaoProduto,
     Decisao,
@@ -161,6 +162,13 @@ class FechamentoComRetencaoTest(TestCase):
             probabilidade=15,
         )
         EventoRodada.objects.create(rodada=1, jogo=None, evento=enchentes)
+        # A expedicao acontece no fechamento (11.3.b) e so tira do que existe:
+        # sem acabado em estoque, nada sai e nao ha o que reter.
+        EstoqueProduto.objects.create(
+            grupo=self.grupo, produto=self.produto, rodada_entrada=1, quantidade=100
+        )
+        self.grupo.estoque = 100
+        self.grupo.save(update_fields=["estoque"])
         Distribuicao.objects.create(
             grupo=self.grupo,
             produto=self.produto,

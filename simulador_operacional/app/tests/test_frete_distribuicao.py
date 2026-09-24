@@ -5,6 +5,11 @@ documental e, pior, linear: sair de 40 para 41 unidades mudava o frete em
 2%, entao nao havia licao de planejamento de carga nenhuma. Agora usa o
 mesmo caminhao da compra de materia-prima, e a mesma licao vale nos dois
 lados da operacao.
+
+Desde 2026-09-24 a expedicao acontece no fechamento, nao na submissao
+(11.3.b), entao o painel registra a ordem e `executar_expedicao` cobra o
+frete. Os testes chamam o servico direto: o frete e o assunto aqui, e
+rodar o fechamento inteiro traria folha, perecibilidade e vendas junto.
 """
 
 from datetime import timedelta
@@ -60,6 +65,13 @@ class FreteDaDistribuicaoTest(TestCase):
         self.grupo.estoque = quantidade
         self.grupo.save(update_fields=["estoque"])
 
+    def _expedir(self, evento=None):
+        from app.services.distribuicao_service import executar_expedicao
+
+        custo, _ = executar_expedicao(grupo=self.grupo, rodada=1, evento=evento)
+        self.grupo.refresh_from_db()
+        return custo
+
     def _enviar(self, quantidade):
         return self.client.post(
             reverse("painel_grupo"),
@@ -77,6 +89,7 @@ class FreteDaDistribuicaoTest(TestCase):
         self._estocar(40)
 
         self._enviar(40)
+        self._expedir()
 
         envio = Distribuicao.objects.get(grupo=self.grupo)
         # 1 viagem x 172 km x R$ 1,50
@@ -86,18 +99,20 @@ class FreteDaDistribuicaoTest(TestCase):
         self._estocar(41)
 
         self._enviar(41)
+        self._expedir()
 
         envio = Distribuicao.objects.get(grupo=self.grupo)
         self.assertEqual(envio.custo_transporte, Decimal("2720.00"))
 
-    def test_capital_do_grupo_e_debitado(self):
+    def test_frete_e_reportado_ao_fechamento_para_cobranca(self):
+        """Quem debita o caixa e o fechamento, que soma producao e frete num
+        lancamento so (11.3.b). O servico apura e devolve o valor; o debito em
+        si esta coberto em MateriaPrimaFlowTest."""
         self._estocar(40)
-        capital_antes = self.grupo.capital
 
         self._enviar(40)
 
-        self.grupo.refresh_from_db()
-        self.assertEqual(self.grupo.capital, capital_antes - Decimal("1360.00"))
+        self.assertEqual(self._expedir(), Decimal("1360.00"))
 
     def test_evento_de_custo_de_transporte_encarece_o_frete(self):
         """Greve de caminhoneiros: +30% no custo logistico (8.4)."""
@@ -112,6 +127,7 @@ class FreteDaDistribuicaoTest(TestCase):
         self._estocar(40)
 
         self._enviar(40)
+        self._expedir(evento=greve)
 
         envio = Distribuicao.objects.get(grupo=self.grupo)
         self.assertEqual(envio.custo_transporte, Decimal("1768.00"))  # 1.360 x 1,30
@@ -142,6 +158,7 @@ class FreteDaDistribuicaoTest(TestCase):
             },
             follow=True,
         )
+        self._expedir()
 
         para_natal = Distribuicao.objects.get(grupo=self.grupo, cidade=self.natal)
         para_acari = Distribuicao.objects.get(grupo=self.grupo, cidade=acari)

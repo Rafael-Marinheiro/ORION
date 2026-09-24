@@ -102,28 +102,15 @@ class PainelPostErrosTest(TestCase):
         self.assertIn("Capital insuficiente para compra de materia-prima", response.content.decode())
         self.assertFalse(CompraMateriaPrima.objects.filter(grupo=self.grupo).exists())
 
-    def test_producao_barrada_por_capital_insuficiente(self):
-        # Custo de producao de 1 unidade: 2*3 (MP1) + 1*5.5 (MP2) = 11.5.
-        EstoqueMateriaPrima.objects.create(grupo=self.grupo, materia_prima=self.mp1, quantidade_kg=100)
-        EstoqueMateriaPrima.objects.create(grupo=self.grupo, materia_prima=self.mp2, quantidade_kg=100)
-        self.grupo.capital = Decimal("1")
-        self.grupo.save(update_fields=["capital"])
+    # test_producao_barrada_por_capital_insuficiente saiu em 2026-09-24.
+    # A producao deixou de ser executada na submissao (11.3.b poe "Producao"
+    # entre as acoes do FECHAMENTO), entao nao ha debito de caixa no POST
+    # para barrar. E nenhuma secao da especificacao condiciona produzir a ter
+    # caixa: o 13.9 so diz que o custo e o valor da MP consumida, e o RN-09
+    # pressupoe que o caixa pode ficar negativo -- ele restringe investir,
+    # nao produzir.
 
-        response = self.client.post(
-            reverse("painel_grupo"),
-            {
-                "enviar_producao": "1",
-                "produto": self.produto.id,
-                "quantidade_planejada": 1,
-            },
-            follow=True,
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("Capital insuficiente para esta producao", response.content.decode())
-        self.assertFalse(Producao.objects.filter(grupo=self.grupo, produto=self.produto).exists())
-
-    def test_envio_barrado_por_estoque_insuficiente(self):
+    def test_envio_acima_do_estoque_avisa_e_registra_a_ordem(self):
         EstoqueProduto.objects.create(
             grupo=self.grupo,
             produto=self.produto,
@@ -145,9 +132,12 @@ class PainelPostErrosTest(TestCase):
             follow=True,
         )
 
+        # RN-05: quantidade acima do limite e "automaticamente ajustada pelo
+        # sistema, com alerta ao CEO". A ordem fica registrada e o fechamento
+        # expede o que houver -- pode ser que a producao desta rodada cubra.
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Estoque insuficiente", response.content.decode())
-        self.assertFalse(Distribuicao.objects.filter(grupo=self.grupo).exists())
+        self.assertIn("5 un de Produto A em estoque", response.content.decode())
+        self.assertTrue(Distribuicao.objects.filter(grupo=self.grupo).exists())
 
     def test_investimento_operacional_barrado_por_capital_insuficiente(self):
         """Categoria fora de 'financeiro' cai no desconto de capital generico."""

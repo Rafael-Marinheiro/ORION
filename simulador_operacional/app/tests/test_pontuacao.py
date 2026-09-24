@@ -262,14 +262,19 @@ class FechamentoGravaOsCincoEixosTest(TestCase):
         )
         Decisao.objects.create(grupo=self.grupo, rodada=1, descricao="ok", quantidade=0)
         # 13.4: 15 maquinas x 400 min = 6.000 min para o produto A, que leva
-        # 1 min por unidade. Produzir 5.400 ocupa 90% da linha -- e o que faz
-        # o primeiro termo do EO (12.3.1) ser alto.
+        # 1 min por unidade. Pedir 5.400 ocupa 90% da linha -- e o que faz o
+        # primeiro termo do EO (12.3.1) ser alto.
+        #
+        # A producao e apurada no fechamento (11.3.b), limitada por tempo E
+        # insumo (13.11), entao o insumo precisa existir: 5.400 un x 10 kg.
+        EstoqueMateriaPrima.objects.create(
+            grupo=self.grupo, materia_prima=mp, quantidade_kg=Decimal("54000")
+        )
         Producao.objects.create(
             grupo=self.grupo,
             produto=self.produto,
             rodada=1,
             quantidade_planejada=5400,
-            quantidade_produzida=5400,
         )
         EstoqueProduto.objects.create(
             grupo=self.grupo, produto=self.produto, rodada_entrada=1, quantidade=50

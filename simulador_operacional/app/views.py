@@ -40,6 +40,11 @@ from .parametros import (
 )
 from .services.dre import montar_dre, montar_fluxo_de_caixa, resumo_do_fluxo
 from .services.eventos import evento_estado_ativo, sortear_evento
+from .services.estoque import (
+    adicionar_estoque_produto,
+    consumir_materia_prima_para_producao,
+    estoque_disponivel_produto,
+)
 from .services.producao import garantir_capacidades_grupo
 from .services.investimentos import impedimento_para_investir, limite_de_expansao
 from .services.logistica import calcular_frete, calcular_frete_materia_prima, peso_do_envio
@@ -220,86 +225,6 @@ def fornecedor_valido_para_mp(materia_prima, cidade):
         return True
     nome_cidade = normalizar_nome_cidade(cidade.nome)
     return nome_cidade in permitidas
-
-
-def consumir_materia_prima_para_producao(grupo, produto, quantidade_planejada, aplicar_consumo=True):
-    composicoes = list(
-        ComposicaoProduto.objects.filter(produto=produto).select_related("materia_prima")
-    )
-    if not composicoes:
-        return False, "Produto sem composicao cadastrada."
-
-    faltas = []
-    consumos = []
-
-    for item in composicoes:
-        necessidade = item.quantidade_por_unidade * Decimal(quantidade_planejada)
-        estoque, _ = EstoqueMateriaPrima.objects.get_or_create(
-            grupo=grupo,
-            materia_prima=item.materia_prima,
-            defaults={"quantidade_kg": Decimal("0")},
-        )
-        if estoque.quantidade_kg < necessidade:
-            faltas.append(
-                f"{item.materia_prima.codigo}: precisa {necessidade} kg, saldo {estoque.quantidade_kg} kg"
-            )
-        consumos.append((estoque, necessidade))
-
-    if faltas:
-        return False, "Materia-prima insuficiente: " + "; ".join(faltas)
-
-    if aplicar_consumo:
-        for estoque, necessidade in consumos:
-            estoque.quantidade_kg -= necessidade
-            estoque.save(update_fields=["quantidade_kg"])
-
-    return True, None
-
-
-def atualizar_estoque_total_grupo(grupo):
-    total = (
-        EstoqueProduto.objects.filter(grupo=grupo)
-        .aggregate(total=Sum("quantidade"))
-        .get("total")
-        or 0
-    )
-    grupo.estoque = int(total)
-    grupo.save(update_fields=["estoque"])
-
-
-def adicionar_estoque_produto(grupo, produto, rodada_numero, quantidade):
-    lote, _ = EstoqueProduto.objects.get_or_create(
-        grupo=grupo,
-        produto=produto,
-        rodada_entrada=rodada_numero,
-        defaults={"quantidade": 0},
-    )
-    lote.quantidade += int(quantidade)
-    lote.save(update_fields=["quantidade"])
-    atualizar_estoque_total_grupo(grupo)
-
-
-def consumir_estoque_produto(grupo, produto, quantidade):
-    quantidade_restante = int(quantidade)
-    lotes = EstoqueProduto.objects.filter(
-        grupo=grupo,
-        produto=produto,
-        quantidade__gt=0,
-    ).order_by("rodada_entrada", "id")
-    disponivel = lotes.aggregate(total=Sum("quantidade")).get("total") or 0
-    if disponivel < quantidade_restante:
-        return False, disponivel
-
-    for lote in lotes:
-        if quantidade_restante <= 0:
-            break
-        retirada = min(lote.quantidade, quantidade_restante)
-        lote.quantidade -= retirada
-        lote.save(update_fields=["quantidade"])
-        quantidade_restante -= retirada
-
-    atualizar_estoque_total_grupo(grupo)
-    return True, disponivel
 
 
 def capacidade_disponivel_produto_rodada(grupo, produto, rodada_numero):
@@ -1170,67 +1095,32 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     rodada_numero=rodada_ativa.numero,
                 )
 
-                if producao.quantidade_planejada > capacidade_disponivel:
-                    messages.error(
-                        request,
-                        (
-                            f"Capacidade insuficiente para {producao.produto.nome}. "
-                            f"Disponivel: {capacidade_disponivel} de {capacidade_total} un na rodada."
-                        ),
-                    )
-                    return redirect("painel_grupo")
-
-                sucesso_consumo, erro_consumo = consumir_materia_prima_para_producao(
-                    grupo=grupo,
-                    produto=producao.produto,
-                    quantidade_planejada=producao.quantidade_planejada,
-                    aplicar_consumo=False,
-                )
-                if not sucesso_consumo:
-                    messages.error(request, erro_consumo)
-                    return redirect("painel_grupo")
-
-                custo_unitario = producao.produto.custo_unitario_estimado
-                custo_total = custo_unitario * Decimal(producao.quantidade_planejada)
-                evento = sortear_evento(producao.rodada, jogo_id=grupo.jogo_id)
-                if evento and evento.modo_aplicacao == "percentual" and evento.tipo == "custo_producao":
-                    custo_total *= Decimal(1 + evento.impacto_percentual / 100)
-
-                if grupo.capital < custo_total:
-                    messages.error(request, "Capital insuficiente para esta producao.")
-                    return redirect("painel_grupo")
-
-                consumir_materia_prima_para_producao(
-                    grupo=grupo,
-                    produto=producao.produto,
-                    quantidade_planejada=producao.quantidade_planejada,
-                    aplicar_consumo=True,
-                )
-
-                producao.quantidade_produzida = producao.quantidade_planejada
-                producao.custo_unitario = custo_unitario
-                producao.custo_total = custo_total
+                # 11.3.b poe a producao entre as acoes executadas no
+                # FECHAMENTO, e o 13.12 lista "quantidade produzida" entre os
+                # indicadores gerados pela Producao. Aqui so se registra a
+                # ordem; quem produz e o fechamento, seguindo o 13.7.
+                producao.quantidade_produzida = 0
+                producao.custo_unitario = Decimal("0")
+                producao.custo_total = Decimal("0")
                 producao.save()
 
-                grupo.capital -= custo_total
-                grupo.save(update_fields=["capital"])
-                adicionar_estoque_produto(
-                    grupo=grupo,
-                    produto=producao.produto,
-                    rodada_numero=rodada_ativa.numero,
-                    quantidade=producao.quantidade_produzida,
-                )
+                # RN-05: quantidade acima do limite e "automaticamente
+                # ajustada pelo sistema, com alerta ao CEO" -- avisa, nao
+                # recusa. O 13.11 manda produzir parcialmente.
+                if producao.quantidade_planejada > capacidade_disponivel:
+                    messages.warning(
+                        request,
+                        (
+                            f"Ordem registrada, mas a linha de {producao.produto.nome} "
+                            f"comporta {capacidade_disponivel} de {capacidade_total} un "
+                            f"nesta rodada. O fechamento vai produzir o que couber."
+                        ),
+                    )
 
-                resultado, _ = ResultadoFinanceiro.objects.get_or_create(
-                    grupo=grupo,
-                    rodada=rodada_ativa.numero,
+                messages.success(
+                    request,
+                    "Ordem de produção registrada. A produção é apurada no fechamento.",
                 )
-                resultado.custos += custo_total
-                resultado.saldo_caixa = grupo.capital
-                resultado.lucro = resultado.receita - resultado.custos
-                resultado.save()
-
-                messages.success(request, "Producao registrada.")
                 return redirect("painel_grupo")
 
         elif "enviar_envio" in request.POST:
@@ -1240,58 +1130,41 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 envio.grupo = grupo
                 envio.rodada = rodada_ativa.numero
 
-                evento = sortear_evento(envio.rodada, jogo_id=grupo.jogo_id)
-                sucesso_consumo, disponivel = consumir_estoque_produto(
-                    grupo=grupo,
-                    produto=envio.produto,
-                    quantidade=envio.quantidade,
-                )
-                if not sucesso_consumo:
-                    messages.error(
-                        request,
-                        (
-                            f"Estoque insuficiente para {envio.produto.nome}. "
-                            f"Disponivel: {disponivel}."
-                        ),
-                    )
-                    return redirect("painel_grupo")
+                # 11.3.b executa a distribuicao no FECHAMENTO, depois da
+                # producao. Aqui so se registra a ordem de envio: a baixa do
+                # acabado e o frete saem no fechamento, quando ja existe o que
+                # foi produzido nesta rodada (6.2, produto B).
+                envio.custo_transporte = Decimal("0")
+                envio.save()
 
-                # §9.2a: frete proporcional à distância e ao volume. A
-                # calibração aprovada cobra R$ 5/km e R$ 500 por viagem.
                 frete = calcular_frete(
                     distancia_km=envio.cidade.distancia_km,
                     peso_kg=peso_do_envio(envio.produto, envio.quantidade),
                 )
-                custo = frete["custo"]
-                if evento and evento.modo_aplicacao == "percentual" and evento.tipo == "custo_transporte":
-                    custo *= Decimal(1 + evento.impacto_percentual / 100)
 
-                envio.custo_transporte = custo
-                envio.save()
-
-                grupo.capital -= custo
-                grupo.save(update_fields=["capital"])
-
-                resultado, _ = ResultadoFinanceiro.objects.get_or_create(
-                    grupo=grupo,
-                    rodada=envio.rodada,
-                )
-                resultado.custos += custo
-                resultado.lucro = resultado.receita - resultado.custos
-                resultado.saldo_caixa = grupo.capital
-                resultado.save()
+                disponivel = estoque_disponivel_produto(grupo, envio.produto)
+                if envio.quantidade > disponivel:
+                    # RN-05: avisa e ajusta no fechamento, nao recusa.
+                    messages.warning(
+                        request,
+                        (
+                            f"Ordem registrada, mas ha {disponivel} un de "
+                            f"{envio.produto.nome} em estoque. Se a producao desta "
+                            f"rodada nao cobrir o resto, o envio sai parcial."
+                        ),
+                    )
 
                 messages.success(
                     request,
                     (
-                        "Distribuicao registrada: {viagens} viagem(ns) ate {cidade}, "
-                        "{ocupacao:.0f}% da capacidade do caminhao, frete de {custo}. "
-                        "A venda sera calculada no fechamento da rodada."
+                        "Ordem de envio registrada: {viagens} viagem(ns) até {cidade}, "
+                        "{ocupacao:.0f}% da capacidade do caminhão, frete estimado de "
+                        "{custo}. Expedição e venda saem no fechamento da rodada."
                     ).format(
                         viagens=frete["viagens"],
                         cidade=envio.cidade.nome,
                         ocupacao=frete["ocupacao_percentual"],
-                        custo=custo.quantize(Decimal("0.01")),
+                        custo=frete["custo"].quantize(Decimal("0.01")),
                     ),
                 )
                 return redirect("painel_grupo")
