@@ -125,7 +125,7 @@
 {% if grafico_posicoes.labels %}
 {{ grafico_posicoes|json_script:"dados-posicoes-ranking" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-<script src="{% static 'js/charts.js' %}?v=20260923b" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260924a" defer></script>
 <script>
     (function () {
         var dados = JSON.parse(document.getElementById('dados-posicoes-ranking').textContent);
@@ -133,6 +133,7 @@
         window.orionCharts.push({
             canvas: 'ranking-posicoes', fallback: 'fb-ranking-posicoes',
             type: 'line', labels: dados.labels, series: dados.series,
+            tooltipClassificacao: true,
             reverseY: true, integerY: true,
             // Uma margem discreta evita que a posição 1 seja recortada
             // pelo limite superior do gráfico, sobretudo quando só há uma equipe.
@@ -185,7 +186,14 @@
                 var cor = cores[indice % cores.length];
                 var pontos = serie.data.map(function (valor, i) { return x(i) + ',' + y(valor); }).join(' ');
                 elemento('polyline', { points: pontos, fill: 'none', stroke: cor, 'stroke-width': '3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
-                serie.data.forEach(function (valor, i) { elemento('circle', { cx: x(i), cy: y(valor), r: '5', fill: cor, stroke: 'var(--o-panel)', 'stroke-width': '2' }); });
+                serie.data.forEach(function (valor, i) {
+                    var ponto = elemento('circle', { cx: x(i), cy: y(valor), r: '5', fill: cor, stroke: 'var(--o-panel)', 'stroke-width': '2' });
+                    // sem Chart.js nao ha tooltip; o title nativo mantem a
+                    // leitura "quem estava onde" ao parar o mouse no ponto
+                    var rotulo = document.createElementNS(ns, 'title');
+                    rotulo.textContent = serie.label + ' — ' + valor + 'º na rodada ' + String(dados.labels[i]).replace(/^R/, '');
+                    ponto.appendChild(rotulo);
+                });
                 var legendaX = margem.esquerda + indice * 128;
                 elemento('circle', { cx: legendaX, cy: altura - 16, r: '4', fill: cor });
                 elemento('text', { x: legendaX + 9, y: altura - 12, fill: 'currentColor', 'font-size': '12' }, serie.label);

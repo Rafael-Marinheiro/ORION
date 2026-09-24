@@ -122,7 +122,31 @@
                         display: spec.legenda !== false,
                         labels: { color: ink, boxWidth: 12, usePointStyle: true }
                     },
-                    tooltip: { padding: 10 }
+                    tooltip: {
+                        padding: 10,
+                        /* 10.3 pede "evolucao do grupo ao longo da
+                           competicao". No grafico de posicoes, parar o mouse
+                           numa rodada tem que responder "quem estava na
+                           frente NAQUELA rodada" -- entao as equipes saem na
+                           ordem da classificacao, da primeira para a ultima,
+                           e nao na ordem em que as series foram criadas. */
+                        itemSort: spec.tooltipClassificacao
+                            ? function (a, b) { return a.parsed.y - b.parsed.y; }
+                            : undefined,
+                        callbacks: spec.tooltipClassificacao
+                            ? {
+                                title: function (itens) {
+                                    return itens.length
+                                        ? 'Classificação na rodada ' +
+                                          String(itens[0].label).replace(/^R/, '')
+                                        : '';
+                                },
+                                label: function (item) {
+                                    return item.parsed.y + 'º  ' + item.dataset.label;
+                                }
+                            }
+                            : {}
+                    }
                 },
                 scales: {
                     x: {

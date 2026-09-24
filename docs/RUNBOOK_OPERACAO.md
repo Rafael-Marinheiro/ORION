@@ -138,6 +138,14 @@ Se o resultado não aparecer, peça ao responsável que confira os logs antes de
 abrir outra rodada. Não refaça operações nem reaplique o seed para tentar corrigir.
 
 O ranking ainda depende de ratificações pedagógicas registradas no guia
+**Mudança de régua no meio de um jogo:** os eixos ficam gravados em
+`ConsolidadoRodadaGrupo` no fechamento de cada rodada. Uma correção de fórmula
+— como o B11 e o B12 — vale só para os fechamentos seguintes, e a classificação
+final soma as rodadas, misturando as duas escalas. Se a régua mudar com um jogo
+em andamento, recomece o jogo; não há recálculo retroativo, porque o histórico
+não guarda todos os insumos (custo das vendas, estoque médio da rodada anterior
+e o parque de máquinas de então).
+
 (B8/B12: fórmula e escala do SD — o denominador era o mercado inteiro, 37×
 maior que a planta, e o eixo valia no máximo 0,54 de 100; B11: escala do giro
 de estoque — o indicador não tinha teto e o estoque zerado valia 0, invertendo

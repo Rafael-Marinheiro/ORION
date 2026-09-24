@@ -54,6 +54,10 @@ class RankingViewTest(TestCase):
                  "valor": Decimal("55"), "formato": "percentual"},
             ],
         )
+        # O grafico de posicoes responde "quem estava na frente NAQUELA
+        # rodada" quando o mouse para nela; sem a bandeira o tooltip volta a
+        # listar as equipes na ordem em que as series foram criadas.
+        self.assertContains(response, "tooltipClassificacao: true")
         self.assertEqual(
             response.context["evolucao_grupo"],
             [

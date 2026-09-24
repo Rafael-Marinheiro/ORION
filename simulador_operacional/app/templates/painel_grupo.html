@@ -367,7 +367,7 @@
 {% if grafico_desempenho.labels and not somente_decisoes %}
 {{ grafico_desempenho|json_script:"dados-desempenho-painel" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-<script src="{% static 'js/charts.js' %}?v=20260923b" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260924a" defer></script>
 <script>
     (function () {
         var dados = JSON.parse(document.getElementById('dados-desempenho-painel').textContent);
