@@ -1,16 +1,16 @@
-"""Aviso de perecibilidade: o que vence no fechamento desta rodada.
+"""Validade do produto perecivel e o risco que ela cria -- 6.2.
 
-O 6.2 manda descartar o produto perecivel nao comercializado, sem
-compensacao. O descarte ja acontecia no fechamento, mas em silencio: o aluno
-so descobria a perda depois de consumada, quando nao havia mais o que fazer.
+Duas coisas moram aqui: a regra de vencimento que o fechamento aplica, e o
+estado de risco que o painel mostra ao grupo enquanto a rodada corre.
 
-Aqui o mesmo criterio do fechamento e aplicado antes, para o grupo poder
-reagir enquanto a rodada esta aberta -- que e onde a decisao ainda existe.
+O aviso diz que existe risco, e so. Nao calcula a perda, nao sugere a
+correcao, nao aponta o produto. Rafael, 24/09/2026: "O que nao acontece na
+vida real, eles como gestores devem conhecer os produtos, suas
+caracteristicas, e efeitos das escolhas." As caracteristicas ficam no manual
+(tela de Ajuda); a leitura do proprio estoque e do aluno.
 """
 
-from decimal import Decimal
-
-from app.models import EstoqueProduto
+from django.db.models import Sum
 
 
 def lote_vencido(lote, rodada):
@@ -38,32 +38,48 @@ def lote_vencido(lote, rodada):
     return rodada >= lote.rodada_entrada + validade - 1
 
 
-def lotes_a_vencer(grupo, rodada):
-    """Lotes do grupo que serao descartados no fechamento de `rodada`."""
+def risco_de_perda_de_estoque(grupo, rodada):
+    """True quando o grupo termina a rodada com perecivel sobrando.
+
+    Compara, por produto perecivel, o que existira no fim da rodada --
+    estoque atual mais producao planejada -- com o que foi destinado a
+    envio. O que sobrar e descartado no fechamento, pelo 6.2.
+
+    A producao planejada conta porque ela ainda nao aconteceu: o 11.3.b
+    executa producao e expedicao no fechamento, entao durante a rodada o
+    lote existe so como decisao. Se so olhasse o estoque, o aviso nunca
+    acenderia -- o perecivel nao atravessa rodada.
+    """
+    from app.models import Distribuicao, EstoqueProduto, Producao
+
     if grupo is None or rodada is None:
-        return []
+        return False
 
-    lotes = (
-        EstoqueProduto.objects.filter(grupo=grupo, produto__perecivel=True, quantidade__gt=0)
-        .select_related("produto")
-        .order_by("produto__codigo", "rodada_entrada")
+    perecivel = {"produto__perecivel": True}
+    planejado = _por_produto(
+        Producao.objects.filter(grupo=grupo, rodada=rodada, **perecivel),
+        "quantidade_planejada",
     )
-    return [lote for lote in lotes if lote_vencido(lote, rodada)]
-
-
-def resumo_vencimento(grupo, rodada):
-    """Resumo pronto para a tela, ou None quando nao ha nada a vencer."""
-    lotes = lotes_a_vencer(grupo, rodada)
-    if not lotes:
-        return None
-
-    quantidade = sum(lote.quantidade for lote in lotes)
-    valor = sum(
-        Decimal(lote.quantidade) * lote.produto.custo_unitario_estimado for lote in lotes
+    estocado = _por_produto(
+        EstoqueProduto.objects.filter(grupo=grupo, quantidade__gt=0, **perecivel),
+        "quantidade",
     )
+    destinado = _por_produto(
+        Distribuicao.objects.filter(
+            grupo=grupo, rodada=rodada, expedida=False, **perecivel
+        ),
+        "quantidade",
+    )
+
+    for produto_id in set(planejado) | set(estocado):
+        disponivel = planejado.get(produto_id, 0) + estocado.get(produto_id, 0)
+        if disponivel > destinado.get(produto_id, 0):
+            return True
+    return False
+
+
+def _por_produto(queryset, campo):
     return {
-        "lotes": lotes,
-        "quantidade": quantidade,
-        "valor": valor,
-        "produtos": sorted({lote.produto.codigo for lote in lotes}),
+        linha["produto"]: linha["total"] or 0
+        for linha in queryset.values("produto").annotate(total=Sum(campo))
     }

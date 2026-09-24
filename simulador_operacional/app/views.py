@@ -52,7 +52,7 @@ from .services.producao import garantir_capacidades_grupo
 from .services.investimentos import impedimento_para_investir, limite_de_expansao
 from .services.logistica import calcular_frete, calcular_frete_materia_prima, peso_do_envio
 from .services.marketing import fator_marketing
-from .services.perecibilidade import resumo_vencimento
+from .services.perecibilidade import risco_de_perda_de_estoque
 from .services.suprimentos import limite_de_compra
 from .services.pontuacao import ordenar_classificacao, satisfacao_por_praca
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
@@ -990,7 +990,9 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             ),
             "linhas_fabrica": linhas_fabrica,
             "aplicacao_financeira": aplicacao_financeira,
-            "vencimento_proximo": resumo_vencimento(
+            # 6.2: o aviso declara o estado, nao a jogada -- nem quanto,
+            # nem qual produto, nem o que fazer.
+            "risco_perda_estoque": risco_de_perda_de_estoque(
                 grupo, rodada_ativa.numero if rodada_ativa else None
             ),
             "rodada_filtro": rodada_filtro or "",

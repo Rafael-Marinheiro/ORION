@@ -170,22 +170,11 @@
         `evento` saiu da condicao: o boletim do cabecalho ja anuncia o evento,
         e mante-lo aqui abria a secao "Atencao na rodada" sem nada dentro.
     {% endcomment %}
-    {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
+    {% if risco_perda_estoque or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
     {% if somente_decisoes %}<h2 class="o-attention-title">Atenção na rodada</h2>{% endif %}
     <ul class="o-notes {% if somente_decisoes %}o-notes--decision{% endif %}">
-        {% if vencimento_proximo %}
-            <li class="o-note o-note--warning">
-                <p>
-                    <strong>Vence no fechamento desta rodada:</strong>
-                    <span class="o-num">{{ vencimento_proximo.quantidade }}</span> un
-                    do produto {{ vencimento_proximo.produtos|join:", " }},
-                    equivalentes a <span class="o-num">{{ vencimento_proximo.valor|floatformat:2 }}</span>.
-                </p>
-                <p class="o-muted">
-                    Produto perecível não comercializado é descartado sem compensação.
-                    Distribua nesta rodada ou a perda entra no resultado.
-                </p>
-            </li>
+        {% if risco_perda_estoque %}
+            <li class="o-note o-note--warning"><strong>Risco de perda de estoque.</strong></li>
         {% endif %}
         {% if not rodada_ativa %}
             <li class="o-note o-note--warning">Nenhuma rodada aberta no momento. As decisões voltam a aceitar envio quando o professor abrir a próxima.</li>

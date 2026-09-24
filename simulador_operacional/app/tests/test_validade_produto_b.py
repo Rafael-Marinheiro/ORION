@@ -22,7 +22,7 @@ from app.models import (
     MateriaPrima,
     Produto,
 )
-from app.services.perecibilidade import lote_vencido, lotes_a_vencer
+from app.services.perecibilidade import lote_vencido
 
 
 @override_settings(MIGRATION_MODULES={"app": None})
@@ -59,18 +59,17 @@ class ValidadeDoPerecivelTest(TestCase):
 
         self.assertTrue(lote_vencido(lote, 4))
 
-    def test_a_nunca_vence(self):
-        """6.2: "estocado por tempo indefinido"; producao antecipada e a
-        estrategia propria do A."""
-        lote = self._lote(self.a, rodada_entrada=1)
+    def test_validade_maior_sobrevive_ao_proprio_fechamento(self):
+        """`validade_rodadas` conta a propria rodada: 2 da ao lote a rodada
+        de entrada mais a seguinte."""
+        duradouro = Produto.objects.create(
+            codigo="D", nome="Produto D", tempo_producao_min=1,
+            perecivel=True, validade_rodadas=2,
+        )
+        lote = self._lote(duradouro, rodada_entrada=4)
 
-        self.assertEqual(lotes_a_vencer(self.grupo, 9), [])
-
-    def test_o_aviso_de_tela_usa_a_mesma_regra_do_fechamento(self):
-        """A condicao vivia duplicada; uma copia podia mudar sem a outra."""
-        lote = self._lote(self.b, rodada_entrada=2)
-
-        self.assertEqual(lotes_a_vencer(self.grupo, 2), [lote])
+        self.assertFalse(lote_vencido(lote, 4))
+        self.assertTrue(lote_vencido(lote, 5))
 
 
 @override_settings(MIGRATION_MODULES={"app": None})

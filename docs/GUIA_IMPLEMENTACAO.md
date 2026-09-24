@@ -348,11 +348,36 @@ no fechamento em que nasceu, 2 = sobrevive à rodada seguinte. A regra mora em
 `services.perecibilidade.lote_vencido`, único lugar; o fechamento e o aviso de
 tela chamam de lá. Antes eram duas cópias da mesma condição.
 
-**Consequência conhecida:** o painel de aviso de vencimento
-(`resumo_vencimento`) tende a nunca disparar, porque estoque de perecível deixa
-de atravessar rodadas. O aviso útil agora é outro — produção planejada de B
-contra o que foi destinado a envio, dentro da rodada aberta. Não foi
-implementado; fica registrado para decisão.
+**Consequência tratada em 24/09/2026:** o painel de aviso de vencimento
+deixou de ter alcance, porque estoque de perecível não atravessa mais rodadas.
+Foi substituído pelo aviso de **risco de perda de estoque**, descrito abaixo.
+
+### D10 · Avisos não tutelam o aluno — política de 24/09/2026
+
+Rafael, 24/09/2026: **"O que não acontece na vida real, eles como gestores
+devem conhecer os produtos, suas características, e efeitos das escolhas."**
+
+O ORION é instrumento de avaliação, não tutor. Não se cria aviso que antecipe
+ao aluno a consequência da decisão dele. **Alerta exigido pela especificação
+continua** — o RN-05 pede "alerta ao CEO" ao aparar compra acima do teto, e
+erros de submissão seguem sendo informados.
+
+O aviso do painel que somava a perda, nomeava o produto e mandava distribuir
+foi removido. No lugar, `risco_de_perda_de_estoque` declara um estado e nada
+mais: **"Risco de perda de estoque."** Sem quantidade, sem produto, sem
+sugestão. Acende quando estoque atual mais produção planejada de perecível
+supera o que foi destinado a envio na rodada.
+
+A contrapartida é tornar a regra **legível**: as características dos produtos
+(§6.1, §6.2, §13.3) passaram a ser documentadas na tela de Ajuda, lidas do
+banco para acompanharem os preços parametrizáveis do §6.1. Antes, a única
+menção a perecibilidade em toda a interface vivia dentro do aviso removido —
+ou seja, só alcançava quem já estava prestes a perder o lote.
+
+**Não existe capacidade máxima de estoque.** O RN-07 é explícito: "não existem
+limites mínimos ou máximos de estoque predefinidos". O freio é financeiro (2%
+de armazenagem, §6.4 e §7.4), não físico. Qualquer aviso de "estoque acima da
+capacidade" seria regra inventada contra o RN-07.
 
 ### Quem decide o quê
 

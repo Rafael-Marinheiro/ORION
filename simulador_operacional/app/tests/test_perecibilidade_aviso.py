@@ -1,118 +1,117 @@
-"""O aviso de vencimento tem que usar o mesmo criterio do fechamento.
+"""Aviso de risco de perda de estoque -- 6.2.
 
-Se os dois divergirem, o aluno recebe aviso de perda que nao acontece, ou
-perde lote sem ter sido avisado -- os dois casos destroem a confianca na
-simulacao.
+O aviso declara um estado e nada mais: "Risco de perda de estoque". Nao diz
+quanto, nao diz qual produto, nao diz o que fazer. Rafael, 24/09/2026: "O
+que nao acontece na vida real, eles como gestores devem conhecer os
+produtos, suas caracteristicas, e efeitos das escolhas."
+
+O aviso anterior fazia o contrario -- somava a perda, nomeava o produto e
+mandava distribuir. Alem de tutelar, tinha deixado de funcionar: olhava
+estoque de perecivel atravessando rodadas, e desde que o B passou a vencer
+no fechamento da propria rodada isso nao existe mais.
 """
 
 from decimal import Decimal
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
-from app.models import EstoqueProduto, Grupo, Produto
-from app.services.perecibilidade import lotes_a_vencer, resumo_vencimento
+from app.models import (
+    Cidade,
+    Distribuicao,
+    EstoqueProduto,
+    Grupo,
+    Producao,
+    Produto,
+)
+from app.services.perecibilidade import risco_de_perda_de_estoque
 
 
-class AvisoDeVencimentoTest(TestCase):
+@override_settings(MIGRATION_MODULES={"app": None})
+class RiscoDePerdaTest(TestCase):
     def setUp(self):
-        self.grupo = Grupo.objects.create(nome="Equipe Vega", capital=Decimal("1000"))
-        # 6.2: B e o unico perecivel, com validade de 1 rodada
+        self.grupo = Grupo.objects.create(nome="Equipe Vega", capital=Decimal("100000"))
         self.b = Produto.objects.create(
-            codigo="B", nome="Produto B", perecivel=True, validade_rodadas=1,
-            tempo_producao_min=4,
+            codigo="B", nome="Produto B", tempo_producao_min=4,
+            perecivel=True, validade_rodadas=1,
         )
         self.a = Produto.objects.create(
-            codigo="A", nome="Produto A", perecivel=False, validade_rodadas=0,
-            tempo_producao_min=2,
+            codigo="A", nome="Produto A", tempo_producao_min=2, perecivel=False
+        )
+        self.cidade = Cidade.objects.create(
+            nome="Recife", distancia_km=290, demanda=4000
         )
 
-    def test_lote_que_vence_no_fechamento_desta_rodada_e_avisado(self):
-        # 6.2: entrou na rodada 3 e nao foi enviado -> morre no fechamento
-        # da propria rodada 3.
+    def _produzir(self, produto, quantidade, rodada=1):
+        return Producao.objects.create(
+            grupo=self.grupo, produto=produto, rodada=rodada,
+            quantidade_planejada=quantidade,
+        )
+
+    def _distribuir(self, produto, quantidade, rodada=1, expedida=False):
+        return Distribuicao.objects.create(
+            grupo=self.grupo, produto=produto, cidade=self.cidade, rodada=rodada,
+            quantidade=quantidade, preco_unitario=Decimal("10"),
+            custo_transporte=Decimal("0"), expedida=expedida,
+        )
+
+    def test_producao_de_perecivel_sem_destino_acende_o_aviso(self):
+        self._produzir(self.b, 500)
+
+        self.assertTrue(risco_de_perda_de_estoque(self.grupo, 1))
+
+    def test_producao_inteira_destinada_nao_acende(self):
+        self._produzir(self.b, 500)
+        self._distribuir(self.b, 500)
+
+        self.assertFalse(risco_de_perda_de_estoque(self.grupo, 1))
+
+    def test_sobra_parcial_acende(self):
+        self._produzir(self.b, 500)
+        self._distribuir(self.b, 300)
+
+        self.assertTrue(risco_de_perda_de_estoque(self.grupo, 1))
+
+    def test_destino_acima_da_producao_nao_acende(self):
+        """Enviar mais do que produziu e outro problema -- o 13.11 apara no
+        fechamento --, e nao e perda de estoque."""
+        self._produzir(self.b, 300)
+        self._distribuir(self.b, 500)
+
+        self.assertFalse(risco_de_perda_de_estoque(self.grupo, 1))
+
+    def test_produto_nao_perecivel_nunca_acende(self):
+        """6.2: o A "pode ser estocado por tempo indefinido". Sobra dele vira
+        custo de armazenagem, nao perda."""
+        self._produzir(self.a, 5000)
+
+        self.assertFalse(risco_de_perda_de_estoque(self.grupo, 1))
+
+    def test_estoque_de_perecivel_parado_acende_mesmo_sem_producao(self):
+        """Nao deveria existir depois do 6.2, mas se existir e perda certa."""
         EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=self.b, rodada_entrada=3, quantidade=300
+            grupo=self.grupo, produto=self.b, rodada_entrada=1, quantidade=40
         )
 
-        self.assertEqual(len(lotes_a_vencer(self.grupo, 3)), 1)
+        self.assertTrue(risco_de_perda_de_estoque(self.grupo, 1))
 
-    def test_validade_maior_sobrevive_ao_proprio_fechamento(self):
-        """`validade_rodadas` conta a propria rodada de producao: 2 da ao
-        lote a rodada de entrada mais a seguinte."""
-        duradouro = Produto.objects.create(
-            codigo="D", nome="Produto D", perecivel=True, validade_rodadas=2,
-            tempo_producao_min=1,
-        )
-        EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=duradouro, rodada_entrada=4, quantidade=300
-        )
+    def test_envio_ja_expedido_nao_conta_como_destino(self):
+        """Carga expedida saiu do armazem: nao absorve a producao desta rodada."""
+        self._produzir(self.b, 500)
+        self._distribuir(self.b, 500, expedida=True)
 
-        self.assertEqual(lotes_a_vencer(self.grupo, 4), [])
-        self.assertEqual(len(lotes_a_vencer(self.grupo, 5)), 1)
+        self.assertTrue(risco_de_perda_de_estoque(self.grupo, 1))
 
-    def test_produto_nao_perecivel_nunca_entra_no_aviso(self):
-        EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=self.a, rodada_entrada=1, quantidade=500
-        )
+    def test_destino_de_outra_rodada_nao_conta(self):
+        self._produzir(self.b, 500)
+        self._distribuir(self.b, 500, rodada=2)
 
-        self.assertEqual(lotes_a_vencer(self.grupo, 9), [])
+        self.assertTrue(risco_de_perda_de_estoque(self.grupo, 1))
 
-    def test_lote_zerado_nao_gera_aviso(self):
-        EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=self.b, rodada_entrada=1, quantidade=0
-        )
+    def test_sem_rodada_aberta_nao_quebra(self):
+        self._produzir(self.b, 500)
 
-        self.assertIsNone(resumo_vencimento(self.grupo, 5))
+        self.assertFalse(risco_de_perda_de_estoque(self.grupo, None))
+        self.assertFalse(risco_de_perda_de_estoque(None, 1))
 
-    def test_resumo_soma_quantidade_e_lista_produtos(self):
-        EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=self.b, rodada_entrada=2, quantidade=120
-        )
-        EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=self.b, rodada_entrada=3, quantidade=80
-        )
-
-        resumo = resumo_vencimento(self.grupo, 3)
-
-        self.assertEqual(resumo["quantidade"], 200)
-        self.assertEqual(resumo["produtos"], ["B"])
-
-    def test_sem_rodada_ativa_nao_quebra(self):
-        EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=self.b, rodada_entrada=1, quantidade=50
-        )
-
-        self.assertIsNone(resumo_vencimento(self.grupo, None))
-        self.assertIsNone(resumo_vencimento(None, 4))
-
-
-class CriterioIgualAoFechamentoTest(TestCase):
-    """O aviso tem que prever exatamente o que o fechamento descarta.
-
-    A condicao vivia duplicada nos dois lugares; hoje ha uma so, em
-    `lote_vencido`. Comparar a lista prevista com os lotes que o fechamento
-    de fato zerou continua valendo -- e o que prova que a tela nao mente.
-    """
-
-    def test_o_aviso_prediz_exatamente_os_lotes_que_o_fechamento_zera(self):
-        from app.management.commands.fechar_rodadas import Command
-
-        grupo = Grupo.objects.create(nome="Equipe Rigel", capital=Decimal("1000"))
-        b = Produto.objects.create(
-            codigo="B", nome="Produto B", perecivel=True, validade_rodadas=1,
-            tempo_producao_min=4,
-        )
-        for entrada in range(1, 5):
-            EstoqueProduto.objects.create(
-                grupo=grupo, produto=b, rodada_entrada=entrada, quantidade=10
-            )
-
-        avisados = {lote.id for lote in lotes_a_vencer(grupo, 3)}
-
-        Command().processar_perecibilidade(grupo, 3)
-
-        zerados = {
-            lote.id
-            for lote in EstoqueProduto.objects.filter(grupo=grupo, quantidade=0)
-        }
-        self.assertEqual(avisados, zerados)
-        self.assertTrue(avisados, "o cenario precisa ter algo a vencer")
+    def test_grupo_sem_decisao_nao_acende(self):
+        self.assertFalse(risco_de_perda_de_estoque(self.grupo, 1))
