@@ -12,6 +12,7 @@ from django.utils import timezone
 from app.parametros import CUSTO_OPERADOR_POR_RODADA, PESOS_EIXOS
 from app.services.eventos import evento_estado_ativo, sortear_evento
 from app.services.suprimentos import processar_recebimentos_materia_prima
+from app.services.producao import garantir_capacidades_grupo
 from app.services.marketing import fator_marketing
 from app.services.pontuacao import calcular_eixos, coletar_insumos, pontuacao_total
 from app.services.retencao import aplicar_retencao_de_entregas
@@ -478,6 +479,10 @@ class Command(BaseCommand):
                     metricas = {}
 
                     for grupo in grupos:
+                        # 13.4: o parque de largada existe mesmo para o grupo
+                        # cujo CEO nunca abriu o painel. Sem isto o primeiro
+                        # termo do EO zerava por falta de cadastro.
+                        garantir_capacidades_grupo(grupo)
                         custos_extras = Decimal("0")
                         motivos = []
                         penalidade_sem_submissao = Decimal("0")

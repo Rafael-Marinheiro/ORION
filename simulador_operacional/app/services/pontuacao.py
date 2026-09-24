@@ -42,12 +42,30 @@ def _razao(numerador, denominador):
     return _dec(numerador) / denominador
 
 
-def eficiencia_operacional(*, produzido, planejado, vendidos, disponiveis, perdas, base_perdas):
-    """12.3.1 -- producao, comercializacao e perdas, pesos F1/F2/F3."""
+def eficiencia_operacional(
+    *, minutos_produzidos, minutos_de_capacidade, vendidos, disponiveis, perdas, base_perdas
+):
+    """12.3.1 -- producao, comercializacao e perdas, pesos F1/F2/F3.
+
+    O primeiro termo e "Producao Liquida / Capacidade Utilizada". Ate
+    2026-09-24 o codigo usava produzido/planejado, que e outra coisa:
+    aderencia ao plano. Um grupo que planejava 100 e produzia 100 tirava
+    nota cheia ocupando 3% da fabrica.
+
+    A razao e minuto sobre minuto porque essa e a unidade do proprio
+    documento: a tabela do 13.4 chama de "Capacidade Total por Rodada" e
+    mede em minutos (15 maquinas x 400 min = 6.000 min/rodada). Somar
+    unidades entre A, B e C distorceria -- uma unidade de A custa 2 min e
+    uma de C custa 5.
+
+    "Capacidade Utilizada" e a capacidade que o grupo pode de fato operar:
+    maquinas com os dois operadores que o 14.2.3 exige. Maquina comprada e
+    nao guarnecida nao entra, como manda o proprio 14.2.3.
+    """
     f1, f2, f3 = PESOS_EO
     aproveitamento = Decimal("1") - _razao(perdas, base_perdas)
     return CEM * (
-        _razao(produzido, planejado) * f1
+        min(_razao(minutos_produzidos, minutos_de_capacidade), Decimal("1")) * f1
         + _razao(vendidos, disponiveis) * f2
         + aproveitamento * f3
     )
@@ -241,9 +259,23 @@ def coletar_insumos(
     """
     from app.models import Cidade, CompraMateriaPrima, Distribuicao, Producao
 
-    producoes = Producao.objects.filter(grupo=grupo, rodada=rodada).aggregate(
-        produzido=Sum("quantidade_produzida"),
-        planejado=Sum("quantidade_planejada"),
+    # 12.3.1: producao e capacidade em minutos, a unidade da tabela do 13.4.
+    minutos_produzidos = sum(
+        (
+            Decimal(producao.quantidade_produzida) * producao.produto.tempo_producao_min
+            for producao in Producao.objects.filter(
+                grupo=grupo, rodada=rodada
+            ).select_related("produto")
+            if producao.produto
+        ),
+        Decimal("0"),
+    )
+    minutos_de_capacidade = sum(
+        (
+            Decimal(min(linha.maquinas, linha.operadores // 2) * linha.minutos_por_maquina)
+            for linha in grupo.capacidades_produto.all()
+        ),
+        Decimal("0"),
     )
 
     envios = list(
@@ -286,8 +318,8 @@ def coletar_insumos(
     ) / Decimal("2")
 
     return {
-        "produzido": producoes["produzido"] or 0,
-        "planejado": producoes["planejado"] or 0,
+        "minutos_produzidos": minutos_produzidos,
+        "minutos_de_capacidade": minutos_de_capacidade,
         "vendidos": vendidos,
         "disponiveis": ofertados,
         "perdas": _dec(perdas),
@@ -313,8 +345,8 @@ def calcular_eixos(insumos):
     """Os cinco eixos a partir do dicionario de `coletar_insumos`."""
     eixos = {
         "EO": eficiencia_operacional(
-            produzido=insumos["produzido"],
-            planejado=insumos["planejado"],
+            minutos_produzidos=insumos["minutos_produzidos"],
+            minutos_de_capacidade=insumos["minutos_de_capacidade"],
             vendidos=insumos["vendidos"],
             disponiveis=insumos["disponiveis"],
             perdas=insumos["perdas"],

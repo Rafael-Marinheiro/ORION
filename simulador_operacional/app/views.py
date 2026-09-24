@@ -33,9 +33,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from .parametros import CUSTO_OPERADOR_POR_RODADA, TAXA_APLICACAO_FINANCEIRA_RODADA
+from .parametros import (
+    CUSTO_OPERADOR_POR_RODADA,
+    MAQUINAS_INICIAIS_POR_PRODUTO,
+    TAXA_APLICACAO_FINANCEIRA_RODADA,
+)
 from .services.dre import montar_dre, montar_fluxo_de_caixa, resumo_do_fluxo
 from .services.eventos import evento_estado_ativo, sortear_evento
+from .services.producao import garantir_capacidades_grupo
 from .services.investimentos import impedimento_para_investir, limite_de_expansao
 from .services.logistica import calcular_frete, calcular_frete_materia_prima, peso_do_envio
 from .services.marketing import fator_marketing
@@ -130,7 +135,6 @@ MATERIA_PRIMA_FORNECEDORES = {
     "MP3": {"Assu", "Natal", "Fortaleza"},
     "MP4": {"Patos", "Joao Pessoa"},
 }
-CAPACIDADE_PADRAO_POR_CODIGO = {"A": 15, "B": 15, "C": 10}
 
 
 def obter_ip_origem(request):
@@ -298,27 +302,13 @@ def consumir_estoque_produto(grupo, produto, quantidade):
     return True, disponivel
 
 
-def garantir_capacidades_grupo(grupo):
-    for produto in Produto.objects.filter(ativo=True):
-        maquinas_default = CAPACIDADE_PADRAO_POR_CODIGO.get(produto.codigo, 0)
-        CapacidadeProdutoGrupo.objects.get_or_create(
-            grupo=grupo,
-            produto=produto,
-            defaults={
-                "maquinas": maquinas_default,
-                "operadores": maquinas_default * 2,
-                "minutos_por_maquina": 400,
-            },
-        )
-
-
 def capacidade_disponivel_produto_rodada(grupo, produto, rodada_numero):
     capacidade, _ = CapacidadeProdutoGrupo.objects.get_or_create(
         grupo=grupo,
         produto=produto,
         defaults={
-            "maquinas": CAPACIDADE_PADRAO_POR_CODIGO.get(produto.codigo, 0),
-            "operadores": CAPACIDADE_PADRAO_POR_CODIGO.get(produto.codigo, 0) * 2,
+            "maquinas": MAQUINAS_INICIAIS_POR_PRODUTO.get(produto.codigo, 0),
+            "operadores": MAQUINAS_INICIAIS_POR_PRODUTO.get(produto.codigo, 0) * 2,
             "minutos_por_maquina": 400,
         },
     )

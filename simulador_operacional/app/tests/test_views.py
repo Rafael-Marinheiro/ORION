@@ -397,6 +397,20 @@ class RodadaSubmissionRulesTest(TestCase):
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
 class MateriaPrimaFlowTest(TestCase):
+    @staticmethod
+    def folha(grupo):
+        """Folha de pagamento da rodada, em reais.
+
+        RN-02: todo grupo comeca o jogo com 40 maquinas e 80 funcionarios.
+        14.3: cada funcionario custa R$ 1.800, "registrado como custo fixo
+        operacional". Logo a folha e cobrada desde a rodada 1, independente
+        de o CEO ter aberto o painel ou nao.
+        """
+        from app.parametros import CUSTO_OPERADOR_POR_RODADA
+
+        operadores = sum(linha.operadores for linha in grupo.capacidades_produto.all())
+        return Decimal(operadores) * CUSTO_OPERADOR_POR_RODADA
+
     def setUp(self):
         User = get_user_model()
         self.ceo = User.objects.create_user(
@@ -639,18 +653,21 @@ class MateriaPrimaFlowTest(TestCase):
         self.grupo.refresh_from_db()
         rodada.refresh_from_db()
         self.assertTrue(rodada.fechada)
-        self.assertEqual(self.grupo.capital, Decimal("934.00"))
+        folha = self.folha(self.grupo)
+        self.assertEqual(self.grupo.capital, Decimal("934.00") - folha)
         rf = ResultadoFinanceiro.objects.get(grupo=self.grupo, rodada=2)
-        self.assertEqual(rf.custos, Decimal("66.00"))
+        self.assertEqual(rf.custos, Decimal("66.00") + folha)
         consolidado = ConsolidadoRodadaGrupo.objects.get(grupo=self.grupo, rodada=2)
         self.assertEqual(consolidado.receita_vendas, Decimal("0.00"))
         self.assertEqual(consolidado.custos_operacionais, Decimal("0.00"))
         self.assertEqual(consolidado.penalidade_sem_submissao, Decimal("0.00"))
         self.assertEqual(consolidado.perda_pereciveis, Decimal("60.00"))
         self.assertEqual(consolidado.custo_armazenagem_mp, Decimal("6.00"))
-        self.assertEqual(consolidado.custo_armazenagem_produtos, Decimal("0.00"))
-        self.assertEqual(consolidado.custos_totais, Decimal("66.00"))
-        self.assertEqual(consolidado.lucro_rodada, Decimal("-66.00"))
+        # A folha entra na mesma linha da armazenagem de produtos -- o DRE a
+        # rotula "Armazenagem de produtos e mao de obra".
+        self.assertEqual(consolidado.custo_armazenagem_produtos, folha)
+        self.assertEqual(consolidado.custos_totais, Decimal("66.00") + folha)
+        self.assertEqual(consolidado.lucro_rodada, Decimal("-66.00") - folha)
 
     def test_fechamento_distribui_demanda_por_preco(self):
         grupo2 = Grupo.objects.create(nome="Equipe MP 2", capital=0, estoque=0)
@@ -699,8 +716,8 @@ class MateriaPrimaFlowTest(TestCase):
 
         self.grupo.refresh_from_db()
         grupo2.refresh_from_db()
-        self.assertEqual(self.grupo.capital, Decimal("500670.00"))
-        self.assertEqual(grupo2.capital, Decimal("396.00"))
+        self.assertEqual(self.grupo.capital, Decimal("500670.00") - self.folha(self.grupo))
+        self.assertEqual(grupo2.capital, Decimal("396.00") - self.folha(grupo2))
 
         rf1 = ResultadoFinanceiro.objects.get(grupo=self.grupo, rodada=3)
         rf2 = ResultadoFinanceiro.objects.get(grupo=grupo2, rodada=3)

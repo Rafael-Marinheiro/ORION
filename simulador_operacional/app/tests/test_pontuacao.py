@@ -67,12 +67,46 @@ class PesosDoDocumentoTest(TestCase):
 
 class FormulasTest(TestCase):
     def test_eficiencia_operacional(self):
+        """12.3.1: producao liquida sobre capacidade utilizada, em minutos."""
         # 0,8x0,4 + 0,9x0,4 + (1-0,1)x0,2
         eo = eficiencia_operacional(
-            produzido=80, planejado=100, vendidos=90, disponiveis=100, perdas=100, base_perdas=1000
+            minutos_produzidos=4800,
+            minutos_de_capacidade=6000,
+            vendidos=90,
+            disponiveis=100,
+            perdas=100,
+            base_perdas=1000,
         )
 
         self.assertEqual(eo, Decimal("86.0"))
+
+    def test_producao_nao_conta_alem_da_capacidade(self):
+        """Evento ou arredondamento nao pode fazer a linha render mais de 100%."""
+        eo = eficiencia_operacional(
+            minutos_produzidos=9000,
+            minutos_de_capacidade=6000,
+            vendidos=0,
+            disponiveis=0,
+            perdas=0,
+            base_perdas=1000,
+        )
+
+        # 1x0,4 + 0 + 1x0,2
+        self.assertEqual(eo, Decimal("60.0"))
+
+    def test_fabrica_parada_com_maquinas_guarnecidas_zera_o_primeiro_termo(self):
+        """Ocupar 0% da capacidade instalada nao pode dar nota cheia -- era o
+        que acontecia com produzido/planejado quando o plano tambem era zero."""
+        eo = eficiencia_operacional(
+            minutos_produzidos=0,
+            minutos_de_capacidade=16000,
+            vendidos=0,
+            disponiveis=0,
+            perdas=0,
+            base_perdas=1000,
+        )
+
+        self.assertEqual(eo, Decimal("20.0"))
 
     def test_eficiencia_de_estoques_e_giro_e_passa_de_cem(self):
         """O proprio exemplo do 12.6 mostra EE de 102 a 110: nao ha teto."""
@@ -131,8 +165,8 @@ class FormulasTest(TestCase):
     def test_rodada_sem_atividade_nao_divide_por_zero(self):
         zerado = dict.fromkeys(
             (
-                "produzido",
-                "planejado",
+                "minutos_produzidos",
+                "minutos_de_capacidade",
                 "vendidos",
                 "disponiveis",
                 "perdas",
@@ -227,12 +261,15 @@ class FechamentoGravaOsCincoEixosTest(TestCase):
             numero=1, fim=timezone.now() - timedelta(minutes=1)
         )
         Decisao.objects.create(grupo=self.grupo, rodada=1, descricao="ok", quantidade=0)
+        # 13.4: 15 maquinas x 400 min = 6.000 min para o produto A, que leva
+        # 1 min por unidade. Produzir 5.400 ocupa 90% da linha -- e o que faz
+        # o primeiro termo do EO (12.3.1) ser alto.
         Producao.objects.create(
             grupo=self.grupo,
             produto=self.produto,
             rodada=1,
-            quantidade_planejada=100,
-            quantidade_produzida=100,
+            quantidade_planejada=5400,
+            quantidade_produzida=5400,
         )
         EstoqueProduto.objects.create(
             grupo=self.grupo, produto=self.produto, rodada_entrada=1, quantidade=50
@@ -251,7 +288,7 @@ class FechamentoGravaOsCincoEixosTest(TestCase):
         call_command("fechar_rodadas")
 
         consolidado = self.grupo.consolidados_rodada.get(rodada=1)
-        # producao 100/100 e venda integral: EO alto
+        # 90% da capacidade ocupada e venda integral: EO alto
         self.assertGreater(consolidado.eo_percent, Decimal("90"))
         self.assertGreater(consolidado.sd_percent, Decimal("0"))
         self.assertGreater(consolidado.ds_percent, Decimal("0"))
@@ -323,7 +360,7 @@ class EstoqueFinanceiroEOperacionalTest(TestCase):
 
     def test_ee_usa_o_estoque_operacional_e_ie_o_total(self):
         insumos = {
-            "produzido": 0, "planejado": 0, "vendidos": 0, "disponiveis": 0,
+            "minutos_produzidos": 0, "minutos_de_capacidade": 0, "vendidos": 0, "disponiveis": 0,
             "perdas": 0, "base_perdas": 0, "lucro": 0, "receita": 0,
             "ativos_medios": 0, "demanda_total": 0, "distancia_media_compras": 0,
             "distancia_maxima": 0,

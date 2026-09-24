@@ -36,6 +36,10 @@ MINUTOS_POR_MAQUINA_RODADA = 400
 # 14.3: "Cada maquina em operacao exige dois funcionarios".
 OPERADORES_POR_MAQUINA = 2
 
+# 13.4: parque de largada por linha -- 15 maquinas para A, 15 para B, 10
+# para C, totalizando as 40 do RN-02.
+MAQUINAS_INICIAIS_POR_PRODUTO = {"A": 15, "B": 15, "C": 10}
+
 # 9.1 nao da uma formula, da uma tabela. Dividindo demanda por populacao nas
 # 10 cidades listadas, a razao fica em 0,207% em media (min 0,148%, max
 # 0,241%). E esse o fator usado para derivar a demanda das pracas a partir
