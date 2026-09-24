@@ -190,6 +190,17 @@ def ordenar_classificacao(linhas):
 
     `linhas` e uma sequencia de dicts com as chaves `pontuacao`, `EO`, `SD`,
     `DS`, `receita` e `nome`.
+
+    O RN-12 lista outro desempate para a mesma pontuacao final -- lucro
+    acumulado, market share medio, saldo de caixa, penalidades. O Product
+    Owner ratificou o 12.5 em 2026-09-24: e o documento marcado "Pronto", o
+    12 inteiro e dedicado a classificacao, e os quatro primeiros criterios
+    sao os proprios eixos da nota em ordem de peso.
+
+    Adotar o RN-12 criaria contradicao interna: ele premiaria o saldo de
+    caixa que o IR do 12.3.2 trata como ativo improdutivo, na mesma tela.
+    A implementacao concorrente que existia em services/classificacao.py,
+    orfa desde que o 12 entrou, foi removida na mesma data.
     """
     return sorted(
         linhas,
