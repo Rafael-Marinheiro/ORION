@@ -50,6 +50,7 @@ from .services.investimentos import impedimento_para_investir, limite_de_expansa
 from .services.logistica import calcular_frete, calcular_frete_materia_prima, peso_do_envio
 from .services.marketing import fator_marketing
 from .services.perecibilidade import resumo_vencimento
+from .services.suprimentos import limite_de_compra
 from .services.pontuacao import ordenar_classificacao, satisfacao_por_praca
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
@@ -1025,6 +1026,36 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                     messages.error(
                         request,
                         "Cidade fornecedora invalida para a materia-prima selecionada.",
+                    )
+                    return redirect("painel_grupo")
+
+                # RN-05: a compra de MP por rodada vai ate 150% do consumo
+                # estimado da producao, e "quantidades acima do limite serao
+                # automaticamente ajustadas pelo sistema, com alerta ao CEO".
+                # Apara antes do frete, senao o grupo pagaria viagem por carga
+                # que nao vai comprar.
+                limite = limite_de_compra(
+                    grupo, compra.materia_prima, rodada_ativa.numero
+                )
+                if compra.quantidade_kg > limite["restante"]:
+                    pedido = compra.quantidade_kg
+                    compra.quantidade_kg = limite["restante"]
+                    messages.warning(
+                        request,
+                        (
+                            f"Compra ajustada de {pedido} para {compra.quantidade_kg} kg "
+                            f"de {compra.materia_prima.codigo}: o limite da rodada e "
+                            f"{limite['teto']} kg, 150% do que a fabrica consome "
+                            f"rodando cheia (RN-05)."
+                        ),
+                    )
+                if compra.quantidade_kg <= 0:
+                    messages.error(
+                        request,
+                        (
+                            f"Limite de compra de {compra.materia_prima.codigo} ja "
+                            f"atingido nesta rodada: {limite['teto']} kg."
+                        ),
                     )
                     return redirect("painel_grupo")
 

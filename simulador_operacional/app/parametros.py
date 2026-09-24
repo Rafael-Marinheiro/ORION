@@ -123,3 +123,11 @@ LIMITE_EXPANSAO_MAQUINAS = Decimal("0.5")
 # RN-09 (5): "Saldo negativo (fluxo de caixa negativo) por duas rodadas
 # consecutivas implica na restricao de investimento."
 RODADAS_CAIXA_NEGATIVO_PARA_RESTRICAO = 2
+
+# RN-05: a compra de MP por rodada vai ate "150% do consumo estimado da
+# producao". O documento nao define "consumo estimado" -- e a unica mencao
+# ao termo nos quinze documentos. A linha de cima da mesma tabela mede a
+# producao por "capacidade da planta x numero de turnos", e o RN-06 diz que
+# a rodada e um turno unico: o consumo estimado e o que as linhas consomem
+# rodando cheias por uma rodada. Decisao do projeto, ver `limite_de_compra`.
+LIMITE_COMPRA_MP = Decimal("1.5")

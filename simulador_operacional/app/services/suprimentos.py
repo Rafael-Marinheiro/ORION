@@ -60,3 +60,56 @@ def processar_recebimentos_materia_prima(grupo, rodada_numero, rodada_evento=Non
         estoque.save(update_fields=["quantidade_kg"])
         compra.recebida = True
         compra.save(update_fields=["recebida"])
+
+
+def consumo_de_capacidade(grupo, materia_prima):
+    """Quanto desta MP a planta consome numa rodada a plena capacidade.
+
+    Soma, sobre as linhas do grupo, a capacidade em unidades (13.5) vezes o
+    que cada unidade leva desta materia-prima (6.1). Maquina sem os dois
+    operadores do 14.2.3 nao entra, porque nao produz.
+    """
+    from decimal import Decimal
+
+    from ..models import CapacidadeProdutoGrupo, ComposicaoProduto
+
+    por_unidade = {
+        item.produto_id: item.quantidade_por_unidade
+        for item in ComposicaoProduto.objects.filter(materia_prima=materia_prima)
+    }
+    if not por_unidade:
+        return Decimal("0")
+
+    total = Decimal("0")
+    for linha in CapacidadeProdutoGrupo.objects.filter(
+        grupo=grupo, produto_id__in=por_unidade
+    ).select_related("produto"):
+        total += Decimal(linha.capacidade_unidades_rodada) * por_unidade[linha.produto_id]
+    return total
+
+
+def limite_de_compra(grupo, materia_prima, rodada):
+    """Quanto desta MP ainda cabe comprar nesta rodada (RN-05).
+
+    O teto e por RODADA, nao por pedido: somar as compras ja feitas impede
+    que tres pedidos de metade do limite furem a regra, do mesmo jeito que o
+    teto de expansao do 14.2.1 conta o parque inteiro.
+    """
+    from decimal import Decimal
+
+    from django.db.models import Sum
+
+    from ..models import CompraMateriaPrima
+    from ..parametros import LIMITE_COMPRA_MP
+
+    teto = (consumo_de_capacidade(grupo, materia_prima) * LIMITE_COMPRA_MP).quantize(
+        Decimal("0.01")
+    )
+    ja_comprado = CompraMateriaPrima.objects.filter(
+        grupo=grupo, materia_prima=materia_prima, rodada_pedido=rodada
+    ).aggregate(total=Sum("quantidade_kg")).get("total") or Decimal("0")
+    return {
+        "teto": teto,
+        "comprado": ja_comprado,
+        "restante": max(teto - ja_comprado, Decimal("0")),
+    }

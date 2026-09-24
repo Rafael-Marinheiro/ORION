@@ -18,10 +18,12 @@ from django.utils import timezone
 
 from app.models import (
     Cidade,
+    ComposicaoProduto,
     CompraMateriaPrima,
     Grupo,
     MateriaPrima,
     ResultadoFinanceiro,
+    Produto,
     Rodada,
 )
 
@@ -42,6 +44,12 @@ class SubmissaoAtomicaTest(TestCase):
         self.cidade = Cidade.objects.create(nome="Fortaleza", distancia_km=527, demanda=6000)
         self.mp1 = MateriaPrima.objects.create(
             codigo="MP1", nome="MP1", preco_unitario=Decimal("3")
+        )
+        # RN-05 limita a compra a 150% do que a fabrica consome: sem linha de
+        # producao que use a MP, o teto e zero e nao ha compra para testar.
+        produto = Produto.objects.create(codigo="A", nome="Produto A", tempo_producao_min=1)
+        ComposicaoProduto.objects.create(
+            produto=produto, materia_prima=self.mp1, quantidade_por_unidade=Decimal("2")
         )
         Rodada.objects.create(numero=1, fim=timezone.now() + timedelta(hours=1))
         self.client.login(username="ceo-atomico@example.com", password="pass")
