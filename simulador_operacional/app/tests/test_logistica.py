@@ -25,18 +25,72 @@ class ViagensTest(TestCase):
         self.assertEqual(viagens_necessarias(-5), 0)
 
 
+class FreteDeMateriaPrimaTest(TestCase):
+    """7.2 e 7.2.1 com os valores do documento, por VIAGEM de caminhao.
+
+    Ao pe da letra -- R$ 1,50 x km x kg -- o exemplo do proprio 7.2.1 cobra
+    R$ 750.000 para trazer 500 kg que valem R$ 4.000, e o produto A pagava
+    R$ 204.360 de frete de insumo por unidade contra o caixa de R$ 1.000.000
+    do 5. A unidade passou a ser a viagem em 24/09/2026; os valores do
+    documento ficaram intactos.
+    """
+
+    def test_o_exemplo_do_721_cabe_no_caixa_do_grupo(self):
+        """500 kg de Belem a 1.000 km: uma viagem, R$ 1.500 -- nao 750.000."""
+        frete = calcular_frete_materia_prima(1000, 500)
+
+        self.assertEqual(frete["viagens"], 1)
+        self.assertEqual(frete["custo_bruto"], Decimal("1500.00"))
+
+    def test_consolidar_pedido_nao_muda_o_frete(self):
+        """A licao: meio caminhao e um caminhao cheio custam o mesmo."""
+        pouco = calcular_frete_materia_prima(190, 500)
+        cheio = calcular_frete_materia_prima(190, CAPACIDADE_CAMINHAO_KG)
+
+        self.assertEqual(pouco["custo"], cheio["custo"])
+        self.assertEqual(pouco["custo"], Decimal("285.00"))  # 190 x 1,50
+        self.assertLess(pouco["ocupacao_percentual"], Decimal("5"))
+        self.assertEqual(cheio["ocupacao_percentual"], Decimal("100.00"))
+
+    def test_um_quilo_alem_do_caminhao_dobra_a_conta(self):
+        frete = calcular_frete_materia_prima(190, CAPACIDADE_CAMINHAO_KG + 1)
+
+        self.assertEqual(frete["viagens"], 2)
+        self.assertEqual(frete["custo_bruto"], Decimal("570.00"))
+
+    def test_desconto_de_retorno_vale_pelas_viagens_de_produto(self):
+        """7.2.1: o caminhao que levou produto volta carregado com a MP."""
+        frete = calcular_frete_materia_prima(1000, 500, peso_remetido_kg=12000)
+
+        self.assertEqual(frete["desconto_retorno"], Decimal("500.00"))  # 1 x 1000 x 0,50
+        self.assertEqual(frete["custo"], Decimal("1000.00"))
+
+    def test_desconto_nao_passa_das_viagens_de_materia_prima(self):
+        """Remeter dez caminhoes de produto nao barateia uma viagem de MP
+        alem do frete dela."""
+        frete = calcular_frete_materia_prima(1000, 500, peso_remetido_kg=120000)
+
+        self.assertEqual(frete["desconto_retorno"], Decimal("500.00"))
+
+    def test_sem_remessa_nao_ha_desconto(self):
+        self.assertEqual(
+            calcular_frete_materia_prima(1000, 500)["desconto_retorno"], Decimal("0")
+        )
+
+    def test_compra_vazia_nao_custa(self):
+        self.assertEqual(calcular_frete_materia_prima(1000, 0)["custo"], Decimal("0"))
+        self.assertEqual(calcular_frete_materia_prima(0, 500)["custo"], Decimal("0"))
+
+    def test_a_mesma_carga_custa_o_mesmo_nas_duas_pontas(self):
+        """O que motivou a correcao: 12 t na mesma estrada custavam 2.677x
+        mais como MP do que como produto acabado."""
+        como_mp = calcular_frete_materia_prima(290, 12000)["custo"]
+        como_produto = calcular_frete(290, 12000)["custo"]
+
+        self.assertLess(como_mp, como_produto * 2)
+
+
 class FreteTest(TestCase):
-    def test_frete_de_materia_prima_usa_quilo_quilometro_documentado(self):
-        frete = calcular_frete_materia_prima(1000, 500, produtos_remetidos=300)
-
-        self.assertEqual(frete["custo_bruto"], Decimal("750000.00"))
-        self.assertEqual(frete["desconto_retorno"], Decimal("150000.00"))
-        self.assertEqual(frete["custo"], Decimal("600000.00"))
-
-    def test_desconto_de_materia_prima_nao_excede_quantidade_comprada(self):
-        frete = calcular_frete_materia_prima(100, 50, produtos_remetidos=80)
-
-        self.assertEqual(frete["desconto_retorno"], Decimal("2500.00"))
     def test_consolidar_nao_muda_o_frete_mas_muda_o_custo_por_quilo(self):
         """A licao central: o caminhao cheio e o vazio custam o mesmo."""
         pouco = calcular_frete(190, 1000)

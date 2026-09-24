@@ -42,11 +42,18 @@ MAQUINAS_INICIAIS_POR_PRODUTO = {"A": 15, "B": 15, "C": 10}
 
 # --- Logistica -------------------------------------------------------------
 #
-# MP: §7.2 define R$ 1,50 por km e por kg adquirido. Produto acabado: §9.2a
-# exige proporcionalidade a distancia e volume, sem taxa; a calibracao do
-# ORION usa referencia de carga geral da ANTT, arredondada para a aula.
+# Os valores sao os do 7.2 -- R$ 1,50 por km e R$ 0,50 de desconto por km --,
+# e o que mudou em 2026-09-24 foi a UNIDADE que eles multiplicam: viagem de
+# caminhao, nao quilo. Ao pe da letra, 500 kg de MP3 valendo R$ 4.000 custavam
+# R$ 750.000 de frete (o proprio exemplo do 7.2.1), e uma unidade do produto A
+# pagava R$ 204.360 de frete de insumo contra um caixa inicial de R$ 1.000.000
+# fixado no 5. Ver D10 no guia.
+#
+# Produto acabado: o 9.2a exige proporcionalidade a distancia e volume, sem
+# dar taxa; a calibracao do ORION usa referencia de carga geral da ANTT,
+# arredondada para a aula.
 CAPACIDADE_CAMINHAO_KG = 12000
-CUSTO_MP_POR_KM_KG = Decimal("1.50")
+CUSTO_VIAGEM_MP_POR_KM = Decimal("1.50")
 CUSTO_VIAGEM_PRODUTO_POR_KM = Decimal("5.00")
 CUSTO_CARGA_DESCARGA_PRODUTO = Decimal("500.00")
 

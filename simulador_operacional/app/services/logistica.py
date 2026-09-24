@@ -5,7 +5,7 @@ from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 from app.parametros import (
     CAPACIDADE_CAMINHAO_KG,
     CUSTO_CARGA_DESCARGA_PRODUTO,
-    CUSTO_MP_POR_KM_KG,
+    CUSTO_VIAGEM_MP_POR_KM,
     CUSTO_VIAGEM_PRODUTO_POR_KM,
     DESCONTO_RETORNO_POR_KM,
 )
@@ -13,22 +13,71 @@ from app.parametros import (
 CENTAVO = Decimal("0.01")
 
 
-def calcular_frete_materia_prima(distancia_km, quantidade_kg, produtos_remetidos=0) -> dict:
-    """Aplica literalmente os §§7.2 e 7.2.1.
+def calcular_frete_materia_prima(distancia_km, quantidade_kg, peso_remetido_kg=0) -> dict:
+    """Frete de matéria-prima, por VIAGEM de caminhão -- §7.2 e §7.2.1.
 
-    O frete é R$ 1,50 por quilômetro e por kg adquirido. A remessa para a
-    mesma cidade reduz R$ 0,50 por quilômetro e por unidade de produto, até o
-    limite da quantidade adquirida.
+    Os valores são os do documento: R$ 1,50 por quilômetro rodado e R$ 0,50
+    de desconto por quilômetro quando o caminhão volta carregado. O que mudou
+    em 24/09/2026 foi a unidade que eles multiplicam.
+
+    Por que não por quilo
+    ---------------------
+    O §7.2 diz "R$ 1,50 por quilômetro rodado, multiplicado pela quantidade
+    adquirida (em kg)", e o exemplo do §7.2.1 mostra aonde isso leva: 500 kg
+    de MP3, que valem R$ 4.000, geram R$ 750.000 de frete -- 188 vezes a
+    carga. Uma unidade do produto A pagava R$ 204.360 só de frete de insumo,
+    contra o caixa inicial de R$ 1.000.000 que o §5 fixa: o capital do grupo
+    comprava quatro unidades. E a mesma carga na mesma estrada custava 2.677
+    vezes mais como MP do que como produto acabado, porque o §9.2a é omisso em
+    valores e ali o ORION já cobrava por viagem.
+
+    O que o modelo ensina
+    ---------------------
+    O caminhão é indivisível. Levar 12.001 kg custa duas viagens, o mesmo que
+    levar 24.000 kg. Isso premia quem consolida pedido e pune quem compra em
+    migalhas, que é a lição de planejamento de suprimentos. A ocupação volta
+    no resultado para o aluno ver quanto de caminhão vazio pagou.
+
+    O desconto do §7.2.1 é frete de retorno, que é o que ele sempre foi
+    fisicamente: as viagens que levaram produto àquela cidade voltam
+    carregadas com a MP em vez de voltarem vazias, limitado pelas viagens de
+    produto que de fato existiram.
     """
     distancia = Decimal(str(distancia_km or 0))
-    quantidade = max(Decimal("0"), Decimal(str(quantidade_kg or 0)))
-    limite_desconto = min(quantidade, max(Decimal("0"), Decimal(str(produtos_remetidos or 0))))
-    custo_bruto = (distancia * quantidade * CUSTO_MP_POR_KM_KG).quantize(CENTAVO)
-    desconto = (distancia * limite_desconto * DESCONTO_RETORNO_POR_KM).quantize(CENTAVO)
+    peso = max(Decimal("0"), Decimal(str(quantidade_kg or 0)))
+    viagens = viagens_necessarias(peso)
+
+    if viagens == 0 or distancia <= 0:
+        return {
+            "peso_kg": peso,
+            "viagens": viagens,
+            "capacidade_paga_kg": Decimal(CAPACIDADE_CAMINHAO_KG) * viagens,
+            "ocupacao_percentual": Decimal("0"),
+            "custo_bruto": Decimal("0"),
+            "desconto_retorno": Decimal("0"),
+            "custo": Decimal("0"),
+        }
+
+    capacidade_paga = Decimal(CAPACIDADE_CAMINHAO_KG) * viagens
+    ocupacao = (peso / capacidade_paga * Decimal("100")).quantize(CENTAVO, ROUND_HALF_UP)
+    custo_bruto = (distancia * CUSTO_VIAGEM_MP_POR_KM * viagens).quantize(
+        CENTAVO, ROUND_HALF_UP
+    )
+
+    com_retorno = min(viagens_necessarias(peso_remetido_kg), viagens)
+    desconto = (distancia * DESCONTO_RETORNO_POR_KM * com_retorno).quantize(
+        CENTAVO, ROUND_HALF_UP
+    )
+    desconto = min(desconto, custo_bruto)
+
     return {
+        "peso_kg": peso,
+        "viagens": viagens,
+        "capacidade_paga_kg": capacidade_paga,
+        "ocupacao_percentual": ocupacao,
         "custo_bruto": custo_bruto,
-        "desconto_retorno": min(desconto, custo_bruto),
-        "custo": custo_bruto - min(desconto, custo_bruto),
+        "desconto_retorno": desconto,
+        "custo": custo_bruto - desconto,
     }
 
 

@@ -529,6 +529,69 @@ ratificar. O SD é o caso de maior latitude entre todos: o B8 registra que **a
 fórmula não existe em nenhum dos 15 documentos** — ela foi definida em conversa
 em 23/09/2026.
 
+### D10 · Unidade do frete de matéria-prima — restaurado em 24/09/2026
+
+**O projeto já tinha resolvido isso, e desfez.** Em 18/09 o commit `619f6ed`
+trocou a unidade do frete de MP de quilo para **viagem de caminhão**, mantendo
+R$ 1,50 e R$ 0,50 exatamente como o §7.2 os escreve. Em 19/09 o `e5adf86`
+reverteu para a letra, com a justificativa "o §7.2 prevalece" — e foi essa
+reversão que ficou registrada aqui como D10.
+
+**Por que a letra não se sustenta.** O §7.2 diz "R$ 1,50 por quilômetro
+rodado, multiplicado pela quantidade adquirida (em kg)", e o exemplo do §7.2.1
+mostra aonde isso leva: 500 kg de MP3, que valem R$ 4.000, geram **R$ 750.000**
+de frete — 188 vezes a carga. Medido no ORION:
+
+| | |
+|---|---|
+| Custo da MP de uma unidade do produto A (§6.1) | R$ 2.260 |
+| Frete dessa MP pela letra do §7.2 | **R$ 204.360** |
+| Capital inicial fixado no §5 | R$ 1.000.000 |
+| **Unidades que o capital comprava** | **4** |
+
+E a mesma carga na mesma estrada custava **2.677 vezes mais** como MP do que
+como produto acabado (12 t até Recife: R$ 5.220.000 contra R$ 1.950), porque o
+§9.2a é omisso em valores e ali o ORION já cobrava por viagem. A assimetria era
+resíduo da reversão, não desenho.
+
+**O que a documentação diz sobre o resto.** O §5 fixa o capital em R$ 1.000.000;
+o §6.1, o custo de produção em R$ 2.260/unidade; o §14.2.4, a máquina em
+R$ 8.000; o §14.3, o operador em R$ 1.800; o §14.1.1, o teto do marketing em
+R$ 10.000. Nenhum documento fixa preço de venda. Todos os valores do jogo vivem
+entre R$ 1.800 e R$ 10.000 — **um único item estava três ordens de grandeza
+acima**, e era ele que zerava o caixa antes da segunda rodada.
+
+**O que mudou.** Só a unidade que os valores multiplicam:
+
+```
+antes:  frete = R$ 1,50 × km × kg adquirido
+agora:  frete = R$ 1,50 × km × viagens de caminhão de 12.000 kg
+```
+
+O desconto do §7.2.1 é frete de **retorno** — as viagens que levaram produto
+àquela cidade voltam carregadas com a MP em vez de voltarem vazias, limitado
+pelas viagens de produto que de fato existiram. É o que ele sempre foi
+fisicamente, e agora a medida é peso remetido, não unidades: uma unidade de A
+pesa 300 kg e uma de C, 650 (§6.1).
+
+**O que o modelo ensina.** O caminhão é indivisível: 12.001 kg custam duas
+viagens, o mesmo que 24.000 kg. Consolidar pedido muda o custo por quilo em 24
+vezes; pedir um quilo além do caminhão dobra a conta. A ocupação volta no
+resultado para o aluno ver quanto de caminhão vazio pagou.
+
+**Verificado no cenário**, turma de seis equipes com o capital do §5 e três
+rodadas fechadas:
+
+| | Antes (letra do §7.2) | Depois |
+|---|---|---|
+| DF das equipes | −236 a −632 | **55,1 a 64,2** |
+| Pontuação | −10 a −115 | **55,3 a 61,0** |
+| Lucro da rodada | negativo em todas | **R$ 534 mil a R$ 1,6 milhão** |
+
+**Decisão do dono do projeto, sem revisão do Dr. Pio.** Diferente do B12, aqui
+o documento traz texto **e** exemplo numérico: a mudança se afasta da letra e
+preserva os valores. Fica anotado para ele ratificar.
+
 ### Quem decide o quê
 
 O Dr. Pio Marinheiro é o Product Owner e autor da especificação. **O desenho
@@ -573,7 +636,7 @@ Ficam registradas aqui para ninguém as confundir com divergência acidental.
 | D9.5 | Custo do operador por rodada | §14.2.4: R$ 1.800/mês + RN-06: rodada = 1 semana | **R$ 1.800 por rodada**, sem conversão por tempo | o professor define o prazo livremente; converter por tempo decorrido faria o custo da mesma decisão mudar conforme o prazo |
 | D9.6 | Sigilo da rodada aberta | não previsto | **resultado só aparece após o fechamento** | é um jogo de competição; desempenho alheio antes da submissão muda a decisão de quem ainda não decidiu |
 | D11 | Variedade de eventos | §8.2: "probabilidade **constante** de ocorrência" | **peso reduzido do evento recente** (×0,05 / ×0,30 / ×0,65), nunca bloqueio | bloquear achata os pesos: com 3 eventos de 60/30/10, cooldown duro os transforma em 33/33/33 |
-| D10 | Unidade do frete | §7.2: R$ 1,50 por km **por kg** | **§7.2 literal: R$ 1,50 por km por kg** | a regra está expressa no documento e prevalece |
+| D10 | Unidade do frete de MP | §7.2: R$ 1,50 por km **por kg** | **R$ 1,50 por km por VIAGEM de caminhão**; os valores do §7.2 ficam intactos | `RESTAURADO` em 24/09/2026 — ao pé da letra o jogo é injogável; ver abaixo |
 
 **Reversão de D9.1–D9.4 em 24/09/2026.** A pedido do dono do projeto, a base
 voltou a ser a do documento: fábrica em Natal, as dez praças do §9.1 com a
@@ -699,10 +762,10 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | 4 MPs com preços 3,00 / 5,50 / 8,00 / 15,00 | §7.1 | `CONFORME` | seed `materias_primas` |
 | Recebimento na rodada seguinte (D+1) | §7.2 | `CONFORME` | `CompraMateriaPrima.rodada_pedido` |
-| Frete de MP a R$ 1,50/km por kg adquirido | §7.2 | `CONFORME` | `services/logistica.calcular_frete_materia_prima` |
+| Frete de MP a R$ 1,50/km por viagem de caminhão | §7.2 (valores) + D10 | `DESVIO RATIFICADO` | `services/logistica.calcular_frete_materia_prima` |
 | Armazenagem de MP a 2% do valor de compra | §7.4 | `CONFORME` | `fechar_rodadas` |
 | Fornecedores por cidade | §7.1 | `CONFORME` | `views.MATERIA_PRIMA_FORNECEDORES` |
-| Desconto logístico cruzado de R$ 0,50/km por produto remetido | §7.2.1 | `CONFORME` | `services/logistica.calcular_frete_materia_prima` |
+| Desconto de R$ 0,50/km por viagem de retorno | §7.2.1 (valores) + D10 | `DESVIO RATIFICADO` | `services/logistica.calcular_frete_materia_prima` |
 | Frete de produtos acabados | §9.2a + decisão de calibração | `CONFORME` | R$ 5,00/km + R$ 500,00 de carga/descarga por viagem em `services/logistica.calcular_frete` |
 
 ### 4.4 Comercialização e demanda

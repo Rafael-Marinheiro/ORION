@@ -179,13 +179,17 @@ def calcular_fator_marketing(grupo, cidade, rodada_numero):
     return fator_marketing(grupo, cidade, rodada_numero)
 
 
-def quantidade_produtos_remetidos(grupo, cidade, rodada_numero):
-    """Unidades remetidas para limitar o desconto do §7.2.1."""
-    return (
-        Distribuicao.objects.filter(grupo=grupo, cidade=cidade, rodada=rodada_numero)
-        .aggregate(total=Sum("quantidade"))["total"]
-        or 0
-    )
+def peso_produtos_remetidos(grupo, cidade, rodada_numero):
+    """Peso remetido para a cidade, em kg -- limita o desconto do §7.2.1.
+
+    O desconto e frete de RETORNO: conta quantas viagens levaram produto
+    para la e podem voltar carregadas com a MP. Por isso a medida e peso, e
+    nao unidades -- uma unidade de A pesa 300 kg e uma de C, 650 (6.1).
+    """
+    envios = Distribuicao.objects.filter(
+        grupo=grupo, cidade=cidade, rodada=rodada_numero
+    ).select_related("produto")
+    return sum((peso_do_envio(envio.produto, envio.quantidade) for envio in envios), Decimal("0"))
 
 
 def obter_aplicacao_financeira_grupo(grupo):
@@ -1104,7 +1108,7 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 frete = calcular_frete_materia_prima(
                     distancia_km=compra.cidade_fornecedora.distancia_km,
                     quantidade_kg=compra.quantidade_kg,
-                    produtos_remetidos=quantidade_produtos_remetidos(
+                    peso_remetido_kg=peso_produtos_remetidos(
                         grupo, compra.cidade_fornecedora, rodada_ativa.numero
                     ),
                 )

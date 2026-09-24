@@ -133,6 +133,13 @@ Dois pontos de análise que estão registrados no guia e continuam abertos:
 - **B10** — `ENCERRADO` em 24/09/2026: com a volta à base do §9.1, o limiar de
   1.000 km do DS₃ voltou a discriminar e `DISTANCIA_REGIONAL_KM` retornou ao
   valor do §12.3.4. O problema era da base regional, não do documento.
+- **D10** — unidade do frete de MP restaurada para **viagem de caminhão** em
+  24/09/2026 (o `619f6ed` de 18/09 tinha feito isso; o `e5adf86` de 19/09
+  reverteu para a letra). Motivo: ao pé da letra, o frete de insumo de UMA
+  unidade do produto A custava R$ 204.360 contra o capital de R$ 1.000.000 que
+  o §5 fixa — o caixa comprava quatro unidades —, e a mesma carga custava
+  2.677× mais como MP do que como produto acabado. Os valores do §7.2 ficaram
+  intactos; mudou o que eles multiplicam. **Ainda não apresentado ao Dr. Pio.**
 - **B12** — escala do eixo SD: o denominador passou da demanda do mercado
   inteiro (198.000/rodada) para a capacidade de venda da planta (5.300) em
   24/09/2026, por decisão do Rafael. Motivo: o mercado do §9.1 é 37× a planta
