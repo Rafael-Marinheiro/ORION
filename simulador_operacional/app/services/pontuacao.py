@@ -117,39 +117,60 @@ def desempenho_financeiro(*, lucro, receita, ativos_medios, custo_das_vendas, es
     return il * w1 + ir * w2 + ie * w3
 
 
-def satisfacao_demanda(*, vendidos, demanda_total):
-    """12.3.4 -- "grau de atendimento ao mercado", ratificado em 2026-09-23.
+def satisfacao_demanda(*, vendidos, capacidade_de_venda):
+    """12.3.4 -- "grau de atendimento ao mercado".
 
-    SD = (unidades vendidas / soma das demandas maximas) x 100, somando os
-    pares cidade x produto. Tres escolhas do Product Owner:
+    SD = (unidades vendidas / capacidade de venda da planta) x 100, com teto
+    em 100. A capacidade vem do 13.5: o que as linhas do grupo conseguem
+    colocar no mercado numa rodada, ja descontada a maquina sem os dois
+    operadores do 14.2.3.
+
+    O 12.3.4 nao traz formula para o SD -- o documento poe titulo e glosa do
+    SD sobre a formula do DS (B8 no guia). O Product Owner definiu em
+    2026-09-23 "vendidas / soma das demandas maximas de TODAS as pracas", e
+    disso ficam duas escolhas dele, intactas:
 
     - VENDIDAS, nao entregues: despejar 5.000 unidades numa praca de demanda
       1.000 entrega cinco vezes mais e satisfaz o mesmo. Entregue/disponivel
       ja e o segundo termo do EO.
-    - Denominador com TODAS as pracas, nao so as atendidas: quem opera
-      concentrado nao passa da fatia da sua cidade, e a cobertura entra
-      embutida sem precisar de um segundo termo.
-    - Denominador calculado, nunca digitado: a soma muda com a base de
-      pracas em uso.
+    - Denominador calculado, nunca digitado.
 
-    Teto em 100: marketing (14.1) e o evento de boom (8.4) elevam a demanda
-    no momento da venda, e o denominador aqui e a demanda catalogada.
+    O que mudou em 2026-09-24, e por que: o mercado do 9.1 soma 198.000
+    unidades por rodada e a planta do 13.4 produz 5.300 -- o denominador era
+    37 vezes maior que o numerador maximo. O eixo ficava preso em [0; 2,68],
+    e com peso 0,20 contribuia no maximo 0,54 de 100. Pior, sendo o
+    denominador uma constante, o SD ordenava por unidades vendidas e nada
+    mais: tres estrategias opostas que venderam 3.000 empatavam em 1,52.
+
+    Medido antes de decidir. Trocar para a demanda das PRACAS-ALVO -- a
+    leitura que o 12.3.4 sugere -- inverteu o incentivo: quem vendeu 2.500
+    em duas pracas pequenas tirava 83,33 e quem vendeu 3.000 espalhado por
+    oito pracas tirava 4,76. E o risco que o Product Owner nomeou ao
+    escolher o denominador global, e a medicao confirmou.
+
+    A capacidade de venda e uma transformacao LINEAR CRESCENTE de vendidas,
+    entao preserva exatamente a ordem que a formula ratificada produz --
+    mesmo criterio do B11 (escala do giro de estoque). Muda so a escala,
+    para a faixa 0-100 dos outros eixos.
+
+    Correlacao declarada: o EO ja olha producao/capacidade e vendidos/
+    enviados. O SD passa a olhar vendidos/capacidade, que os aproxima. Nao
+    sao a mesma medida -- o EO mede disciplina de despacho, o SD mede quanto
+    do potencial da fabrica virou venda --, mas andam juntos, e o 12 ja tem
+    sobreposicoes assim (IE dentro do DF e EE, perdas no EO3 e no DS1).
+
+    Teto em 100: quem vende estoque acumulado de rodadas anteriores pode
+    passar da capacidade da rodada.
     """
-    return CEM * min(_razao(vendidos, demanda_total), Decimal("1"))
+    return CEM * min(_razao(vendidos, capacidade_de_venda), Decimal("1"))
 
 
-def demanda_total_do_mercado():
-    """Soma das demandas maximas de todos os pares cidade x produto ativos."""
-    from app.models import Cidade, DemandaCidadeProduto
-
-    total = DemandaCidadeProduto.objects.filter(produto__ativo=True).aggregate(
-        total=Sum("demanda_maxima")
-    )["total"]
-    if total:
-        return int(total)
-    # Base sem demanda por produto: cai na demanda da cidade, como o
-    # `obter_demanda_cidade_produto` do fechamento.
-    return int(Cidade.objects.aggregate(total=Sum("demanda"))["total"] or 0)
+def capacidade_de_venda(grupo):
+    """Unidades que as linhas do grupo colocam no mercado numa rodada (13.5)."""
+    return sum(
+        linha.capacidade_unidades_rodada
+        for linha in grupo.capacidades_produto.select_related("produto")
+    )
 
 
 def satisfacao_por_praca(*, grupo, rodada):
@@ -372,7 +393,7 @@ def coletar_insumos(
         "estoque_medio_operacional": estoque_medio_operacional,
         "valor_estoques": valor_estoques,
         "valor_estoques_operacional": valor_operacional,
-        "demanda_total": demanda_total_do_mercado(),
+        "capacidade_de_venda": capacidade_de_venda(grupo),
         "distancia_media_compras": _razao(km_ponderado, kg_comprado),
         "distancia_maxima": Cidade.objects.aggregate(m=Max("distancia_km"))["m"] or 0,
         "enviados_regionais": regionais,
@@ -406,7 +427,7 @@ def calcular_eixos(insumos):
         ),
         "SD": satisfacao_demanda(
             vendidos=insumos["vendidos"],
-            demanda_total=insumos["demanda_total"],
+            capacidade_de_venda=insumos["capacidade_de_venda"],
         ),
         "DS": sustentabilidade(
             perdas=insumos["perdas"],

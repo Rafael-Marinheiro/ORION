@@ -148,20 +148,33 @@ class FormulasTest(TestCase):
         self.assertEqual(df.quantize(Decimal("0.01")), Decimal("29.50"))
 
     def test_satisfacao_da_demanda(self):
-        """12.3.4: vendidas sobre a soma das demandas maximas."""
+        """12.3.4: vendidas sobre a capacidade de venda da planta (13.5)."""
         self.assertEqual(
-            satisfacao_demanda(vendidos=1600, demanda_total=64000), Decimal("2.5")
+            satisfacao_demanda(vendidos=1325, capacidade_de_venda=5300), Decimal("25")
         )
 
     def test_satisfacao_da_demanda_nao_passa_de_cem(self):
-        """Marketing e o boom de consumo elevam a demanda na hora da venda;
-        o denominador e a demanda catalogada, entao a razao pode estourar."""
+        """Quem vende estoque de rodadas anteriores pode passar da
+        capacidade da rodada."""
         self.assertEqual(
-            satisfacao_demanda(vendidos=500, demanda_total=100), Decimal("100")
+            satisfacao_demanda(vendidos=500, capacidade_de_venda=100), Decimal("100")
         )
 
-    def test_mercado_sem_demanda_nao_divide_por_zero(self):
-        self.assertEqual(satisfacao_demanda(vendidos=10, demanda_total=0), Decimal("0"))
+    def test_grupo_sem_planta_nao_divide_por_zero(self):
+        self.assertEqual(
+            satisfacao_demanda(vendidos=10, capacidade_de_venda=0), Decimal("0")
+        )
+
+    def test_sd_preserva_a_ordem_por_unidades_vendidas(self):
+        """A troca de denominador de 24/09/2026 e uma transformacao linear
+        crescente: quem vendeu mais continua pontuando mais."""
+        notas = [
+            satisfacao_demanda(vendidos=v, capacidade_de_venda=5300)
+            for v in (200, 500, 2500, 3000)
+        ]
+
+        self.assertEqual(notas, sorted(notas))
+        self.assertTrue(all(Decimal("0") <= n <= Decimal("100") for n in notas))
 
     def test_sustentabilidade(self):
         # 0,9x0,5 + (1-0,25)x0,3 + 0,5x0,2
@@ -202,7 +215,7 @@ class FormulasTest(TestCase):
                 "custo_das_vendas",
                 "estoque_medio",
                 "estoque_medio_operacional",
-                "demanda_total",
+                "capacidade_de_venda",
                 "distancia_media_compras",
                 "distancia_maxima",
                 "enviados_regionais",
@@ -392,7 +405,7 @@ class EstoqueFinanceiroEOperacionalTest(TestCase):
         insumos = {
             "minutos_produzidos": 0, "minutos_de_capacidade": 0, "vendidos": 0, "disponiveis": 0,
             "perdas": 0, "base_perdas": 0, "lucro": 0, "receita": 0,
-            "ativos_medios": 0, "demanda_total": 0, "distancia_media_compras": 0,
+            "ativos_medios": 0, "capacidade_de_venda": 0, "distancia_media_compras": 0,
             "distancia_maxima": 0,
             "enviados_regionais": 0, "enviados_total": 0,
             "custo_das_vendas": Decimal("1000"),

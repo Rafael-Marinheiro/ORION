@@ -89,10 +89,12 @@ PESOS_DS = (Decimal("0.5"), Decimal("0.3"), Decimal("0.2"))
 
 # SD nao tem pesos internos: o 12.3.4 traz titulo e glosa do SD sobre a
 # formula do DS, e a formula do SD nao existe em nenhum dos 15 documentos.
-# O Product Owner definiu em 2026-09-23:
-#   SD = (unidades vendidas / soma das demandas maximas) x 100
-# Denominador sobre TODAS as pracas e calculado em tempo de execucao --
-# ver `satisfacao_demanda` e `demanda_total_do_mercado`.
+# O Product Owner definiu em 2026-09-23 "vendidas / soma das demandas
+# maximas de todas as pracas". O denominador virou a capacidade de venda da
+# planta (13.5) em 2026-09-24: o mercado do 9.1 soma 198.000 unidades por
+# rodada contra 5.300 da planta do 13.4, entao o eixo ficava preso em
+# [0; 2,68] e contribuia no maximo 0,54 de 100. Ver `satisfacao_demanda`,
+# que traz a medicao, e B12 no guia.
 
 # 12.3.4, DS3: "Produtos Enviados para pracas <= 1.000 km / Total Enviado".
 # Com a base do 9.1 o limiar discrimina de verdade -- Recife (290 km) e

@@ -133,6 +133,15 @@ Dois pontos de análise que estão registrados no guia e continuam abertos:
 - **B10** — `ENCERRADO` em 24/09/2026: com a volta à base do §9.1, o limiar de
   1.000 km do DS₃ voltou a discriminar e `DISTANCIA_REGIONAL_KM` retornou ao
   valor do §12.3.4. O problema era da base regional, não do documento.
+- **B12** — escala do eixo SD: o denominador passou da demanda do mercado
+  inteiro (198.000/rodada) para a capacidade de venda da planta (5.300) em
+  24/09/2026, por decisão do Rafael. Motivo: o mercado do §9.1 é 37× a planta
+  do §13.4, então o eixo ficava preso em [0; 2,68] e valia no máximo 0,54 de
+  100 — aparecia como **0,0** na tela para todas as equipes. Medida antes de
+  decidir, a leitura por "praças-alvo" invertia o incentivo (2.500 vendidas em
+  duas praças pequenas = 83,33 contra 3.000 em oito praças = 4,76) e foi
+  descartada. A adotada preserva a ordem por unidades vendidas. **Ainda não
+  apresentada ao Dr. Pio.**
 - **B11** — escala do giro (EE e IE) passou a `100 × CV/(CV+EM)` em
   24/09/2026, por decisão do Rafael. Motivo: como razão crua o indicador não
   tinha teto (chegou a 19.800 na medição) e o caso perfeito — vender todo o

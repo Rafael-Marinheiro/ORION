@@ -186,6 +186,11 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
 
 ### B8 · Fórmula de SD — `RATIFICADA` pelo Product Owner em 23/09/2026
 
+> **Atualização de 24/09/2026:** o denominador desta fórmula foi trocado pela
+> capacidade de venda da planta. O motivo, a medição e o que ficou intacto
+> estão em **B12**, adiante. O numerador (vendidas, não entregues) e o
+> cálculo em tempo de execução continuam como ratificados aqui.
+
 O §12.3.4 traz **título e glosa do SD sobre a fórmula do DS**. Verificado na
 imagem original (`word/media/image8.png`), não na conversão: a transcrição em
 Markdown é fiel, o erro é de edição do documento. Como não existe §12.3.5, a
@@ -462,6 +467,67 @@ disparar por IL e IR, que são razões sobre receita e ativos.
 **O que fica pendente com o Dr. Pio:** apresentar esta decisão. Os valores
 102–110 da tabela do §12.6 tornam-se inalcançáveis — o que é consistente com a
 ratificação de que aquela tabela é ilustrativa (B6), mas ele ainda não viu.
+
+### B12 · Escala do eixo SD — decidida pelo Rafael em 24/09/2026
+
+**Por que mudamos.** O mercado do §9.1 soma **198.000 unidades por rodada**
+(66.000 por produto × 3 produtos) e a planta do §13.4 produz **5.300**
+(3.000 A + 1.500 B + 800 C). O denominador do SD era 37 vezes maior que o
+numerador máximo que uma equipe pode alcançar, então o eixo ficava preso na
+faixa **[0; 2,68]** — [0; 4,02] mesmo com a expansão máxima do §14.2.1. Com
+peso 0,20, contribuía no máximo **0,54 ponto de 100**, num placar em que o EO
+sozinho vale 30. Na tela, seis equipes apareciam com **SD 0,0**.
+
+E havia um efeito pior que a escala: sendo o denominador uma **constante**, o
+SD ordenava por unidades vendidas e nada mais. Três estratégias comerciais
+opostas que venderam 3.000 unidades empatavam em 1,52 — o eixo não distinguia
+atender oito praças de despejar tudo em uma.
+
+**O que mudou.**
+
+```
+antes:  SD = 100 × vendidas ÷ demanda máxima de todas as praças (198.000)
+agora:  SD = 100 × vendidas ÷ capacidade de venda da planta (§13.5), teto 100
+```
+
+**A leitura testada e recusada.** O §12.3.4 diz "grau de atendimento ao mercado
+nas **praças-alvo**", o que sugere usar a demanda das praças atendidas. Medido
+com o fechamento real, seis estratégias de distribuição:
+
+| Estratégia | Vendidas | SD antes | SD por praças-alvo | SD adotado |
+|---|---|---|---|---|
+| Três praças médias | 3.000 | 1,52 | 25,00 | **56,60** |
+| Só São Paulo | 3.000 | 1,52 | 11,11 | **56,60** |
+| Espalhado (8 praças) | 3.000 | 1,52 | **4,76** | **56,60** |
+| Duas praças pequenas | 2.500 | 1,26 | **83,33** | 47,17 |
+| Só Aracaju | 500 | 0,25 | 50,00 | 9,43 |
+| Tímido (200 un) | 200 | 0,10 | 5,00 | 3,77 |
+
+Por praças-alvo, quem vendeu **2.500** tira 83,33 e quem vendeu **3.000** em
+oito praças tira 4,76: **o incentivo inverte** e premia mirar pequeno. É o
+risco que o Product Owner nomeou ao escolher o denominador global no B8, e a
+medição o confirmou. Descartada.
+
+**Por que a capacidade serve.** `vendidas ÷ capacidade` é uma transformação
+**linear crescente** de `vendidas` — preserva exatamente a ordem que a fórmula
+ratificada produz, e muda só a escala para a faixa 0–100 dos outros quatro
+eixos. É o mesmo critério do B11. A capacidade vem do §13.5 e já desconta a
+máquina sem os dois operadores do §14.2.3.
+
+**O que ficou intacto do B8:** vendidas (não entregues) no numerador, e
+denominador calculado, nunca digitado.
+
+**Correlação declarada.** O EO já olha produção÷capacidade e vendidos÷enviados;
+o SD passa a olhar vendidos÷capacidade, o que os aproxima. Não são a mesma
+medida — o EO mede disciplina de despacho, o SD mede quanto do potencial da
+fábrica virou venda —, mas andam juntos. O §12 já tem sobreposições assim (o IE
+dentro do DF e o EE; as perdas no EO₃ e no DS₁).
+
+**Decisão do dono do projeto, sem revisão do Dr. Pio.** Fica anotado porque a
+política desta seção é que mudança na régua dele não é definitiva até ele
+ratificar. O SD é o caso de maior latitude entre todos: o B8 registra que **a
+fórmula não existe em nenhum dos 15 documentos** — ela foi definida em conversa
+em 23/09/2026.
 
 ### Quem decide o quê
 

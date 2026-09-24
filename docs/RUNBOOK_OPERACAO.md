@@ -138,9 +138,11 @@ Se o resultado não aparecer, peça ao responsável que confira os logs antes de
 abrir outra rodada. Não refaça operações nem reaplique o seed para tentar corrigir.
 
 O ranking ainda depende de ratificações pedagógicas registradas no guia
-(B8: fórmula de SD; B11: escala do giro de estoque — o indicador não tinha
-teto e o estoque zerado valia 0, invertendo o incentivo do §12.3.3; decidido
-pelo Rafael e ainda não apresentado ao Dr. Pio; D11: variedade de eventos). Use o ensaio para avaliar a ferramenta; não trate a
+(B8/B12: fórmula e escala do SD — o denominador era o mercado inteiro, 37×
+maior que a planta, e o eixo valia no máximo 0,54 de 100; B11: escala do giro
+de estoque — o indicador não tinha teto e o estoque zerado valia 0, invertendo
+o incentivo do §12.3.3. B11 e B12 foram decididos pelo Rafael e ainda não
+apresentados ao Dr. Pio; D11: variedade de eventos). Use o ensaio para avaliar a ferramenta; não trate a
 pontuação como nota oficial antes da ratificação do Dr. Pio.
 
 ## 5. Backup, retomada e diagnóstico técnico
