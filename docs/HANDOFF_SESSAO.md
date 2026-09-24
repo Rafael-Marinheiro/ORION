@@ -127,11 +127,19 @@ Prioridade, de cima para baixo:
 
 Dois pontos de análise que estão registrados no guia e continuam abertos:
 
-- **B9** — o giro de estoque é contado duas vezes: dentro do DF (como IE) e
-  como eixo próprio (EE), somando ~22,5% da pontuação.
-- **B10** — o limiar de 1.000 km do DS₃ é inerte no mapa regional, cuja praça
-  mais distante está a 470 km. Já foi recalibrado para 200 km em
-  `parametros.DISTANCIA_REGIONAL_KM`, mas vale confirmar com o Rafael.
+- **B9** — `RESOLVIDO` em 23/09/2026: o §12 distingue IE (estoque total) de
+  EE (estoque operacional); quem colapsava os dois era a implementação. O
+  giro segue pesando ~22,5% da nota, por desenho do §12.4.
+- **B10** — `ENCERRADO` em 24/09/2026: com a volta à base do §9.1, o limiar de
+  1.000 km do DS₃ voltou a discriminar e `DISTANCIA_REGIONAL_KM` retornou ao
+  valor do §12.3.4. O problema era da base regional, não do documento.
+- **B11** — escala do giro (EE e IE) passou a `100 × CV/(CV+EM)` em
+  24/09/2026, por decisão do Rafael. Motivo: como razão crua o indicador não
+  tinha teto (chegou a 19.800 na medição) e o caso perfeito — vender todo o
+  estoque — caía em divisão por zero e valia 0, fazendo a melhor política de
+  estoque terminar em quarto lugar. A nova forma é `100 × g/(g+1)`, preserva
+  a ordem entre as equipes e cabe em 0–100. **Ainda não apresentada ao
+  Dr. Pio.**
 
 ## Pergunta em aberto para o Rafael
 

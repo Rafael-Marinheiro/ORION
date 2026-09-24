@@ -5,9 +5,10 @@ somam 1. Ate aqui o fechamento pontuava por quatro metricas proprias
 (lucro/market share/atendimento/eficiencia) que nao existem no documento, e
 Sustentabilidade simplesmente nao era calculada.
 
-Cada eixo devolve um percentual. EE e o giro de estoque, entao passa de 100
-com naturalidade -- o proprio exemplo do 12.6 mostra EE de 102 a 110. Nao ha
-teto artificial.
+Cada eixo devolve um percentual de 0 a 100. O EE e o IE sao giro de
+estoque expresso como percentual do fluxo -- ver `eficiencia_estoques`, que
+explica por que a razao crua do 12.3.3 foi reescrita sem mudar a ordem que
+ela produz.
 
 A tabela de exemplo do 12.6 traz VALORES ILUSTRATIVOS, nao resultados
 reais -- confirmado pelo Product Owner em 2026-09-24. Ela nao reproduz a
@@ -74,12 +75,37 @@ def eficiencia_operacional(
 
 
 def eficiencia_estoques(*, custo_das_vendas, estoque_medio):
-    """Giro: custo das vendas sobre estoque medio, em %.
+    """Giro de estoque como percentual do fluxo -- 12.3.3.
 
-    Serve ao IE do 12.3.2 e ao EE do 12.3.3 -- a formula e a mesma, o que
-    muda e o estoque no denominador (total ou operacional).
+    EE = 100 x CV / (CV + Estoque Medio)
+
+    Serve ao IE do 12.3.2 e ao EE do 12.3.3: a formula e a mesma, o que muda
+    e o estoque no denominador (total ou operacional).
+
+    E a razao do documento, reescrita. Chamando g = CV/EM, o giro que o
+    12.3.3 define, esta expressao e 100 x g/(g+1) -- transformacao
+    estritamente crescente, entao a ORDEM entre as equipes e identica a que
+    a formula do documento produz. Muda so a escala, de [0, infinito) para
+    [0, 100], que e a dos outros quatro eixos do 12.2.
+
+    Por que mudou (decisao do Rafael em 2026-09-24, medida antes de decidir):
+    a razao pura explode quando o estoque medio encolhe, e nenhum dos 15
+    documentos define teto ou o caso do denominador zero. Numa turma medida
+    de oito rodadas com seis politicas de estoque, 26 das 42 observacoes
+    ficaram fora de 0-100, com EE chegando a 19.800, e a equipe que vendeu
+    TODO o estoque -- a politica que o 12.3.3 diz incentivar, "enxuta e
+    agil" -- terminou em QUARTO lugar, porque estoque medio zero caia no
+    _razao(x, 0) = 0. Com esta forma, a mesma turma ficou 42/42 dentro da
+    escala e a classificacao passou a seguir exatamente a qualidade da
+    decisao de estoque.
+
+    Estoque medio zero com venda passa a valer 100 por construcao, sem
+    regra a parte. Sem venda continua valendo 0: nao houve operacao a medir.
     """
-    return CEM * _razao(custo_das_vendas, estoque_medio)
+    cv = _dec(custo_das_vendas)
+    if cv <= 0:
+        return Decimal("0")
+    return CEM * cv / (cv + _dec(estoque_medio))
 
 
 def desempenho_financeiro(*, lucro, receita, ativos_medios, custo_das_vendas, estoque_medio):

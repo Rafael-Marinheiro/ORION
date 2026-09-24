@@ -179,9 +179,10 @@ Pesos por eixo (§12.4): EO 0,30 · DF 0,25 · EE 0,15 · SD 0,20 · DS 0,10.
   fora e Recife (290 km) e Fortaleza (527 km) dentro — o subindicador volta a
   discriminar, e o parâmetro voltou ao valor do §12.3.4. O problema era da
   base, não do documento.
-- **EE não é limitado a 100.** Sendo uma razão de giro, passa de 100 com
-  facilidade — a própria tabela de exemplo do §12.6 traz EE de 110 e 105. A
-  soma ponderada precisa saber lidar com isso.
+- **EE ia além de 100 — corrigido em 24/09/2026 (B11).** Como razão de giro
+  crua, passava de 100 com facilidade e chegou a 19.800 na medição. Hoje é a
+  mesma razão expressa como percentual do fluxo, `100 × g/(g+1)`, que preserva
+  a ordem entre as equipes e cabe em 0–100 como os outros quatro eixos.
 
 ### B8 · Fórmula de SD — `RATIFICADA` pelo Product Owner em 23/09/2026
 
@@ -378,6 +379,89 @@ ou seja, só alcançava quem já estava prestes a perder o lote.
 limites mínimos ou máximos de estoque predefinidos". O freio é financeiro (2%
 de armazenagem, §6.4 e §7.4), não físico. Qualquer aviso de "estoque acima da
 capacidade" seria regra inventada contra o RN-07.
+
+### B11 · Escala do giro de estoque (EE e IE) — decidida pelo Rafael em 24/09/2026
+
+**Por que mudamos.** O §12.3.3 quer premiar quem **gira** estoque. Escrito
+como razão crua, ele premiava quem **quase não tinha** estoque — e as duas
+coisas não são a mesma. Como o estoque médio aparece sozinho no denominador,
+quanto menor ele fica, mais o indicador dispara, sem limite: na medição o EE
+chegou a **19.800** para uma equipe que deixou **uma unidade** na prateleira,
+enquanto um eixo normal entrega no máximo 100. Pior, o caso perfeito — vender
+todo o estoque — caía em divisão por zero e valia **0**, de modo que a
+política que o próprio §12.3.3 declara incentivar, *"enxuta e ágil"*,
+terminava em quarto lugar na classificação. Com 22,5% da nota nesse giro
+(EE mais o IE dentro do DF), isso não era detalhe de escala: era a
+classificação medindo quanto sobrou na prateleira em vez de quanto girou.
+
+Nenhum dos 16 documentos define teto para o indicador nem o que fazer quando
+o estoque médio é zero — não havia regra a contrariar, havia lacuna a
+preencher. A forma adotada preenche as duas de uma vez, sem constante
+inventada e sem caso especial, e **sem alterar a ordem** que a fórmula do
+documento produz.
+
+**Decisão do dono do projeto, tomada sem revisão do Dr. Pio.** Fica anotado
+aqui porque a política desta seção é que mudança na régua dele não é
+definitiva até ele ratificar — e esta ainda não foi apresentada a ele.
+
+**O que mudou.** `eficiencia_estoques`, que serve ao IE do §12.3.2 e ao EE do
+§12.3.3:
+
+```
+antes:  EE = 100 × CV ÷ Estoque Médio
+agora:  EE = 100 × CV ÷ (CV + Estoque Médio)
+```
+
+**Por que não é fórmula nova.** Chamando `g = CV/EM` — o giro que o §12.3.3
+define —, a expressão nova é `100 × g/(g+1)`, transformação estritamente
+crescente. **A ordem entre as equipes é idêntica** à que a fórmula do
+documento produz; muda só a escala, de `[0, ∞)` para `[0, 100]`, que é a dos
+outros quatro eixos do §12.2.
+
+**Verificação documental.** Varredura nos 16 documentos por teto de indicador,
+limite, máximo, saturação, normalização, giro, estoque médio e divisão por
+zero. Achado único: `Estoque Médio = (Estoque Inicial + Estoque Final) / 2`.
+**Nenhum documento define teto para o giro nem o caso do denominador zero.**
+
+**Medição que motivou a decisão** — oito rodadas, seis políticas de estoque,
+fechamento real, 42 observações por fórmula:
+
+| | Antes | Depois |
+|---|---|---|
+| Dentro de 0–100 | 16 | **42** |
+| Acima de 100 | 19 | 0 |
+| Zero com venda registrada | 7 | 0 |
+| EE máximo observado | 19.800,0 | 100,0 |
+
+Classificação final somando as sete rodadas:
+
+| | Antes | | Depois | |
+|---|---|---|---|---|
+| 1º | Sobra 1 un | 7.817,9 | **Vende tudo** | −724,1 |
+| 2º | Sobra 5 un | 750,9 | Sobra 1 un | −740,1 |
+| 3º | Sobra 20 un | −803,7 | Sobra 5 un | −786,8 |
+| 4º | **Vende tudo** | **−881,7** | Sobra 20 un | −1.064,6 |
+| 5º | Sobra 50 un | −1.898,8 | Sobra 50 un | −1.940,9 |
+| 6º | Sobra 90 un | −10.805,5 | Sobra 90 un | −10.806,6 |
+
+A equipe que vendeu todo o estoque — a política que o §12.3.3 declara
+incentivar, *"enxuta e ágil"* — terminava em **quarto lugar**, porque estoque
+médio zero caía em `_razao(x, 0) = 0`. Depois da mudança a classificação
+segue exatamente a qualidade da decisão de estoque, sem nenhuma inversão.
+
+(Os placares negativos vêm do cenário da medição, que manda produto A para São
+Paulo e Rio a R$ 4.000 e afunda na conta de frete do §9.2a. O piso desloca
+todas as linhas igualmente; a comparação entre equipes e entre fórmulas não é
+afetada.)
+
+**Efeitos colaterais.** Estoque médio zero com venda passa a valer 100 por
+construção, sem regra à parte. Sem venda continua valendo 0 — não houve
+operação a medir. O `limitar()` do fechamento permanece: o DF ainda pode
+disparar por IL e IR, que são razões sobre receita e ativos.
+
+**O que fica pendente com o Dr. Pio:** apresentar esta decisão. Os valores
+102–110 da tabela do §12.6 tornam-se inalcançáveis — o que é consistente com a
+ratificação de que aquela tabela é ilustrativa (B6), mas ele ainda não viu.
 
 ### Quem decide o quê
 
@@ -806,7 +890,8 @@ núcleo passou o 85%, periférico em 79%.
 Ponto em aberto para o Rafael: grupo que não opera na rodada tira DS = 80 e
 EO = 20, porque "não teve perdas" e "não comprou longe" são verdade quando não
 houve operação. É a fórmula do §12.3 ao pé da letra. Se isso for exploração
-indevida, o caminho é zerar os eixos sem atividade.
+indevida, o caminho é zerar os eixos sem atividade. (O caso irmão disso no EE
+— estoque zero valendo zero — foi resolvido em 24/09/2026; ver B11 na seção 3.)
 
 ---
 

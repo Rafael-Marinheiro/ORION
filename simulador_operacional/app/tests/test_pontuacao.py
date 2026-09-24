@@ -108,19 +108,44 @@ class FormulasTest(TestCase):
 
         self.assertEqual(eo, Decimal("20.0"))
 
-    def test_eficiencia_de_estoques_e_giro_e_passa_de_cem(self):
-        """O proprio exemplo do 12.6 mostra EE de 102 a 110: nao ha teto."""
+    def test_eficiencia_de_estoques_e_o_giro_como_percentual_do_fluxo(self):
+        """12.3.3: 100 x CV/(CV+EM). Giro 2 (5000 sobre 2500) vale 66,67."""
+        ee = eficiencia_estoques(custo_das_vendas=5000, estoque_medio=2500)
+
+        self.assertEqual(ee.quantize(Decimal("0.01")), Decimal("66.67"))
+
+    def test_estoque_zerado_com_venda_vale_cem(self):
+        """Girou tudo: e o topo do eixo, nao o fundo. Ate 24/09/2026 a
+        razao crua devolvia zero aqui, e a equipe que vendeu todo o estoque
+        terminava atras de quem girou pior."""
         self.assertEqual(
-            eficiencia_estoques(custo_das_vendas=5000, estoque_medio=2500), Decimal("200")
+            eficiencia_estoques(custo_das_vendas=5000, estoque_medio=0), Decimal("100")
         )
 
+    def test_sem_venda_vale_zero(self):
+        """Sem custo das vendas nao houve operacao a medir."""
+        self.assertEqual(
+            eficiencia_estoques(custo_das_vendas=0, estoque_medio=2500), Decimal("0")
+        )
+
+    def test_a_ordem_entre_equipes_e_a_do_giro_do_documento(self):
+        """A expressao e 100 x g/(g+1): crescente, entao quem gira mais
+        pontua mais, exatamente como na razao do 12.3.3."""
+        notas = [
+            eficiencia_estoques(custo_das_vendas=5000, estoque_medio=estoque)
+            for estoque in (100, 1000, 2500, 10000, 50000)
+        ]
+
+        self.assertEqual(notas, sorted(notas, reverse=True))
+        self.assertTrue(all(Decimal("0") <= nota <= Decimal("100") for nota in notas))
+
     def test_desempenho_financeiro(self):
-        # IL=20, IR=5, IE=200 -> 0,4x20 + 0,3x5 + 0,3x200
+        # IL=20, IR=5, IE=66,67 -> 0,4x20 + 0,3x5 + 0,3x66,67
         df = desempenho_financeiro(
             lucro=200, receita=1000, ativos_medios=4000, custo_das_vendas=5000, estoque_medio=2500
         )
 
-        self.assertEqual(df, Decimal("69.5"))
+        self.assertEqual(df.quantize(Decimal("0.01")), Decimal("29.50"))
 
     def test_satisfacao_da_demanda(self):
         """12.3.4: vendidas sobre a soma das demandas maximas."""
@@ -377,10 +402,11 @@ class EstoqueFinanceiroEOperacionalTest(TestCase):
 
         eixos = calcular_eixos(insumos)
 
-        # EE gira sobre 250: 1000/250 = 400%
-        self.assertEqual(eixos["EE"], Decimal("400"))
-        # o IE dentro do DF gira sobre 1000 (100%) e entra com peso W3 = 0,3
-        self.assertEqual(eixos["DF"], Decimal("30.0"))
+        # EE gira sobre o acabado: 100 x 1000/(1000+250) = 80
+        self.assertEqual(eixos["EE"], Decimal("80"))
+        # o IE dentro do DF gira sobre o estoque total: 100 x 1000/(1000+1000)
+        # = 50, que entra com peso W3 = 0,3
+        self.assertEqual(eixos["DF"], Decimal("15.0"))
 
     def test_estoque_medio_operacional_usa_a_rodada_anterior(self):
         """12.3.3: "(Estoque Inicial + Estoque Final) / 2"."""
