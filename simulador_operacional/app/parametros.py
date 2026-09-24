@@ -118,6 +118,11 @@ GANHO_MAXIMO_MARKETING = Decimal("0.20")
 # 14.2.1: "ate 50% sobre a quantidade inicial instalada", por restricao fisica
 # do espaco industrial, "fixo durante toda a simulacao". O limite e sobre o
 # parque do grupo, nao por linha de produto -- o que acaba e o galpao.
+# 14.2.4: "Custo por maquina: valor FIXADO PELO SIMULADOR (ex: R$ 8.000,00)".
+# O valor e exemplo; quem fixa e o sistema, nao o aluno -- ate 2026-09-24 o
+# preco vinha do formulario e dava para comprar 20 maquinas por R$ 1,00.
+CUSTO_MAQUINA = Decimal("8000")
+
 LIMITE_EXPANSAO_MAQUINAS = Decimal("0.5")
 
 # RN-09 (5): "Saldo negativo (fluxo de caixa negativo) por duas rodadas

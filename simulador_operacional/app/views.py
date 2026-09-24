@@ -34,7 +34,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .parametros import (
+    CUSTO_MAQUINA,
     CUSTO_OPERADOR_POR_RODADA,
+    OPERADORES_POR_MAQUINA,
     MAQUINAS_INICIAIS_POR_PRODUTO,
     TAXA_APLICACAO_FINANCEIRA_RODADA,
 )
@@ -1221,6 +1223,19 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 else:
                     investimento.rodada_ativacao = rodada_ativa.numero
 
+                # 14.2.4: o preco da maquina e "fixado pelo simulador", nao
+                # digitado por quem compra.
+                if investimento.categoria == "maquinas":
+                    investimento.valor = CUSTO_MAQUINA * Decimal(investimento.quantidade)
+
+                # 14.3: contratar nao tem taxa de entrada -- "o custo por
+                # funcionario e de R$ 1.800,00 mensais, registrado como custo
+                # fixo operacional", e o fechamento ja cobra isso por rodada.
+                # Debitar um valor de entrada cobraria a mesma contratacao duas
+                # vezes.
+                if investimento.categoria == "rh":
+                    investimento.valor = Decimal("0")
+
                 if investimento.categoria == "financeiro":
                     aplicacao = obter_aplicacao_financeira_grupo(grupo)
                     if investimento.operacao_financeira == "aplicar":
@@ -1263,9 +1278,29 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                         investimento.processado = True
 
                 investimento.save()
+                if investimento.categoria == "maquinas":
+                    detalhe = (
+                        f"{investimento.quantidade} máquina(s) a "
+                        f"R$ {CUSTO_MAQUINA:.2f} cada, total de "
+                        f"R$ {investimento.valor:.2f}. Lembre de contratar "
+                        f"{investimento.quantidade * OPERADORES_POR_MAQUINA} operadores: "
+                        f"máquina sem equipe fica parada (14.2.3)."
+                    )
+                elif investimento.categoria == "rh":
+                    detalhe = (
+                        f"{investimento.quantidade} operador(es). Não há taxa de "
+                        f"contratação: o custo é a folha de R$ "
+                        f"{CUSTO_OPERADOR_POR_RODADA:.2f} por rodada (14.3)."
+                    )
+                else:
+                    detalhe = f"R$ {investimento.valor:.2f}."
                 messages.success(
                     request,
-                    f"Investimento registrado ({investimento.get_categoria_display()}) para ativacao na rodada {investimento.rodada_ativacao}.",
+                    (
+                        f"Investimento registrado em "
+                        f"{investimento.get_categoria_display()} para ativação na "
+                        f"rodada {investimento.rodada_ativacao}. {detalhe}"
+                    ),
                 )
                 return redirect("painel_grupo")
 
