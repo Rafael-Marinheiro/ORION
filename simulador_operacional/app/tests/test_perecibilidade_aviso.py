@@ -27,20 +27,27 @@ class AvisoDeVencimentoTest(TestCase):
         )
 
     def test_lote_que_vence_no_fechamento_desta_rodada_e_avisado(self):
-        # entrou na rodada 3, validade 1 -> morre no fechamento da rodada 4
+        # 6.2: entrou na rodada 3 e nao foi enviado -> morre no fechamento
+        # da propria rodada 3.
         EstoqueProduto.objects.create(
             grupo=self.grupo, produto=self.b, rodada_entrada=3, quantidade=300
         )
 
-        self.assertEqual(len(lotes_a_vencer(self.grupo, 4)), 1)
+        self.assertEqual(len(lotes_a_vencer(self.grupo, 3)), 1)
 
-    def test_lote_ainda_dentro_da_validade_nao_e_avisado(self):
-        # entrou na rodada 4, validade 1 -> so morre no fechamento da rodada 5
+    def test_validade_maior_sobrevive_ao_proprio_fechamento(self):
+        """`validade_rodadas` conta a propria rodada de producao: 2 da ao
+        lote a rodada de entrada mais a seguinte."""
+        duradouro = Produto.objects.create(
+            codigo="D", nome="Produto D", perecivel=True, validade_rodadas=2,
+            tempo_producao_min=1,
+        )
         EstoqueProduto.objects.create(
-            grupo=self.grupo, produto=self.b, rodada_entrada=4, quantidade=300
+            grupo=self.grupo, produto=duradouro, rodada_entrada=4, quantidade=300
         )
 
         self.assertEqual(lotes_a_vencer(self.grupo, 4), [])
+        self.assertEqual(len(lotes_a_vencer(self.grupo, 5)), 1)
 
     def test_produto_nao_perecivel_nunca_entra_no_aviso(self):
         EstoqueProduto.objects.create(
@@ -64,7 +71,7 @@ class AvisoDeVencimentoTest(TestCase):
             grupo=self.grupo, produto=self.b, rodada_entrada=3, quantidade=80
         )
 
-        resumo = resumo_vencimento(self.grupo, 4)
+        resumo = resumo_vencimento(self.grupo, 3)
 
         self.assertEqual(resumo["quantidade"], 200)
         self.assertEqual(resumo["produtos"], ["B"])
@@ -79,28 +86,33 @@ class AvisoDeVencimentoTest(TestCase):
 
 
 class CriterioIgualAoFechamentoTest(TestCase):
-    """A condicao do aviso e a mesma do descarte, lote a lote."""
+    """O aviso tem que prever exatamente o que o fechamento descarta.
 
-    def test_aviso_e_descarte_concordam_em_varias_rodadas(self):
+    A condicao vivia duplicada nos dois lugares; hoje ha uma so, em
+    `lote_vencido`. Comparar a lista prevista com os lotes que o fechamento
+    de fato zerou continua valendo -- e o que prova que a tela nao mente.
+    """
+
+    def test_o_aviso_prediz_exatamente_os_lotes_que_o_fechamento_zera(self):
+        from app.management.commands.fechar_rodadas import Command
+
         grupo = Grupo.objects.create(nome="Equipe Rigel", capital=Decimal("1000"))
         b = Produto.objects.create(
             codigo="B", nome="Produto B", perecivel=True, validade_rodadas=1,
             tempo_producao_min=4,
         )
-
         for entrada in range(1, 5):
             EstoqueProduto.objects.create(
                 grupo=grupo, produto=b, rodada_entrada=entrada, quantidade=10
             )
 
-        for rodada in range(1, 7):
-            avisados = {lote.rodada_entrada for lote in lotes_a_vencer(grupo, rodada)}
-            # mesma condicao de fechar_rodadas.processar_perecibilidade
-            esperado = {
-                lote.rodada_entrada
-                for lote in EstoqueProduto.objects.filter(
-                    grupo=grupo, produto__perecivel=True, quantidade__gt=0
-                )
-                if rodada >= lote.rodada_entrada + (lote.produto.validade_rodadas or 1)
-            }
-            self.assertEqual(avisados, esperado, "divergiu na rodada {}".format(rodada))
+        avisados = {lote.id for lote in lotes_a_vencer(grupo, 3)}
+
+        Command().processar_perecibilidade(grupo, 3)
+
+        zerados = {
+            lote.id
+            for lote in EstoqueProduto.objects.filter(grupo=grupo, quantidade=0)
+        }
+        self.assertEqual(avisados, zerados)
+        self.assertTrue(avisados, "o cenario precisa ter algo a vencer")

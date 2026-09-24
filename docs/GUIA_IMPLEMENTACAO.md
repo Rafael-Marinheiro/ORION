@@ -59,7 +59,7 @@ código.
 | # | Tema | Versão A | Versão B | O código faz hoje | Decisão |
 |---|---|---|---|---|---|
 | B1 | Composição dos produtos | §6.1: A = 120 kg MP1 + 40 MP2 + 60 MP3 + 80 MP4 | §13.2: A = 2 un MP1 + 1 un MP2 | Versão A | **§6.1** (2026-09-18) |
-| B2 | Perecibilidade | §6.2: A não perece, B perece em 1 rodada, C não perece | §13.8: todos os produtos valem 2 rodadas | Versão A | **§6.2** (2026-09-18) |
+| B2 | Perecibilidade | §6.2: A não perece, B perece em 1 rodada, C não perece | §13.8: todos os produtos valem 2 rodadas | Versão A | **§6.2** — `RATIFICADA` pelo Dr. Pio em 24/09/2026 |
 | B3 | Capacidade de máquina | §13.4: 400 min por máquina por rodada | RN-06: turno único de 87 h = 5.220 min | Versão A (400) | **§13.4** (2026-09-18) |
 | B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | Versão A (1) | **§8.2** (2026-09-18) |
 | B5 | Critério de desempate | §12.5: EO → SD → DS → Receita bruta → alfabética | RN-12: lucro acumulado → market share → caixa → penalidades → alfabética | — | **§12.5** — `RATIFICADA` pelo PO em 24/09/2026 |
@@ -321,6 +321,38 @@ R$ 5.000 para 1,200 em R$ 10.000, degrau que nenhuma curva logarítmica produz.
 
 A lição que a fórmula ensina e a tabela esconde: **os primeiros mil reais já
 entregam três quartos do ganho máximo** — retorno marginal decrescente.
+
+### B2 · Validade do produto B — `RATIFICADA` pelo Dr. Pio em 24/09/2026
+
+**"B produzido e enviado na mesma rodada. O que ficar para ser enviado depois
+vira perda."** Perda **total**: sem venda com desconto, sem reembolso.
+
+É o que o §6.2 já dizia por escrito, na segunda frase que a implementação não
+seguia: *"Unidades não comercializadas até o encerramento da rodada são
+descartadas automaticamente."*
+
+A decisão B2 estava registrada desde 18/09, mas o código entregava o número do
+documento perdedor. A condição era `rodada >= rodada_entrada + validade` com
+`validade_rodadas = 1`, o que dava ao B uma rodada de sobrevida — produzido em
+N, ainda vendável em N+1. **Duas rodadas de vida é exatamente o §13.8.**
+
+Com isso o B aceitava produção antecipada e virava "um A com prazo", esvaziando
+a própria identidade que o §6.2 lhe dá: *"Exige precisão na produção sob
+demanda e sincronização com a logística de vendas"*, em oposição ao A,
+*"recomendado para estratégias de produção antecipada e venda futura"*. O §6.4
+reforça, ao isentar os perecíveis de custo de armazenagem — o B não foi
+desenhado para ser armazenado.
+
+`validade_rodadas` passou a contar **a própria rodada de produção**: 1 = morre
+no fechamento em que nasceu, 2 = sobrevive à rodada seguinte. A regra mora em
+`services.perecibilidade.lote_vencido`, único lugar; o fechamento e o aviso de
+tela chamam de lá. Antes eram duas cópias da mesma condição.
+
+**Consequência conhecida:** o painel de aviso de vencimento
+(`resumo_vencimento`) tende a nunca disparar, porque estoque de perecível deixa
+de atravessar rodadas. O aviso útil agora é outro — produção planejada de B
+contra o que foi destinado a envio, dentro da rodada aberta. Não foi
+implementado; fica registrado para decisão.
 
 ### Quem decide o quê
 

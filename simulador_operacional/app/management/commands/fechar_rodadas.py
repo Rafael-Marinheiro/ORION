@@ -16,6 +16,7 @@ from app.services.distribuicao_service import executar_expedicao
 from app.services.producao import executar_producao, garantir_capacidades_grupo
 from app.services.marketing import fator_marketing
 from app.services.pontuacao import calcular_eixos, coletar_insumos, pontuacao_total
+from app.services.perecibilidade import lote_vencido
 from app.services.retencao import aplicar_retencao_de_entregas
 from app.models import (
     AplicacaoFinanceiraGrupo,
@@ -84,8 +85,9 @@ class Command(BaseCommand):
             quantidade__gt=0,
         ).select_related("produto")
         for lote in lotes:
-            validade = lote.produto.validade_rodadas or 1
-            if rodada_numero >= lote.rodada_entrada + validade:
+            # 6.2: perda TOTAL, sem venda com desconto e sem reembolso --
+            # ratificado pelo Dr. Pio em 24/09/2026.
+            if lote_vencido(lote, rodada_numero):
                 perda_total += Decimal(lote.quantidade) * lote.produto.custo_unitario_estimado
                 lote.quantidade = 0
                 lote.save(update_fields=["quantidade"])
