@@ -142,7 +142,14 @@
                     ? h + 'h ' + String(m).padStart(2, '0') + 'min'
                     : String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 
-                clock.dataset.state = totalMin < 60 ? 'urgent' : 'normal';
+                var estado = totalMin < 60 ? 'urgent' : 'normal';
+                /* A virada para a ultima hora e o unico momento em que a
+                   interface se move sozinha. Uma vez so, nao a cada tick. */
+                if (estado === 'urgent' && clock.dataset.state !== 'urgent') {
+                    clock.dataset.virada = '';
+                    setTimeout(function () { delete clock.dataset.virada; }, 400);
+                }
+                clock.dataset.state = estado;
 
                 /* anuncia so nas viradas que importam, nao a cada segundo */
                 if (status) {

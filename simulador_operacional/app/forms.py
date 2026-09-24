@@ -100,39 +100,79 @@ class GameConfigForm(forms.ModelForm):
         return instance
 
 
-class DecisaoForm(forms.ModelForm):
+class RotuloSemDoisPontos:
+    """O Django acrescenta ":" a todo rotulo; em portugues so faz ruido."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
+        super().__init__(*args, **kwargs)
+
+
+class DecisaoForm(RotuloSemDoisPontos, forms.ModelForm):
     class Meta:
         model = Decisao
         fields = ["descricao", "quantidade"]
 
 
-class DistribuicaoForm(forms.ModelForm):
-    produto = forms.ModelChoiceField(queryset=Produto.objects.filter(ativo=True))
-    cidade = forms.ModelChoiceField(queryset=Cidade.objects.all())
+class DistribuicaoForm(RotuloSemDoisPontos, forms.ModelForm):
+    # Rotulo vai na declaracao: `Meta.labels` so alcanca campo gerado do modelo.
+    produto = forms.ModelChoiceField(queryset=Produto.objects.filter(ativo=True), label="Produto")
+    cidade = forms.ModelChoiceField(
+        queryset=Cidade.objects.all(),
+        label="Praça de destino",
+        help_text="A distância define o frete e o foco regional.",
+    )
 
     class Meta:
         model = Distribuicao
         fields = ["produto", "cidade", "quantidade", "preco_unitario"]
+        labels = {
+            "produto": "Produto",
+            "cidade": "Praça de destino",
+            "quantidade": "Quantidade a enviar",
+            "preco_unitario": "Preço de venda (R$)",
+        }
+        help_texts = {
+            "preco_unitario": "Preço abaixo da média da praça aumenta a fatia da demanda.",
+        }
 
 
-class ProducaoForm(forms.ModelForm):
-    produto = forms.ModelChoiceField(queryset=Produto.objects.filter(ativo=True))
+class ProducaoForm(RotuloSemDoisPontos, forms.ModelForm):
+    produto = forms.ModelChoiceField(queryset=Produto.objects.filter(ativo=True), label="Produto")
 
     class Meta:
         model = Producao
         fields = ["produto", "quantidade_planejada"]
+        labels = {"produto": "Produto", "quantidade_planejada": "Quantidade a produzir"}
+        help_texts = {
+            "quantidade_planejada": "Limitada pela capacidade da linha e pela matéria-prima em estoque.",
+        }
 
 
-class CompraMateriaPrimaForm(forms.ModelForm):
-    materia_prima = forms.ModelChoiceField(queryset=MateriaPrima.objects.filter(ativa=True))
-    cidade_fornecedora = forms.ModelChoiceField(queryset=Cidade.objects.all())
+class CompraMateriaPrimaForm(RotuloSemDoisPontos, forms.ModelForm):
+    materia_prima = forms.ModelChoiceField(
+        queryset=MateriaPrima.objects.filter(ativa=True), label="Matéria-prima"
+    )
+    cidade_fornecedora = forms.ModelChoiceField(
+        queryset=Cidade.objects.all(),
+        label="Comprar de",
+        help_text="A distância até a sede define o frete.",
+    )
 
     class Meta:
         model = CompraMateriaPrima
         fields = ["materia_prima", "cidade_fornecedora", "quantidade_kg"]
+        labels = {
+            "materia_prima": "Matéria-prima",
+            "cidade_fornecedora": "Comprar de",
+            "quantidade_kg": "Quantidade (kg)",
+        }
+        help_texts = {
+            "cidade_fornecedora": "A distância até a sede define o frete.",
+        }
 
 
-class InvestimentoForm(forms.ModelForm):
+class InvestimentoForm(RotuloSemDoisPontos, forms.ModelForm):
     cidade = forms.ModelChoiceField(queryset=Cidade.objects.all(), required=False)
     produto = forms.ModelChoiceField(queryset=Produto.objects.filter(ativo=True), required=False)
     quantidade = forms.IntegerField(min_value=0, required=False)

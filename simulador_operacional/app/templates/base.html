@@ -86,11 +86,14 @@
     <div class="o-rail">
         <div class="o-shell o-rail__inner">
             {% if rodada_corrente %}
-                <p class="o-rail__round">Rodada <b>{{ rodada_corrente.numero }}</b></p>
+                {% comment %}
+                    O prazo e a tensao do produto inteiro: e ele que manda na
+                    tela, nao o numero da rodada.
+                {% endcomment %}
                 <p class="o-rail__clock"
                    data-deadline="{{ rodada_corrente.fim|date:'c' }}"
                    data-state="normal">
-                    <span>Fecha em</span>
+                    <span class="o-rail__clock-label">Rodada {{ rodada_corrente.numero }} fecha em</span>
                     <time datetime="{{ rodada_corrente.fim|date:'c' }}" data-countdown>{{ rodada_corrente.fim|date:'d/m H:i' }}</time>
                 </p>
                 <span class="o-sr" role="status" data-countdown-status></span>

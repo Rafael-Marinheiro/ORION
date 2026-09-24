@@ -22,6 +22,12 @@
                 <h1>{% if somente_decisoes %}Decisões por rodada{% else %}Painel geral{% endif %}{% if grupo %} · {{ grupo.nome }}{% endif %}</h1>
                 <p class="o-head__sub">{% if somente_decisoes %}Registre, confira e envie as decisões oficiais antes do fechamento da rodada.{% else %}Acompanhe a situação da fábrica e abra as decisões quando a equipe estiver pronta.{% endif %}</p>
             </div>
+            {% comment %}
+                A tela de decisoes existe para submeter a rodada corrente; um
+                seletor de rodada antiga ali disputa a atencao com a tarefa.
+                O historico esta em Relatorios.
+            {% endcomment %}
+            {% if not somente_decisoes %}
             <form method="get" class="o-filters" role="search">
                 <p>
                     <label for="rodada">Ver rodada</label>
@@ -34,9 +40,10 @@
                 </p>
                 <div class="o-btnrow">
                     <button type="submit" class="o-btn">Aplicar</button>
-                    <a href="{% if somente_decisoes %}{% url 'decisoes_rodada' %}{% else %}{% url 'painel_grupo' %}{% endif %}" class="o-btn o-btn--ghost">Limpar</a>
+                    <a href="{% url 'painel_grupo' %}" class="o-btn o-btn--ghost">Limpar</a>
                 </div>
             </form>
+            {% endif %}
         </div>
     </div>
 
@@ -101,18 +108,6 @@
     </section>
     {% endif %}
 
-    {% if evento and not somente_decisoes %}
-    <section class="o-panel o-panel--event" aria-labelledby="evento-titulo">
-        <div>
-            <p class="o-eyebrow">Cenário da rodada{% if rodada_ativa %} {{ rodada_ativa.numero }}{% endif %}</p>
-            <h2 id="evento-titulo" class="o-panel__title">{{ evento.nome }}</h2>
-            <p>{% if evento.frase_indicativa %}{{ evento.frase_indicativa }}{% else %}{{ evento.descricao }}{% endif %}</p>
-            {% if evento.descricao and evento.frase_indicativa %}<p class="o-panel__hint">{{ evento.descricao }}</p>{% endif %}
-        </div>
-        <span class="o-badge o-badge--warn">Impacto ativo</span>
-    </section>
-    {% endif %}
-
     {% if linhas_fabrica %}
     <section class="o-panel o-factory" aria-labelledby="fabrica-titulo">
         <h2 id="fabrica-titulo" class="o-panel__title">Fábrica em operação</h2>
@@ -171,17 +166,13 @@
     {% endif %}
     {% endif %}
 
-    {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa or evento %}
+    {% comment %}
+        `evento` saiu da condicao: o boletim do cabecalho ja anuncia o evento,
+        e mante-lo aqui abria a secao "Atencao na rodada" sem nada dentro.
+    {% endcomment %}
+    {% if vencimento_proximo or notificacao or alerta or not pode_submeter or submissao_realizada or not rodada_ativa %}
     {% if somente_decisoes %}<h2 class="o-attention-title">Atenção na rodada</h2>{% endif %}
     <ul class="o-notes {% if somente_decisoes %}o-notes--decision{% endif %}">
-        {% if evento and somente_decisoes %}
-            <li class="o-note o-note--event">
-                <p class="o-note__kicker">Cenário da rodada{% if rodada_ativa %} {{ rodada_ativa.numero }}{% endif %}</p>
-                <h2>{{ evento.nome }}</h2>
-                <p>{% if evento.frase_indicativa %}{{ evento.frase_indicativa }}{% else %}{{ evento.descricao }}{% endif %}</p>
-                {% if evento.descricao and evento.frase_indicativa %}<p class="o-muted">{{ evento.descricao }}</p>{% endif %}
-            </li>
-        {% endif %}
         {% if vencimento_proximo %}
             <li class="o-note o-note--warning">
                 <p>
@@ -229,10 +220,7 @@
     {% endif %}
     <section class="o-flow" aria-labelledby="fluxo-titulo" data-decision-flow>
         <div class="o-flow__heading">
-            <div>
-                <p class="o-eyebrow">Decisões da rodada</p>
-                <h2 id="fluxo-titulo">Planeje, confira e envie</h2>
-            </div>
+            <h2 id="fluxo-titulo">Planeje, confira e envie</h2>
             <p class="o-muted">Cada etapa permanece disponível para revisão antes da submissão oficial.</p>
         </div>
         <div class="o-flow__steps" role="tablist" aria-label="Etapas de decisão">

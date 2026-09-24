@@ -223,7 +223,6 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-flow { margin: var(--o-6) 0 var(--o-4); }
 .o-flow__heading { display: flex; justify-content: space-between; gap: var(--o-4); align-items: end; margin-bottom: var(--o-4); }
 .o-flow__heading > p { max-width: 48ch; margin: 0; }
-.o-eyebrow { margin: 0 0 var(--o-1); color: var(--o-gold); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .o-flow__heading h2 { margin: 0; }
 .o-flow__steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--o-2); position: relative; }
 .o-flow__steps::before { content: ""; position: absolute; top: 22px; left: 9%; right: 9%; height: 1px; background: var(--o-line); }
@@ -247,13 +246,7 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
 .o-attention-title { margin: var(--o-6) 0 var(--o-3); font-size: 1.125rem; }
 .o-notes--decision { margin-top: 0; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--o-3); }
 .o-notes--decision > .o-note { grid-column: span 6; min-height: 100%; }
-.o-notes--decision > .o-note--event { grid-column: 1 / -1; }
-.o-note--event { position: relative; overflow: hidden; padding: var(--o-5); border: 1px solid color-mix(in srgb, var(--o-gold) 70%, var(--o-line)); background: linear-gradient(112deg, var(--o-gold-bg), var(--o-panel) 58%); }
-.o-note--event::after { content: "✦"; position: absolute; right: var(--o-5); top: 50%; transform: translateY(-50%); color: var(--o-gold); font-size: 2.5rem; opacity: .65; }
-.o-note--event h2 { max-width: 30ch; margin: 0 0 var(--o-2); font-size: clamp(1.25rem, 2vw, 1.625rem); }
-.o-note--event > p { max-width: 68ch; }
-.o-note__kicker { margin: 0 0 var(--o-1); color: var(--o-gold); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-@media (max-width: 640px) { .o-panel--review-state { align-items: flex-start; flex-direction: column; } .o-notes--decision { grid-template-columns: 1fr; } .o-notes--decision > .o-note { grid-column: auto; } .o-note--event { padding: var(--o-4); } }
+@media (max-width: 640px) { .o-panel--review-state { align-items: flex-start; flex-direction: column; } .o-notes--decision { grid-template-columns: 1fr; } .o-notes--decision > .o-note { grid-column: auto; } }
 
 /* --- 4. Navegacao -------------------------------------------------------- */
 
@@ -423,18 +416,40 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     font-variant-numeric: tabular-nums;
 }
 
+/* O relogio e o unico lugar onde esta tela levanta a voz. Tudo em volta
+   fica quieto para que a virada de hora seja percebida sem alarme. */
 .o-rail__clock {
     display: flex;
-    align-items: center;
-    gap: var(--o-2);
+    align-items: baseline;
+    gap: var(--o-3);
+    flex-wrap: wrap;
+    margin: 0;
+}
+.o-rail__clock-label { font-size: 0.875rem; color: var(--o-ink-dim); }
+.o-rail__clock time {
     font-family: var(--o-mono);
     font-variant-numeric: tabular-nums;
-    font-size: 0.9375rem;
-    color: var(--o-ink-dim);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--o-ink);
+    transition: color 240ms cubic-bezier(0.2, 0, 0, 1);
 }
-.o-rail__clock time { color: var(--o-ink); font-weight: 600; }
 .o-rail__clock[data-state="urgent"] time { color: var(--o-warn); }
 .o-rail__clock[data-state="expired"] time { color: var(--o-bad); }
+
+/* Unico momento orquestrado da interface: a entrada na ultima hora. Roda
+   uma vez so, disparado pelo relogio, nunca no carregamento da pagina. */
+@keyframes o-virada {
+    from { transform: scale(1); }
+    45%  { transform: scale(1.06); }
+    to   { transform: scale(1); }
+}
+.o-rail__clock[data-virada] time {
+    display: inline-block;
+    animation: o-virada 360ms cubic-bezier(0.2, 0, 0, 1);
+}
 
 .o-rail__spacer { flex: 1; }
 .o-rail__facts { display: flex; align-items: center; gap: var(--o-2); flex-wrap: wrap; }
@@ -772,17 +787,6 @@ ul.errorlist {
 .o-note--debug   { border-left-color: var(--o-ink-dim); }
 .o-note > :last-child { margin-bottom: 0; }
 
-.o-panel--event {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--o-4);
-    margin-bottom: var(--o-5);
-    border-color: color-mix(in srgb, var(--o-warn) 45%, var(--o-line));
-}
-.o-panel--event .o-eyebrow { color: var(--o-warn); }
-.o-panel--event p { margin: 0 0 var(--o-2); }
-@media (max-width: 640px) { .o-panel--event { flex-direction: column; } }
 
 /* --- 16. Rodape ---------------------------------------------------------- */
 
@@ -968,6 +972,21 @@ ul.errorlist {
     box-shadow: var(--o-shadow);
 }
 .o-hero__mark > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* Frase institucional do 10.2. Fica sozinha entre o hero e o conteudo, na
+   cor de destaque da marca -- e a unica linha da home que nao explica nada,
+   so declara. */
+.o-lema {
+    margin: var(--o-6) 0 var(--o-7);
+    font-size: clamp(1.25rem, 2.6vw, 1.875rem);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--o-gold);
+    max-width: 34ch;
+    text-wrap: balance;
+}
+.o-lema span { display: block; color: var(--o-ink-dim); }
 
 /* O ciclo de decisao desenhado como constelacao: nos ligados por uma linha.
    E uma sequencia real, entao numerar informa a ordem em vez de decorar. */

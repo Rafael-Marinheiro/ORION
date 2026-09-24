@@ -155,9 +155,12 @@ class PainelGrupoViewTest(TestCase):
 
         response = self.client.get(reverse("painel_grupo"))
 
-        self.assertContains(response, "Cenário da rodada 1")
-        self.assertContains(response, "Demanda aquecida")
-        self.assertContains(response, "Impacto ativo")
+        # O 8.4 quer o evento chegando como noticia: a frase indicativa e a
+        # manchete, o nome vem junto do efeito.
+        self.assertContains(response, "As praças registram procura acima do esperado.")
+        self.assertContains(response, "A demanda cresce nesta rodada.")
+        # Uma vez so: o boletim do cabecalho anuncia, a pagina nao repete.
+        self.assertContains(response, "Demanda aquecida", count=1)
 
     def test_ranking_and_relatorios_access_for_authenticated_user(self):
         self.client.login(username="view0@example.com", password="secret")
