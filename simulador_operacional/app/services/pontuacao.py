@@ -9,10 +9,12 @@ Cada eixo devolve um percentual. EE e o giro de estoque, entao passa de 100
 com naturalidade -- o proprio exemplo do 12.6 mostra EE de 102 a 110. Nao ha
 teto artificial.
 
-Divergencia registrada: a tabela de exemplo do 12.6 nao reproduz a formula
-do 12.2 com os pesos do 12.4 (G1 daria 77,9 e a tabela declara 75,35). Como
-nos outros casos do projeto, vale a versao internamente consistente -- a
-formula e os pesos, que sao a parte normativa.
+A tabela de exemplo do 12.6 traz VALORES ILUSTRATIVOS, nao resultados
+reais -- confirmado pelo Product Owner em 2026-09-24. Ela nao reproduz a
+formula do 12.2 com os pesos do 12.4 (G1 daria 77,90 e a tabela declara
+75,35; G2, 74,90 contra 72,55; G3, 74,75 contra 73,60) e nenhuma combinacao
+de pesos multiplos de 0,05 explica as tres linhas. Nao serve de gabarito:
+vale a formula.
 """
 
 from decimal import Decimal

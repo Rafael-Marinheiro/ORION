@@ -106,10 +106,13 @@ DISTANCIA_REGIONAL_KM = 1000
 # Mc = 1 + 0,20 x ln(1 + Ic) / ln(1 + 10000), com Ic limitado ao teto:
 # "Investimentos superiores a R$ 10.000,00 nao geram aumento adicional".
 #
-# A tabela de exemplo do 14.1.3 nao reproduz essa formula (declara 1,038 para
-# R$ 1.000 onde a formula da 1,150) e ainda salta de 1,051 para 1,200 entre
-# R$ 5.000 e R$ 10.000 -- degrau que nenhuma curva logaritmica produz. Vale a
-# formula, que e continua e bate nos dois extremos declarados (1,000 e 1,200).
+# A tabela de exemplo do 14.1.3 traz VALORES ILUSTRATIVOS, nao resultados
+# reais -- confirmado pelo Product Owner em 2026-09-24. Ela nao reproduz esta
+# formula (declara 1,038 para R$ 1.000 onde a formula da 1,150) e salta de
+# 1,051 para 1,200 entre R$ 5.000 e R$ 10.000, degrau que nenhuma curva
+# logaritmica produz. A coluna ln(1+Ic) da tabela, essa, esta correta, e os
+# dois extremos batem (1,000 e 1,200): so o meio nao deriva da conta.
+# Nao serve de gabarito: vale a formula.
 INVESTIMENTO_MARKETING_TETO = Decimal("10000")
 GANHO_MAXIMO_MARKETING = Decimal("0.20")
 

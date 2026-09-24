@@ -62,7 +62,7 @@ código.
 | B2 | Perecibilidade | §6.2: A não perece, B perece em 1 rodada, C não perece | §13.8: todos os produtos valem 2 rodadas | Versão A | **§6.2** (2026-09-18) |
 | B3 | Capacidade de máquina | §13.4: 400 min por máquina por rodada | RN-06: turno único de 87 h = 5.220 min | Versão A (400) | **§13.4** (2026-09-18) |
 | B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | Versão A (1) | **§8.2** (2026-09-18) |
-| B5 | Critério de desempate | §12.5: EO → SD → DS → Receita bruta → alfabética | RN-12: lucro acumulado → market share → caixa → penalidades → alfabética | — | **§12.5** (2026-09-18, confiança baixa) |
+| B5 | Critério de desempate | §12.5: EO → SD → DS → Receita bruta → alfabética | RN-12: lucro acumulado → market share → caixa → penalidades → alfabética | — | **§12.5** — `RATIFICADA` pelo PO em 24/09/2026 |
 
 ### Critério usado nas decisões acima
 
@@ -257,6 +257,70 @@ Decisão B5 mantida no **§12.5**, agora com três apoios em vez de um:
 
 O critério 2 do §12.5 depende de SD, que ganhou fórmula em 23/09/2026 (B8).
 O desempate roda agora do critério 1 ao 5, sem pular nenhum.
+
+**Ratificado pelo Product Owner em 24/09/2026**, com um quarto apoio que só
+apareceu na verificação pedida por ele: as duas regras usam o saldo de caixa
+com **sinais opostos**. O RN-12 desempata *a favor* de quem tem mais caixa; o
+IR do §12.3.2 (`ativos_medios = saldo de caixa + estoque médio`, no
+denominador do ROA) trata caixa parado como ativo improdutivo e **reduz** o
+DF. Adotar o RN-12 premiaria na mesma tela o que a fórmula penaliza.
+
+A verificação também mostrou onde cada métrica do RN-12 já vive:
+
+| Métrica do RN-12 | Dentro de alguma fórmula do §12? |
+|---|---|
+| Lucro acumulado | Sim — IL (`lucro ÷ receita`) e IR (`lucro ÷ ativos médios`). Como **razão**, não valor absoluto |
+| Saldo de caixa | Sim, **invertido** — denominador do IR |
+| Market share médio | **Não** — o SD mede cobertura da demanda catalogada, não fatia sobre as vendas dos concorrentes |
+| Penalidades | Indireto — entram no lucro como custo |
+
+`services/classificacao.py` continha `calcular_ranking()`, que implementava a
+lista do RN-12 (lucro acumulado → market share médio → caixa → penalidades) e
+estava órfã desde que o §12 foi implementado por cima: nenhuma view, url ou
+template a chamava, só o próprio teste. Removida em 24/09/2026 junto da
+ratificação — código morto que implementa a regra perdedora acaba religado por
+engano.
+
+### B6 · Tabelas de exemplo do §12.6 e do §14.1.3 — `ILUSTRATIVAS`, ratificado em 24/09/2026
+
+**Os valores das duas tabelas são exemplos, não resultados reais.** Não foram
+calculados pelas fórmulas que ilustram e não devem ser usados como gabarito,
+em sala ou em teste. Vale a fórmula; a tabela serve só para mostrar o formato
+da saída.
+
+Verificação feita sobre as imagens originais em `word/media/`, não sobre a
+conversão:
+
+**§12.2** (`doc 12, image1.png`) — `Pontuação Total (%) = (EO × P₁) + (DF × P₂)
++ (EE × P₃) + (SD × P₄) + (DS × P₅)`. Soma ponderada simples: sem
+normalização, sem teto, sem raiz.
+
+| Grupo | Pela fórmula, com os pesos do §12.4 | §12.6 declara | Diferença |
+|---|---|---|---|
+| G1 | 77,90 | 75,35 | −2,55 |
+| G2 | 74,90 | 72,55 | −2,35 |
+| G3 | 74,75 | 73,60 | −1,15 |
+
+Não é peso trocado: varridas as 1.001 combinações de cinco pesos múltiplos de
+0,05 que somam 1, **nenhuma** reproduz as três linhas com tolerância de 0,1.
+
+**§14.1.1** (`doc 14, image1.png`) — `Mc = 1 + 0,20 · ln(1+Ic) / ln(1+10000)`.
+
+| Investimento | Mc pela fórmula | §14.1.3 declara |
+|---|---|---|
+| R$ 0 | 1,000 | 1,000 ✓ |
+| R$ 1.000 | 1,150 | 1,038 |
+| R$ 2.500 | 1,170 | 1,043 |
+| R$ 5.000 | 1,185 | 1,051 |
+| R$ 10.000 | 1,200 | 1,200 ✓ |
+
+Aqui a coluna `ln(1+Ic)` da tabela está **inteiramente correta** (6,91 · 7,82 ·
+8,52 · 9,21) e os dois extremos do Mc batem — só os três valores do meio não
+derivam da conta. E a tabela é implausível contra si mesma: salta de 1,051 em
+R$ 5.000 para 1,200 em R$ 10.000, degrau que nenhuma curva logarítmica produz.
+
+A lição que a fórmula ensina e a tabela esconde: **os primeiros mil reais já
+entregam três quartos do ganho máximo** — retorno marginal decrescente.
 
 ### Quem decide o quê
 
@@ -673,7 +737,9 @@ Estado da suíte ao final: **102 testes**, núcleo 91%, periférico 71%.
 
 Duas decisões que ficaram registradas como divergência, não como erro: as
 tabelas de exemplo do §12.6 e do §14.1.3 não reproduzem as próprias fórmulas
-que ilustram. Em ambos os casos vale a fórmula.
+que ilustram. Em ambos os casos vale a fórmula. (Em 24/09/2026 o Product
+Owner confirmou que os valores das duas tabelas são **ilustrativos, não
+reais** — ver B6 na seção 3.)
 
 Verificação (2026-09-19): o Docker voltou e a suíte inteira rodou — **232
 testes, todos OK**, sem nenhuma regressão. As três apostas de onde quebraria
