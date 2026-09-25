@@ -17,10 +17,13 @@
 <div class="o-form-panel o-panel">
 {% if step == 1 %}
     <h2>Parâmetros base</h2>
+    <p class="o-panel__hint">
+        Cada turma tem a própria configuração: escolha de quem são estes números.
+    </p>
     <form method="post">
         {% csrf_token %}
         <input type="hidden" name="step" value="1">
-        {{ form.as_p }}
+        {% for campo in form %}{% include 'partials/campo.html' with campo=campo %}{% endfor %}
         <button type="submit" class="o-btn o-btn--primary">Avançar</button>
     </form>
 {% elif step == 2 %}
@@ -28,7 +31,7 @@
     <form method="post">
         {% csrf_token %}
         <input type="hidden" name="step" value="2">
-        {{ form.as_p }}
+        {% for campo in form %}{% include 'partials/campo.html' with campo=campo %}{% endfor %}
         <div class="o-btnrow">
             <button type="submit" name="voltar" class="o-btn o-btn--ghost">Voltar</button>
             <button type="submit" class="o-btn o-btn--primary">Avançar</button>
@@ -38,13 +41,21 @@
     <h2>Revisão</h2>
     <p class="o-panel__hint">Confira antes de salvar. Você ainda pode voltar e ajustar.</p>
 
+    {% comment %}
+        A revisão mostrava "True" e "False" crus, e não dizia de qual turma
+        eram os números -- que é justamente a pergunta que o passo 3 precisa
+        responder antes de salvar.
+    {% endcomment %}
     <dl class="o-summary">
-        <dt>Capital inicial</dt><dd class="o-num">{{ dados_step1.capital_inicial }}</dd>
-        <dt>Estoque inicial</dt><dd class="o-num">{{ dados_step1.estoque_inicial }}</dd>
-        <dt>Produtos habilitados</dt><dd>{{ dados_step2.produtos_habilitados }}</dd>
-        <dt>Módulo de produção</dt><dd>{{ dados_step2.modulo_producao }}</dd>
-        <dt>Módulo de distribuição</dt><dd>{{ dados_step2.modulo_distribuicao }}</dd>
-        <dt>Módulo financeiro</dt><dd>{{ dados_step2.modulo_financeiro }}</dd>
+        <dt>Turma</dt><dd>{{ turma_escolhida }}</dd>
+        <dt>Capital inicial</dt><dd class="o-num">R$ {{ dados_step1.capital_inicial }}</dd>
+        <dt>Estoque inicial</dt><dd class="o-num">{{ dados_step1.estoque_inicial }} un</dd>
+        <dt>Máquinas de largada</dt><dd class="o-num">{{ dados_step1.maquinas_iniciais }}</dd>
+        <dt>Número de rodadas</dt><dd class="o-num">{{ dados_step1.numero_rodadas }}</dd>
+        <dt>Produtos habilitados</dt><dd>{{ dados_step2.produtos_habilitados|default:"todos" }}</dd>
+        <dt>Módulo de produção</dt><dd>{% if dados_step2.modulo_producao %}Ativo{% else %}Desligado{% endif %}</dd>
+        <dt>Módulo de distribuição</dt><dd>{% if dados_step2.modulo_distribuicao %}Ativo{% else %}Desligado{% endif %}</dd>
+        <dt>Módulo financeiro</dt><dd>{% if dados_step2.modulo_financeiro %}Ativo{% else %}Desligado{% endif %}</dd>
     </dl>
 
     <form method="post">

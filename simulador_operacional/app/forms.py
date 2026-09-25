@@ -440,16 +440,34 @@ class ResultadoFilterForm(forms.Form):
 
 
 class ConfigWizardStep1Form(forms.Form):
-    capital_inicial = forms.DecimalField(min_value=0, decimal_places=2, max_digits=12)
-    estoque_inicial = forms.IntegerField(min_value=0)
-    maquinas_iniciais = forms.IntegerField(min_value=0)
+    # Cada jogo tem a sua configuracao. Sem escolher a turma, o assistente
+    # gravava sempre na `GameConfig` de id 1 -- que podia nao ser a de
+    # nenhuma turma em andamento.
+    jogo = forms.ChoiceField(required=False, label="Turma", choices=[])
+    capital_inicial = forms.DecimalField(
+        min_value=0, decimal_places=2, max_digits=12, label="Capital inicial",
+    )
+    estoque_inicial = forms.IntegerField(min_value=0, label="Estoque inicial")
+    maquinas_iniciais = forms.IntegerField(min_value=0, label="Máquinas de largada")
+    # 5: o numero de rodadas decide quando a classificacao final libera. O
+    # assistente nao perguntava, e a turma nascia com o padrao.
+    numero_rodadas = forms.IntegerField(
+        min_value=3, max_value=12, label="Número de rodadas",
+        help_text="Entre 3 e 12 (§5).",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["jogo"].choices = [("", "Grupos sem turma")] + [
+            (str(jogo.id), jogo.nome) for jogo in Jogo.objects.order_by("nome")
+        ]
 
 
 class ConfigWizardStep2Form(forms.Form):
-    produtos_habilitados = forms.CharField(required=False)
-    modulo_producao = forms.BooleanField(required=False, initial=True)
-    modulo_distribuicao = forms.BooleanField(required=False, initial=True)
-    modulo_financeiro = forms.BooleanField(required=False, initial=True)
+    produtos_habilitados = forms.CharField(required=False, label="Produtos habilitados")
+    modulo_producao = forms.BooleanField(required=False, initial=True, label="Módulo de produção")
+    modulo_distribuicao = forms.BooleanField(required=False, initial=True, label="Módulo de distribuição")
+    modulo_financeiro = forms.BooleanField(required=False, initial=True, label="Módulo financeiro")
 
 
 class FeedbackForm(forms.Form):

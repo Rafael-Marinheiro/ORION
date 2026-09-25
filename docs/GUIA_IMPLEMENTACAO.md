@@ -632,6 +632,32 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### A configuração era gravada na turma errada — 25/09/2026
+
+Cada `Jogo` tem a sua `GameConfig`, e o fechamento lê a do jogo da rodada
+(`fechar_rodadas`: `config = rodada.jogo.config`). A tela de parâmetros e o
+assistente gravavam sempre em `GameConfig.objects.get_or_create(id=1)`.
+
+No banco de desenvolvimento, a Turma 2026.2 usava a config `id=2`. O
+professor abria "Parâmetros do jogo", mudava o capital inicial ou os pesos
+do §12.4, salvava — e a turma dele continuava igual. A escrita ia para a
+config do "Jogo Principal", sem aviso. É o mesmo defeito estrutural do
+ranking, e mais grave: lá era leitura errada, aqui era escrita silenciosa no
+lugar errado.
+
+As duas telas passaram a operar sobre a configuração da turma em foco, com o
+mesmo seletor do ranking e o nome da turma no título. Sem turma (grupos
+avulsos), continua sendo a `id=1`.
+
+No mesmo exame do assistente:
+
+- **Não perguntava o número de rodadas.** É o parâmetro do §5 que decide
+  quando a classificação final libera; a turma nascia com o padrão e ninguém
+  via. Agora é campo obrigatório do passo 1, entre 3 e 12.
+- **A revisão mostrava `True` e `False` crus** e não dizia de qual turma
+  eram os números — justamente a pergunta que o passo 3 existe para
+  responder antes de salvar.
+
 ### A conferência final não conferia nada — 25/09/2026
 
 O §10.3 poe "Decisoes por Rodada" com compras, producao, comercializacao e

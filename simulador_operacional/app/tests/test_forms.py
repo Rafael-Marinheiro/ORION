@@ -134,9 +134,23 @@ class ConfigWizardStep1FormTest(TestCase):
                 "capital_inicial": "100000",
                 "estoque_inicial": 0,
                 "maquinas_iniciais": 5,
+                # 5: o assistente passou a perguntar quantas rodadas o jogo
+                # tem -- e o que decide quando a classificacao final libera.
+                "numero_rodadas": 5,
             }
         )
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_o_numero_de_rodadas_respeita_a_faixa_do_5(self):
+        for fora in (2, 13):
+            with self.subTest(numero_rodadas=fora):
+                form = ConfigWizardStep1Form(
+                    data={
+                        "capital_inicial": "100000", "estoque_inicial": 0,
+                        "maquinas_iniciais": 5, "numero_rodadas": fora,
+                    }
+                )
+                self.assertFalse(form.is_valid())
 
     def test_nao_expoe_parametro_de_capacidade_legado(self):
         self.assertNotIn("capacidade_maquina", ConfigWizardStep1Form().fields)

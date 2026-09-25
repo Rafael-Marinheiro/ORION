@@ -22,7 +22,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 from openpyxl import Workbook
@@ -376,11 +376,49 @@ class GameConfigUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
         return self.request.user.is_staff or super().has_permission()
 
     def get_object(self, queryset=None):
+        """A configuracao da turma escolhida, nao a de id 1.
+
+        Cada Jogo tem a sua `GameConfig`, e o fechamento le a do jogo da
+        rodada. A tela editava sempre a de id 1: com duas turmas no sistema,
+        o professor mudava o capital ou os pesos do 12.4, salvava, e a turma
+        dele continuava igual -- sem nenhum aviso de que a escrita foi para
+        outro lugar.
+        """
+        jogo_id, _sem_jogo, opcoes = turma_em_foco(self.request)
+        self.turmas = opcoes
+        jogo = (
+            Jogo.objects.select_related("config").filter(id=jogo_id).first()
+            if jogo_id
+            else None
+        )
+        self.jogo = jogo
+        if jogo:
+            return jogo.config
         obj, _ = GameConfig.objects.get_or_create(id=1)
         return obj
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["turmas"] = getattr(self, "turmas", [])
+        context["turma_em_foco"] = next(
+            (opcao["nome"] for opcao in context["turmas"] if opcao["selecionada"]),
+            None,
+        )
+        return context
+
+    def get_success_url(self):
+        destino = reverse("game_config")
+        jogo = getattr(self, "jogo", None)
+        return f"{destino}?jogo={jogo.id}" if jogo else destino
+
     def form_valid(self, form):
         form.instance.produtos_habilitados = form.cleaned_data["produtos_habilitados"]
+        alvo = getattr(self, "jogo", None)
+        messages.success(
+            self.request,
+            "Parâmetros salvos"
+            + (f" para a turma {alvo.nome}." if alvo else " para os grupos sem turma."),
+        )
         return super().form_valid(form)
 
 
@@ -405,10 +443,15 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
         wizard_data = request.session.get(self.session_key, {})
         config, _ = GameConfig.objects.get_or_create(id=1)
         if step == 1:
+            jogo_id, _sem_jogo, _opcoes = turma_em_foco(request)
+            alvo = Jogo.objects.select_related("config").filter(id=jogo_id).first()
+            config = alvo.config if alvo else config
             initial = {
+                "jogo": str(alvo.id) if alvo else "",
                 "capital_inicial": config.capital_inicial,
                 "estoque_inicial": config.estoque_inicial,
                 "maquinas_iniciais": config.maquinas_iniciais,
+                "numero_rodadas": config.numero_rodadas,
             }
             initial.update(wizard_data.get("step1", {}))
             form = self.get_form_for_step(step, initial=initial)
@@ -431,8 +474,17 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
                 "form": form,
                 "dados_step1": wizard_data.get("step1", {}),
                 "dados_step2": wizard_data.get("step2", {}),
+                "turma_escolhida": self.nome_da_turma(wizard_data),
             },
         )
+
+    @staticmethod
+    def nome_da_turma(wizard_data):
+        escolhido = (wizard_data.get("step1", {}).get("jogo") or "").strip()
+        if not escolhido.isdigit():
+            return "Grupos sem turma"
+        jogo = Jogo.objects.filter(id=escolhido).first()
+        return jogo.nome if jogo else "Grupos sem turma"
 
     def post(self, request, *args, **kwargs):
         step = int(request.POST.get("step", 1))
@@ -453,6 +505,7 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
                         "form": form,
                         "dados_step1": wizard_data.get("step1", {}),
                         "dados_step2": wizard_data.get("step2", {}),
+                        "turma_escolhida": self.nome_da_turma(wizard_data),
                     },
                 )
             # A sessao serializa em JSON e JSON nao conhece Decimal, entao
@@ -469,18 +522,35 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
             if not dados_step1 or not dados_step2:
                 messages.error(request, "Wizard incompleto. Preencha as etapas anteriores.")
                 return redirect(f"{reverse_lazy('game_config_wizard')}?step=1")
-            config, _ = GameConfig.objects.get_or_create(id=1)
+            # A turma escolhida no passo 1 manda: cada jogo tem a sua
+            # configuracao, e gravar sempre na de id 1 mudava outro jogo.
+            escolhido = (dados_step1.get("jogo") or "").strip()
+            alvo = (
+                Jogo.objects.select_related("config").filter(id=escolhido).first()
+                if escolhido.isdigit()
+                else None
+            )
+            if alvo:
+                config = alvo.config
+            else:
+                config, _ = GameConfig.objects.get_or_create(id=1)
             config.capital_inicial = dados_step1["capital_inicial"]
             config.estoque_inicial = dados_step1["estoque_inicial"]
             config.maquinas_iniciais = dados_step1["maquinas_iniciais"]
+            config.numero_rodadas = dados_step1["numero_rodadas"]
             config.produtos_habilitados = dados_step2.get("produtos_habilitados") or ""
             config.modulo_producao = dados_step2.get("modulo_producao", False)
             config.modulo_distribuicao = dados_step2.get("modulo_distribuicao", False)
             config.modulo_financeiro = dados_step2.get("modulo_financeiro", False)
             config.save()
             request.session.pop(self.session_key, None)
-            messages.success(request, "Configuracao atualizada pelo wizard com sucesso.")
-            return redirect("game_config")
+            messages.success(
+                request,
+                "Configuração salva"
+                + (f" para a turma {alvo.nome}." if alvo else " para os grupos sem turma."),
+            )
+            destino = reverse("game_config")
+            return redirect(f"{destino}?jogo={alvo.id}" if alvo else destino)
 
         return redirect(f"{reverse_lazy('game_config_wizard')}?step={step}")
 

@@ -32,6 +32,7 @@ class GameConfigWizardTest(TestCase):
                 "capital_inicial": "1000000.00",
                 "estoque_inicial": "0",
                 "maquinas_iniciais": "40",
+                "numero_rodadas": "5",
             },
         )
 
@@ -47,6 +48,7 @@ class GameConfigWizardTest(TestCase):
                 "capital_inicial": "750000.50",
                 "estoque_inicial": "12",
                 "maquinas_iniciais": "8",
+                "numero_rodadas": "4",
             },
         )
         self.client.post(
@@ -62,8 +64,11 @@ class GameConfigWizardTest(TestCase):
         resposta = self.client.post(self.url, {"step": "3", "confirmar": "1"})
 
         self.assertEqual(resposta.status_code, 302)
+        # sem turma escolhida, o destino continua sendo a configuracao dos
+        # grupos avulsos (id 1)
         config = GameConfig.objects.get(id=1)
         self.assertEqual(config.capital_inicial, Decimal("750000.50"))
+        self.assertEqual(config.numero_rodadas, 4)
         self.assertEqual(config.maquinas_iniciais, 8)
         self.assertEqual(config.produtos_habilitados, "P1,P2")
         # a sessao e limpa depois de confirmar

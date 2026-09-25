@@ -7,12 +7,13 @@
 <div class="o-head">
     <div class="o-head__row">
         <div>
-            <h1>Parâmetros do jogo</h1>
+            <h1>Parâmetros do jogo{% if turma_em_foco %} · {{ turma_em_foco }}{% endif %}</h1>
             <p class="o-head__sub">
                 O que cada turma recebe ao começar e como o desempenho é pontuado.
-                Vale para as próximas rodadas; o que já fechou não muda.
+                Vale para as próximas rodadas desta turma; o que já fechou não muda.
             </p>
         </div>
+        {% include 'partials/seletor_turma.html' %}
         <div class="o-head__actions">
             <a class="o-btn o-btn--ghost" href="{% url 'game_config_wizard' %}">Assistente</a>
         </div>
