@@ -73,7 +73,7 @@
 </form>
 
 <div class="o-tablewrap">
-    <table class="o-table">
+    <table class="o-table o-table--cartoes">
         <caption class="o-sr">Últimas execuções das rotinas automáticas</caption>
         <thead>
             <tr>
@@ -89,17 +89,17 @@
         <tbody>
             {% for job in jobs %}
             <tr{% if job.status == 'falha' %} data-falha="true"{% endif %}>
-                <th scope="row">{{ job.comando }}</th>
-                <td>{% if job.jogo %}{{ job.jogo.nome }}{% else %}Sem turma{% endif %}</td>
-                <td>
+                <th scope="row" data-label="Rotina">{{ job.comando }}</th>
+                <td data-label="Turma">{% if job.jogo %}{{ job.jogo.nome }}{% else %}Sem turma{% endif %}</td>
+                <td data-label="Resultado">
                     {% if job.status == "sucesso" %}<span class="o-badge o-badge--ok">sucesso</span>
                     {% elif job.status == "falha" %}<span class="o-badge o-badge--bad">falha</span>
                     {% else %}<span class="o-badge o-badge--mute">{{ job.status }}</span>{% endif %}
                 </td>
-                <td class="num">{{ job.rodada|default:"—" }}</td>
-                <td class="o-num">{{ job.iniciado_em|date:'d/m/Y H:i:s' }}</td>
-                <td class="o-num">{% if job.duracao_segundos is not None %}{{ job.duracao_segundos }}s{% else %}em curso{% endif %}</td>
-                <td>{{ job.detalhes|default:"—" }}</td>
+                <td class="num" data-label="Rodada">{{ job.rodada|default:"—" }}</td>
+                <td class="o-num" data-label="Início">{{ job.iniciado_em|date:'d/m/Y H:i:s' }}</td>
+                <td class="o-num" data-label="Duração">{% if job.duracao_segundos is not None %}{{ job.duracao_segundos }}s{% else %}em curso{% endif %}</td>
+                <td data-label="Detalhes">{{ job.detalhes|default:"—" }}</td>
             </tr>
             {% empty %}
             <tr>

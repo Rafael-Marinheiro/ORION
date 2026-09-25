@@ -138,7 +138,7 @@
 <section class="o-stack">
     <h2>Fluxo de caixa por rodada — {{ grupo_foco.nome }}</h2>
     <div class="o-tablewrap">
-        <table class="o-table">
+        <table class="o-table o-table--cartoes">
             <caption class="o-sr">Movimento de caixa rodada a rodada</caption>
             <thead>
                 <tr>
@@ -153,24 +153,24 @@
             <tbody>
                 {% for linha in fluxo %}
                 <tr>
-                    <th scope="row">R{{ linha.rodada }}</th>
-                    <td class="num">{% include 'partials/valor.html' with valor=linha.saldo_inicial %}</td>
-                    <td class="num">{{ linha.entradas|floatformat:2 }}</td>
-                    <td class="num">-{{ linha.saidas|floatformat:2 }}</td>
-                    <td class="num">{% include 'partials/valor.html' with valor=linha.outras_movimentacoes %}</td>
-                    <td class="num">{% include 'partials/valor.html' with valor=linha.saldo_final %}</td>
+                    <th scope="row" data-label="Rodada">R{{ linha.rodada }}</th>
+                    <td class="num" data-label="Saldo inicial">{% include 'partials/valor.html' with valor=linha.saldo_inicial %}</td>
+                    <td class="num" data-label="Entradas">{{ linha.entradas|floatformat:2 }}</td>
+                    <td class="num" data-label="Saídas">-{{ linha.saidas|floatformat:2 }}</td>
+                    <td class="num" data-label="Compras e investimentos">{% include 'partials/valor.html' with valor=linha.outras_movimentacoes %}</td>
+                    <td class="num" data-label="Saldo final">{% include 'partials/valor.html' with valor=linha.saldo_final %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             {% if fluxo_resumo %}
             <tfoot>
                 <tr data-total="true">
-                    <th scope="row">Total</th>
-                    <td class="num"></td>
-                    <td class="num">{{ fluxo_resumo.entradas|floatformat:2 }}</td>
-                    <td class="num">-{{ fluxo_resumo.saidas|floatformat:2 }}</td>
-                    <td class="num">{% include 'partials/valor.html' with valor=fluxo_resumo.outras_movimentacoes %}</td>
-                    <td class="num">{% include 'partials/valor.html' with valor=fluxo_resumo.saldo_final %}</td>
+                    <th scope="row" data-label="Rodada">Total</th>
+                    <td class="num" data-label="Saldo inicial"></td>
+                    <td class="num" data-label="Entradas">{{ fluxo_resumo.entradas|floatformat:2 }}</td>
+                    <td class="num" data-label="Saídas">-{{ fluxo_resumo.saidas|floatformat:2 }}</td>
+                    <td class="num" data-label="Compras e investimentos">{% include 'partials/valor.html' with valor=fluxo_resumo.outras_movimentacoes %}</td>
+                    <td class="num" data-label="Saldo final">{% include 'partials/valor.html' with valor=fluxo_resumo.saldo_final %}</td>
                 </tr>
             </tfoot>
             {% endif %}
@@ -190,7 +190,7 @@
         <section>
             <h3>Consolidado por rodada e grupo</h3>
             <div class="o-tablewrap">
-                <table class="o-table">
+                <table class="o-table o-table--cartoes">
                     <thead>
                         <tr>
                             <th scope="col">Rodada</th>
@@ -209,17 +209,17 @@
                     <tbody>
                         {% for c in consolidados %}
                         <tr>
-                            <th scope="row">R{{ c.rodada }}</th>
-                            <td>{{ c.grupo.nome }}</td>
-                            <td class="num">{{ c.receita_vendas }}</td>
-                            <td class="num">{{ c.custos_operacionais }}</td>
-                            <td class="num">{{ c.penalidade_sem_submissao }}</td>
-                            <td class="num">{{ c.perda_pereciveis }}</td>
-                            <td class="num">{{ c.custo_armazenagem_mp }}</td>
-                            <td class="num">{{ c.custo_armazenagem_produtos }}</td>
-                            <td class="num">{{ c.custos_totais }}</td>
-                            <td class="num">{{ c.lucro_rodada }}</td>
-                            <td class="num">{{ c.score_multicriterio }}</td>
+                            <th scope="row" data-label="Rodada">R{{ c.rodada }}</th>
+                            <td data-label="Grupo">{{ c.grupo.nome }}</td>
+                            <td class="num" data-label="Receita de vendas">{{ c.receita_vendas }}</td>
+                            <td class="num" data-label="Custos operacionais">{{ c.custos_operacionais }}</td>
+                            <td class="num" data-label="Penalidade">{{ c.penalidade_sem_submissao }}</td>
+                            <td class="num" data-label="Perda de perecíveis">{{ c.perda_pereciveis }}</td>
+                            <td class="num" data-label="Armazenagem MP">{{ c.custo_armazenagem_mp }}</td>
+                            <td class="num" data-label="Armazenagem produtos">{{ c.custo_armazenagem_produtos }}</td>
+                            <td class="num" data-label="Custos totais">{{ c.custos_totais }}</td>
+                            <td class="num" data-label="Lucro">{{ c.lucro_rodada }}</td>
+                            <td class="num" data-label="Score">{{ c.score_multicriterio }}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="11"><div class="o-empty">Nenhum consolidado para este filtro.</div></td></tr>
@@ -232,7 +232,7 @@
         <section>
             <h3>Resultado financeiro base</h3>
             <div class="o-tablewrap">
-                <table class="o-table">
+                <table class="o-table o-table--cartoes">
                     <thead>
                         <tr>
                             <th scope="col">Rodada</th>
@@ -245,11 +245,11 @@
                     <tbody>
                         {% for r in resultados %}
                         <tr>
-                            <th scope="row">R{{ r.rodada }}</th>
-                            <td>{{ r.grupo.nome }}</td>
-                            <td class="num">{{ r.receita }}</td>
-                            <td class="num">{{ r.custos }}</td>
-                            <td class="num">{{ r.lucro }}</td>
+                            <th scope="row" data-label="Rodada">R{{ r.rodada }}</th>
+                            <td data-label="Grupo">{{ r.grupo.nome }}</td>
+                            <td class="num" data-label="Receita">{{ r.receita }}</td>
+                            <td class="num" data-label="Custos">{{ r.custos }}</td>
+                            <td class="num" data-label="Lucro líquido">{{ r.lucro }}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="5"><div class="o-empty">Nenhum resultado para este filtro.</div></td></tr>

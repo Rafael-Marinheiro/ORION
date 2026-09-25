@@ -29,9 +29,9 @@
             é o único lugar onde o professor vê que o prazo venceu e o
             fechamento ainda não rodou.
         {% endcomment %}
-        <span class="o-badge o-badge--warn">Prazo vencido há {{ painel.rodada.fim|timesince }} · aguardando fechamento</span>
+        <span class="o-badge o-badge--bloco o-badge--warn">Prazo vencido há {{ painel.rodada.fim|timesince }} · aguardando fechamento</span>
         {% else %}
-        <span class="o-badge o-badge--info">Fecha em {{ painel.rodada.fim|timeuntil }}</span>
+        <span class="o-badge o-badge--bloco o-badge--info">Fecha em {{ painel.rodada.fim|timeuntil }}</span>
         {% endif %}
     </div>
     <p class="o-panel__hint">Prazo-limite: {{ painel.rodada.fim|date:'d/m/Y H:i' }}.</p>
@@ -62,16 +62,16 @@
     {% endif %}
 
     <div class="o-tablewrap">
-        <table class="o-table">
+        <table class="o-table o-table--cartoes">
             <caption class="o-sr">Participação dos grupos na rodada {{ painel.rodada.numero }}</caption>
             <thead><tr><th scope="col">Grupo</th><th scope="col">CEO da rodada</th><th scope="col">Status</th><th scope="col">Enviado em</th></tr></thead>
             <tbody>
                 {% for item in painel.participacoes %}
                 <tr>
-                    <th scope="row">{{ item.grupo.nome }}</th>
-                    <td>{% if item.ceo %}{{ item.ceo.usuario.nome_usuario }}{% else %}<span class="o-badge o-badge--warn">Não definido</span>{% endif %}</td>
-                    <td>{% if item.auditoria %}<span class="o-badge o-badge--ok">Enviado</span>{% else %}<span class="o-badge o-badge--mute">Pendente</span>{% endif %}</td>
-                    <td class="o-num">{% if item.auditoria %}{{ item.auditoria.data_registro|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
+                    <th scope="row" data-label="Grupo">{{ item.grupo.nome }}</th>
+                    <td data-label="CEO da rodada">{% if item.ceo %}{{ item.ceo.usuario.nome_usuario }}{% else %}<span class="o-badge o-badge--warn">Não definido</span>{% endif %}</td>
+                    <td data-label="Status">{% if item.auditoria %}<span class="o-badge o-badge--ok">Enviado</span>{% else %}<span class="o-badge o-badge--mute">Pendente</span>{% endif %}</td>
+                    <td class="o-num" data-label="Enviado em">{% if item.auditoria %}{{ item.auditoria.data_registro|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="4">Não há grupos neste jogo.</td></tr>

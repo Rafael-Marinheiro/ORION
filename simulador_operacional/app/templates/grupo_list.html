@@ -22,17 +22,17 @@
         <span class="o-badge o-badge--plain">{{ turma.grupos|length }} equipe{{ turma.grupos|length|pluralize }}</span>
     </div>
     <div class="o-tablewrap">
-        <table class="o-table">
+        <table class="o-table o-table--cartoes">
             <caption class="o-sr">Equipes da turma {{ turma.nome }}</caption>
             <thead><tr><th scope="col">Equipe</th><th scope="col">CEO</th><th scope="col" class="num">Integrantes</th><th scope="col" class="num">Capital</th><th scope="col"><span class="o-sr">Ações</span></th></tr></thead>
             <tbody>
                 {% for grupo in turma.grupos %}
                 <tr>
-                    <th scope="row">{{ grupo.nome }}</th>
-                    <td>{% if grupo.lider %}{{ grupo.lider.nome_usuario }}{% else %}<span class="o-badge o-badge--warn">Não definido</span>{% endif %}</td>
-                    <td class="o-num">{{ grupo.membros.count }}</td>
-                    <td class="o-num">R$ {% include 'partials/valor.html' with valor=grupo.capital %}</td>
-                    <td><a class="o-btn o-btn--sm o-btn--ghost" href="{% url 'editar_grupo' grupo.pk %}">Editar</a></td>
+                    <th scope="row" data-label="Equipe">{{ grupo.nome }}</th>
+                    <td data-label="CEO">{% if grupo.lider %}{{ grupo.lider.nome_usuario }}{% else %}<span class="o-badge o-badge--warn">Não definido</span>{% endif %}</td>
+                    <td class="o-num" data-label="Integrantes">{{ grupo.membros.count }}</td>
+                    <td class="o-num" data-label="Capital">R$ {% include 'partials/valor.html' with valor=grupo.capital %}</td>
+                    <td data-label="Ações"><a class="o-btn o-btn--sm o-btn--ghost" href="{% url 'editar_grupo' grupo.pk %}">Editar</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

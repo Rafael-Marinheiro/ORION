@@ -27,6 +27,10 @@
     --o-warn-bg:   rgba(245, 183, 78, 0.12);
     --o-bad-bg:    rgba(255, 138, 138, 0.12);
     --o-star-bg:   rgba(143, 208, 255, 0.10);
+    /* Parede da placa do mapa: mais escura que a terra nos dois temas, para
+       ler como espessura e nao como mancha. */
+    --o-mapa-parede: #070c17;
+    --o-mapa-sombra: 0.45;
 
     /* Paleta categorica dos graficos. Separada das cores de estado de
        proposito: o verde que diz "submissao enviada" nao pode significar
@@ -80,6 +84,8 @@
     --o-warn-bg:   rgba(138, 90, 0, 0.10);
     --o-bad-bg:    rgba(192, 38, 38, 0.10);
     --o-star-bg:   rgba(28, 95, 168, 0.08);
+    --o-mapa-parede: #b9c3d6;
+    --o-mapa-sombra: 0.22;
 
     /* Mesmas matizes, degrau proprio para a superficie clara. Tres slots
        ficam abaixo de 3:1 no branco, entao a regra de alivio se aplica: a
@@ -467,7 +473,13 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     line-height: 1.6;
     border: 1px solid transparent;
     white-space: nowrap;
+    /* Nenhum selo pode empurrar o painel para fora da tela. */
+    max-width: 100%;
 }
+/* Selo que carrega uma frase, nao um rotulo: quebra linha em vez de
+   esticar o painel. O ponto fica alinhado com a primeira linha. */
+.o-badge--bloco { white-space: normal; text-align: left; align-items: flex-start; }
+.o-badge--bloco::before { margin-top: 0.5em; }
 .o-badge::before {
     content: "";
     width: 7px; height: 7px;
@@ -532,6 +544,12 @@ main { flex: 1; padding-block: var(--o-5) var(--o-7); }
     gap: var(--o-4);
     align-items: start;
 }
+/* Item de grid nasce com `min-width: auto`: ele nao encolhe abaixo do
+   proprio conteudo. Bastava uma tabela larga dentro de um card para a
+   coluna inteira esticar e a pagina ganhar rolagem horizontal -- era o que
+   a tabela de produtos fazia na Ajuda, apesar de estar num `o-tablewrap`
+   com rolagem propria. */
+.o-grid > * { min-width: 0; }
 
 /* Painel com tabela larga ocupa a linha inteira do grid, em vez de espremer
    a tabela numa coluna de 340px. */
@@ -871,25 +889,29 @@ ul.errorlist {
     .o-flow__step span { width: 36px; height: 36px; }
     .o-review-list li { grid-template-columns: 1fr; gap: var(--o-1); }
 
-    /* O ranking tem nove métricas. Em vez de esconder eixos ou exigir gesto
-       lateral, cada grupo vira um cartão com rótulos explícitos no celular. */
-    .o-tablewrap--ranking { overflow-x: hidden; }
-    .o-table--ranking,
-    .o-table--ranking tbody,
-    .o-table--ranking tr,
-    .o-table--ranking th,
-    .o-table--ranking td { display: block; width: 100%; }
-    .o-table--ranking thead { display: none; }
-    .o-table--ranking tbody { padding: var(--o-2); }
-    .o-table--ranking tr {
+    /* Tabela larga no celular: em vez de exigir gesto lateral, cada linha
+       vira um cartão com o rótulo da coluna ao lado do valor. O ranking
+       estreou o padrão -- tem nove métricas -- e agora ele serve a qualquer
+       tabela que traga `data-label` nas células. */
+    .o-tablewrap--ranking,
+    .o-tablewrap:has(.o-table--cartoes) { overflow-x: hidden; }
+    :is(.o-table--ranking, .o-table--cartoes),
+    :is(.o-table--ranking, .o-table--cartoes) tbody,
+    :is(.o-table--ranking, .o-table--cartoes) tfoot,
+    :is(.o-table--ranking, .o-table--cartoes) tr,
+    :is(.o-table--ranking, .o-table--cartoes) th,
+    :is(.o-table--ranking, .o-table--cartoes) td { display: block; width: 100%; }
+    :is(.o-table--ranking, .o-table--cartoes) thead { display: none; }
+    :is(.o-table--ranking, .o-table--cartoes) tbody { padding: var(--o-2); }
+    :is(.o-table--ranking, .o-table--cartoes) tr {
         border: 1px solid var(--o-line);
         border-radius: calc(var(--o-radius) - 2px);
         margin-bottom: var(--o-2);
         overflow: hidden;
     }
-    .o-table--ranking tbody tr:last-child { margin-bottom: 0; }
-    .o-table--ranking th,
-    .o-table--ranking td {
+    :is(.o-table--ranking, .o-table--cartoes) tbody tr:last-child { margin-bottom: 0; }
+    :is(.o-table--ranking, .o-table--cartoes) th,
+    :is(.o-table--ranking, .o-table--cartoes) td {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         gap: var(--o-3);
@@ -898,8 +920,8 @@ ul.errorlist {
         white-space: normal;
         text-align: right;
     }
-    .o-table--ranking th::before,
-    .o-table--ranking td::before {
+    :is(.o-table--ranking, .o-table--cartoes) th::before,
+    :is(.o-table--ranking, .o-table--cartoes) td::before {
         content: attr(data-label);
         color: var(--o-ink-dim);
         font-family: var(--o-sans);
@@ -907,16 +929,20 @@ ul.errorlist {
         font-weight: 500;
         text-align: left;
     }
-    .o-table--ranking th[scope="row"] {
+    :is(.o-table--ranking, .o-table--cartoes) th[scope="row"] {
         background: var(--o-panel-2);
         font-weight: 600;
     }
-    .o-table--ranking td[colspan] {
+    :is(.o-table--ranking, .o-table--cartoes) td[colspan] {
         display: block;
         text-align: center;
     }
-    .o-table--ranking td[colspan]::before { display: none; }
+    :is(.o-table--ranking, .o-table--cartoes) td[colspan]::before { display: none; }
     .o-table--ranking .rank { width: 100%; }
+
+    /* A DRE tem duas colunas: cabe na tela desde que o nome da conta possa
+       quebrar linha. Virar cartão ali só afastaria a conta do valor. */
+    .o-table--dre th[scope="row"] { white-space: normal; }
 }
 
 /* --- 20. Movimento ------------------------------------------------------- */
@@ -1396,9 +1422,9 @@ ul.errorlist {
 /* Mapa das praças (§9.1). O relevo é só sombreamento: a informação está na
    altura da barra e no rótulo, que continuam legíveis em preto e branco. */
 .o-mapa { display: block; width: 100%; height: auto; max-height: 26rem; margin: var(--o-4) 0 0; }
-.o-mapa__parede { fill: #070c17; stroke: #070c17; stroke-width: 0.6; }
+.o-mapa__parede { fill: var(--o-mapa-parede); stroke: var(--o-mapa-parede); stroke-width: 0.6; }
 .o-mapa__terra { fill: var(--o-panel-2); stroke: var(--o-line); stroke-width: 0.9; vector-effect: non-scaling-stroke; }
-.o-mapa__sombra { fill: #000; opacity: 0.45; }
+.o-mapa__sombra { fill: #000; opacity: var(--o-mapa-sombra); }
 .o-mapa__cume { filter: brightness(1.15); }
 .o-mapa__lado { filter: brightness(0.7); }
 .o-mapa__praca[data-nivel="alto"] .o-mapa__face,
@@ -1466,3 +1492,7 @@ ul.errorlist {
 .o-campo:has(> input[type="checkbox"]) > .o-campo__ajuda { grid-column: 1 / -1; }
 .o-campo ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--o-1); }
 .o-campo ul label { display: flex; align-items: center; gap: var(--o-2); font-weight: 400; }
+/* Alvo de toque: a caixa nativa tem 13 px. O rotulo ja alterna a marca, e
+   a linha inteira passa a ter 44 px de altura -- o minimo para o dedo. */
+.o-campo input[type="checkbox"], .o-campo input[type="radio"] { width: 20px; height: 20px; }
+.o-campo ul label, .o-campo:has(> input[type="checkbox"]) { min-height: 44px; }

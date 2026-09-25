@@ -632,6 +632,36 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### Responsividade das telas — varredura de 25/09/2026
+
+Medido `scrollWidth` contra `clientWidth` em 15 telas, a 375 px e a 320 px,
+nos dois perfis. Três defeitos:
+
+**Selo de frase esticava o painel.** `.o-badge` tem `white-space: nowrap` —
+certo para "Enviado", errado para "Prazo vencido há 10 horas · aguardando
+fechamento". O aviso do gerenciamento empurrava o painel para fora da tela.
+O selo que carrega frase usa `o-badge--bloco` e quebra linha; nenhum selo
+passa de `max-width: 100%`.
+
+**Item de grid não encolhe.** A Ajuda rolava 1.324 px na horizontal: a
+tabela de produtos esticava a coluna do `.o-grid`, apesar de estar num
+`o-tablewrap` com rolagem própria. Item de grid nasce com `min-width: auto`
+— `.o-grid > * { min-width: 0 }` resolve na raiz.
+
+**Seis tabelas exigiam gesto lateral no celular.** O ranking já resolvia
+isso: no celular cada linha vira cartão com o rótulo da coluna ao lado do
+valor. O padrão estava preso a `.o-table--ranking`; virou
+`.o-table--cartoes` e passou a valer para participação dos grupos, grupos
+por turma, execuções de jobs, produtos da Ajuda, fluxo de caixa,
+consolidado, resultado base e classificação final. A DRE ficou de fora de
+propósito: são duas colunas, e virar cartão afastaria a conta do valor —
+ali bastou deixar o rótulo quebrar linha.
+
+Também: caixas de marcação tinham 13 px de altura (o alvo de toque pede
+44); a caixa passou a 20 px dentro de uma linha de 44. E o mapa tinha a cor
+da parede escrita à mão, o que no tema claro punha uma mancha preta sob um
+mapa branco — virou token por tema (`--o-mapa-parede`, `--o-mapa-sombra`).
+
 ### Evento determinado pelo professor — RN-10, implementada em 25/09/2026
 
 A RN-10 do §5 não estava implementada, e o guia a registrava como `AUSENTE`

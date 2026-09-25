@@ -22,7 +22,7 @@
 </div>
 
 <div class="o-tablewrap">
-    <table class="o-table">
+    <table class="o-table o-table--cartoes">
         <thead>
             <tr>
                 <th scope="col">#</th>
@@ -38,14 +38,14 @@
         <tbody>
         {% for g in grupos %}
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
-                <td class="rank rank--{{ forloop.counter }}">{{ forloop.counter }}</td>
-                <th scope="row">{{ g.grupo.nome }}</th>
-                <td class="num">{{ g.EO|floatformat:2 }}</td>
-                <td class="num">{{ g.DF|floatformat:2 }}</td>
-                <td class="num">{{ g.EE|floatformat:2 }}</td>
-                <td class="num">{{ g.SD|floatformat:2 }}</td>
-                <td class="num">{{ g.DS|floatformat:2 }}</td>
-                <td class="num">{{ g.pontuacao|floatformat:2 }}</td>
+                <td class="rank rank--{{ forloop.counter }}" data-label="Posição">{{ forloop.counter }}</td>
+                <th scope="row" data-label="Grupo">{{ g.grupo.nome }}</th>
+                <td class="num" data-label="Eficiência operacional">{{ g.EO|floatformat:2 }}</td>
+                <td class="num" data-label="Desempenho financeiro">{{ g.DF|floatformat:2 }}</td>
+                <td class="num" data-label="Eficiência de estoques">{{ g.EE|floatformat:2 }}</td>
+                <td class="num" data-label="Satisfação da demanda">{{ g.SD|floatformat:2 }}</td>
+                <td class="num" data-label="Sustentabilidade">{{ g.DS|floatformat:2 }}</td>
+                <td class="num" data-label="Pontuação">{{ g.pontuacao|floatformat:2 }}</td>
             </tr>
         {% empty %}
             <tr>
