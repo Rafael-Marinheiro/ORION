@@ -14,7 +14,14 @@ from app.parametros import (
     CUSTO_OPERADOR_POR_RODADA,
     PESOS_EIXOS,
 )
-from app.services.eventos import evento_estado_ativo, sortear_evento
+from app.services.eventos import (
+    efeito_absoluto,
+    evento_estado_ativo,
+    eventos_da_rodada,
+    fator_percentual,
+    lista_de_eventos,
+    sortear_evento,
+)
 from app.services.suprimentos import processar_recebimentos_materia_prima
 from app.services.distribuicao_service import executar_expedicao
 from app.services.producao import executar_producao, garantir_capacidades_grupo
@@ -241,14 +248,18 @@ class Command(BaseCommand):
         )
         return resultado_anterior.saldo_caixa if resultado_anterior else grupo.capital
 
-    def processar_vendas_por_demanda(self, rodada, grupos_ids, evento):
+    def processar_vendas_por_demanda(self, rodada, grupos_ids, evento=None, eventos=None):
         rodada_numero = rodada.numero
         jogo_id = rodada.jogo_id
         MarketShareCidadeProduto.objects.filter(rodada=rodada_numero, grupo_id__in=grupos_ids).delete()
 
         # 8.4: a retencao e do evento da rodada, e um evento pode reter e
         # encarecer ao mesmo tempo (a greve faz as duas coisas).
-        percentual_retido = int(getattr(evento, "retencao_entregas_percent", 0) or 0)
+        ativos = lista_de_eventos(eventos, evento)
+        percentual_retido = max(
+            [int(getattr(item, "retencao_entregas_percent", 0) or 0) for item in ativos]
+            or [0]
+        )
 
         envios = list(
             Distribuicao.objects.filter(
@@ -284,12 +295,13 @@ class Command(BaseCommand):
             cidade = itens[0].cidade
             produto = itens[0].produto
             demanda = self.obter_demanda_base(cidade, produto)
-            if evento and evento.modo_aplicacao == "percentual" and evento.tipo == "demanda":
-                demanda = int(
-                    Decimal(demanda)
-                    * (Decimal("1") + Decimal(evento.impacto_percentual) / Decimal("100"))
-                )
-            demanda = max(demanda, 0)
+            # O evento do professor pode valer so para algumas pracas; o do
+            # 8.4 vale para o mercado inteiro. Percentual primeiro, depois o
+            # absoluto -- somar antes faria o percentual incidir sobre o
+            # ajuste manual.
+            demanda = Decimal(demanda) * fator_percentual(ativos, "demanda", cidade.id)
+            demanda += efeito_absoluto(ativos, "demanda", cidade.id)
+            demanda = max(int(demanda), 0)
 
             if demanda == 0:
                 for envio in itens:
@@ -482,7 +494,13 @@ class Command(BaseCommand):
 
                     grupos = list(grupos_qs)
                     grupos_ids = [grupo.id for grupo in grupos]
-                    evento = self.obter_evento_rodada(rodada.numero, jogo_id=rodada.jogo_id)
+                    # A rodada pode ter dois eventos desde 25/09/2026: o
+                    # sorteado do 8.2 e o que o professor marcou na
+                    # abertura. `evento` segue existindo para o que ainda le
+                    # um so (a quebra de estoque, que e evento de estado).
+                    self.obter_evento_rodada(rodada.numero, jogo_id=rodada.jogo_id)
+                    eventos = eventos_da_rodada(rodada.numero, jogo_id=rodada.jogo_id)
+                    evento = eventos[0] if eventos else None
 
                     # 11.3.b executa "Producao, vendas, compras, distribuicao"
                     # nesta ordem. Producao primeiro (13.7), expedicao depois
@@ -504,10 +522,10 @@ class Command(BaseCommand):
                         # 12.3.2. Ate 24/09/2026 ele tambem era debitado, e a
                         # mesma materia-prima saia do caixa duas vezes.
                         executar_producao(
-                            grupo=grupo, rodada=rodada.numero, evento=evento
+                            grupo=grupo, rodada=rodada.numero, eventos=eventos
                         )
                         custo_frete, _ = executar_expedicao(
-                            grupo=grupo, rodada=rodada.numero, evento=evento
+                            grupo=grupo, rodada=rodada.numero, eventos=eventos
                         )
                         operacional = custo_frete
                         if operacional > 0:
@@ -526,7 +544,7 @@ class Command(BaseCommand):
                     stats_venda = self.processar_vendas_por_demanda(
                         rodada=rodada,
                         grupos_ids=grupos_ids,
-                        evento=evento,
+                        eventos=eventos,
                     )
 
                     receitas_por_grupo = stats_venda["receitas_por_grupo"]

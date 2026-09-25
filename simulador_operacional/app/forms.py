@@ -9,6 +9,7 @@ from .models import (
     CompraMateriaPrima,
     Decisao,
     Distribuicao,
+    Evento,
     GameConfig,
     Grupo,
     Investimento,
@@ -234,9 +235,66 @@ class RodadaForm(forms.ModelForm):
             ),
         }
 
+    # --- Evento da rodada -------------------------------------------------
+    # O 8.2 sorteia um evento por rodada. A partir de 25/09/2026 o professor
+    # tambem pode determinar o evento -- escolhendo um do catalogo do 8.4 ou
+    # descrevendo um novo em termos do que ele faz com uma metrica.
+    TIPOS_MANUAIS = [
+        ("demanda", "Demanda das praças"),
+        ("custo_producao", "Custo de produção"),
+        ("custo_transporte", "Custo de transporte"),
+    ]
+    SENTIDOS = [("beneficio", "Ajuda as equipes"), ("prejuizo", "Prejudica as equipes")]
+    MEDIDAS = [("percentual", "Percentual (%)"), ("absoluto", "Valor absoluto")]
+
+    adicionar_evento = forms.BooleanField(
+        required=False, label="Determinar o evento desta rodada",
+        help_text="Sem marcar, o evento sai do sorteio do §8.2.",
+    )
+    origem_evento = forms.ChoiceField(
+        required=False, initial="catalogo", widget=forms.RadioSelect,
+        choices=[("catalogo", "Usar um evento já cadastrado"), ("novo", "Criar um evento")],
+        label="De onde vem o evento",
+    )
+    evento_existente = forms.ModelChoiceField(
+        required=False, queryset=Evento.objects.none(), label="Evento cadastrado",
+    )
+    evento_nome = forms.CharField(required=False, max_length=100, label="Nome do evento")
+    evento_frase = forms.CharField(
+        required=False, max_length=200, label="Manchete para a turma",
+        help_text="É o que o aluno lê na abertura da rodada (§8.4).",
+    )
+    evento_tipo = forms.ChoiceField(
+        required=False, choices=TIPOS_MANUAIS, label="O que o evento afeta",
+    )
+    evento_sentido = forms.ChoiceField(
+        required=False, choices=SENTIDOS, initial="prejuizo", label="Efeito",
+    )
+    evento_medida = forms.ChoiceField(
+        required=False, choices=MEDIDAS, initial="percentual", label="Medida",
+    )
+    evento_valor = forms.DecimalField(
+        required=False, min_value=0, max_digits=12, decimal_places=2, label="Intensidade",
+    )
+    evento_cidades = forms.ModelMultipleChoiceField(
+        required=False, queryset=Cidade.objects.none(),
+        widget=forms.CheckboxSelectMultiple, label="Praças atingidas",
+        help_text="Nenhuma marcada: o efeito vale para todas.",
+    )
+    evento_com_sorteio = forms.BooleanField(
+        required=False, label="Deixar também um evento sorteado acontecer",
+        help_text="A RN-10 admite até dois eventos simultâneos na mesma rodada.",
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["fim"].input_formats = ["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
+        self.fields["evento_existente"].queryset = Evento.objects.filter(
+            manual=False
+        ).order_by("nome")
+        self.fields["evento_cidades"].queryset = Cidade.objects.filter(
+            demanda__gt=0
+        ).order_by("nome")
 
     def clean(self):
         dados = super().clean()
@@ -248,7 +306,39 @@ class RodadaForm(forms.ModelForm):
             self.add_error(
                 "numero", f"Número da rodada deve ser entre 1 e {max_rodadas}"
             )
+
+        if not dados.get("adicionar_evento"):
+            return dados
+
+        origem = dados.get("origem_evento") or "catalogo"
+        if origem == "catalogo":
+            if not dados.get("evento_existente"):
+                self.add_error("evento_existente", "Escolha o evento da rodada.")
+            return dados
+
+        if not dados.get("evento_nome"):
+            self.add_error("evento_nome", "Dê um nome ao evento.")
+        if not dados.get("evento_tipo"):
+            self.add_error("evento_tipo", "Escolha o que o evento afeta.")
+        valor = dados.get("evento_valor")
+        if valor is None:
+            self.add_error("evento_valor", "Informe a intensidade do efeito.")
+        elif dados.get("evento_medida") == "percentual" and valor > 100:
+            # Reduzir mais de 100% de um custo inverteria o sinal dele.
+            self.add_error("evento_valor", "O percentual vai de 0 a 100.")
         return dados
+
+    def efeito_do_evento(self):
+        """Traduz "ajuda/prejudica" no sinal que o motor aplica.
+
+        Demanda: ajudar e aumentar. Custo: ajudar e reduzir. O professor
+        escolhe o efeito em palavras; o sinal e problema do sistema.
+        """
+        valor = self.cleaned_data.get("evento_valor") or 0
+        ajuda = self.cleaned_data.get("evento_sentido") == "beneficio"
+        if self.cleaned_data.get("evento_tipo") == "demanda":
+            return valor if ajuda else -valor
+        return -valor if ajuda else valor
 
 
 class GrupoForm(forms.ModelForm):

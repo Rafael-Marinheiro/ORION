@@ -46,7 +46,7 @@ def distribuir_demanda(rodada: int) -> None:
             demanda_restante -= vendas
 
 
-def executar_expedicao(*, grupo, rodada, evento=None):
+def executar_expedicao(*, grupo, rodada, evento=None, eventos=None):
     """Baixa o acabado e cobra o frete -- no fechamento, nao na submissao.
 
     O 11.3.b lista "Producao, vendas, compras, distribuicao" entre as acoes
@@ -66,6 +66,9 @@ def executar_expedicao(*, grupo, rodada, evento=None):
 
     from .estoque import consumir_estoque_produto, estoque_disponivel_produto
     from .logistica import calcular_frete, peso_do_envio
+    from .eventos import efeito_absoluto, fator_percentual, lista_de_eventos
+
+    ativos = lista_de_eventos(eventos, evento)
 
     custo_total = Decimal("0")
     ajustes = []
@@ -95,12 +98,10 @@ def executar_expedicao(*, grupo, rodada, evento=None):
                 peso_kg=peso_do_envio(envio.produto, enviado),
             )
             custo = frete["custo"]
-            if (
-                evento
-                and evento.modo_aplicacao == "percentual"
-                and evento.tipo == "custo_transporte"
-            ):
-                custo *= Decimal(1 + evento.impacto_percentual / 100)
+            # O efeito pode ser de uma praca so: o evento do professor
+            # marca as pracas atingidas, e o do 8.4 vale para todas.
+            custo *= fator_percentual(ativos, "custo_transporte", envio.cidade_id)
+            custo += efeito_absoluto(ativos, "custo_transporte", envio.cidade_id)
         else:
             custo = Decimal("0")
 

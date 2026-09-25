@@ -21,12 +21,16 @@ def trilho_rodada(request):
     if rodada is None:
         return contexto
 
-    evento_rodada = (
-        EventoRodada.objects.filter(rodada=rodada.numero, jogo=rodada.jogo)
+    # Uma rodada pode ter mais de um evento desde 25/09/2026: o sorteado do
+    # 8.2 e o que o professor determinou na abertura.
+    contexto["eventos_correntes"] = [
+        evento_rodada.evento
+        for evento_rodada in EventoRodada.objects.filter(
+            rodada=rodada.numero, jogo=rodada.jogo
+        )
         .select_related("evento")
-        .first()
-    )
-    contexto["evento_corrente"] = evento_rodada.evento if evento_rodada else None
+        .order_by("manual", "id")
+    ]
     contexto["submissao_realizada"] = bool(
         grupo and Decisao.objects.filter(grupo=grupo, rodada=rodada.numero).exists()
     )

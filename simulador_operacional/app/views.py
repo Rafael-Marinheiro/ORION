@@ -541,6 +541,63 @@ class RodadaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         context["estado_turmas"] = self.estado_das_turmas()
         return context
 
+    @staticmethod
+    def registrar_evento_manual(form, rodada):
+        """Grava o evento que o professor determinou para a rodada.
+
+        O 8.2 sorteia um evento por rodada. Quando o professor escolhe o
+        evento, o sorteio e desligado -- a menos que ele peca os dois, e ai
+        a rodada tem o dele MAIS o sorteado.
+
+        Isto e a RN-10 do 5, que estava AUSENTE ate 25/09/2026: "a cada
+        rodada, o sistema pode ativar ate 2 eventos aleatorios simultaneos.
+        A ativacao e definida pelo moderador ou aleatoriamente, conforme
+        configuracao" -- e "os eventos aleatorios sao informados na abertura
+        da rodada", que e onde este formulario vive. A decisao B4
+        (2026-09-18) escolheu o 8.2 para o SORTEIO; a ativacao pelo
+        moderador e outra coisa, e continua valendo.
+        """
+        dados = form.cleaned_data
+        if not dados.get("adicionar_evento"):
+            return None
+
+        if (dados.get("origem_evento") or "catalogo") == "catalogo":
+            evento = dados["evento_existente"]
+        else:
+            evento = Evento.objects.create(
+                nome=dados["evento_nome"],
+                frase_indicativa=dados.get("evento_frase") or dados["evento_nome"],
+                descricao=dados.get("evento_frase") or "",
+                tipo=dados["evento_tipo"],
+                modo_aplicacao=dados.get("evento_medida") or "percentual",
+                impacto_percentual=(
+                    int(form.efeito_do_evento())
+                    if dados.get("evento_medida") != "absoluto"
+                    else 0
+                ),
+                valor_absoluto=(
+                    form.efeito_do_evento()
+                    if dados.get("evento_medida") == "absoluto"
+                    else None
+                ),
+                # Fora do sorteio: acontece porque foi mandado.
+                probabilidade=0,
+                manual=True,
+                jogo=rodada.jogo,
+            )
+            evento.cidades.set(dados.get("evento_cidades") or [])
+
+        EventoRodada.objects.get_or_create(
+            rodada=rodada.numero,
+            jogo=rodada.jogo,
+            evento=evento,
+            defaults={"manual": True},
+        )
+        if not dados.get("evento_com_sorteio"):
+            rodada.sorteio_evento = False
+            rodada.save(update_fields=["sorteio_evento"])
+        return evento
+
     def form_valid(self, form):
         fim = form.cleaned_data["fim"]
         if fim <= timezone.now():
@@ -560,6 +617,7 @@ class RodadaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
         response = super().form_valid(form)
         rodada = self.object
+        self.registrar_evento_manual(form, rodada)
         grupos = Grupo.objects.all()
         if rodada.jogo_id:
             grupos = grupos.filter(jogo_id=rodada.jogo_id)

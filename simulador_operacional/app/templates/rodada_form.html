@@ -12,38 +12,68 @@
     </p>
 </div>
 
-<div class="o-form-panel o-panel">
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-        <ul class="o-notes" role="alert">
-            {% for erro in form.non_field_errors %}<li class="o-note o-note--error">{{ erro }}</li>{% endfor %}
-        </ul>
-        {% endif %}
+<form method="post" class="o-config" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <ul class="o-notes" role="alert">
+        {% for erro in form.non_field_errors %}<li class="o-note o-note--error">{{ erro }}</li>{% endfor %}
+    </ul>
+    {% endif %}
 
-        {% for campo in form %}
-        <p>
-            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-            {{ campo }}
-            {% if campo.help_text %}<span class="o-panel__hint">{{ campo.help_text }}</span>{% endif %}
-            {% for erro in campo.errors %}<span class="o-fielderror">{{ erro }}</span>{% endfor %}
-        </p>
-        {% if campo.name == 'jogo' %}
+    <div class="o-panel">
+        {% include 'partials/campo.html' with campo=form.jogo %}
         {% comment %}
             O estado da turma fica colado no seletor dela: é a resposta à
             pergunta que a professora acabou de fazer ao escolher a turma.
         {% endcomment %}
         <p class="o-note o-note--info" data-estado-turma hidden></p>
-        {% endif %}
-        {% endfor %}
-
-        <div class="o-btnrow">
-            <button type="submit" class="o-btn o-btn--primary">Abrir rodada</button>
-            <a class="o-btn o-btn--ghost" href="{% url 'gerenciamento_jogo' %}">Voltar ao gerenciamento</a>
+        <div class="o-config__grid">
+            {% include 'partials/campo.html' with campo=form.numero %}
+            {% include 'partials/campo.html' with campo=form.fim %}
         </div>
-    </form>
-</div>
+    </div>
+
+    {% comment %}
+        O §8.2 sorteia um evento por rodada, e é o que acontece sem tocar em
+        nada aqui. Este bloco existe para o professor que quer dirigir a
+        aula: ele escolhe o evento do catálogo, ou descreve um novo em
+        termos do que faz com uma métrica.
+    {% endcomment %}
+    <div class="o-panel" data-evento>
+        <h2 class="o-panel__title">Evento da rodada</h2>
+        <p class="o-panel__hint">Sem marcar nada, o evento sai do sorteio dos pesos do §8.4.</p>
+
+        {% include 'partials/campo.html' with campo=form.adicionar_evento %}
+
+        <div data-evento-corpo hidden>
+            {% include 'partials/campo.html' with campo=form.origem_evento %}
+
+            <div data-evento-catalogo>
+                {% include 'partials/campo.html' with campo=form.evento_existente %}
+            </div>
+
+            <div data-evento-novo hidden>
+                <div class="o-config__grid">
+                    {% include 'partials/campo.html' with campo=form.evento_nome %}
+                    {% include 'partials/campo.html' with campo=form.evento_tipo %}
+                    {% include 'partials/campo.html' with campo=form.evento_sentido %}
+                    {% include 'partials/campo.html' with campo=form.evento_medida %}
+                    {% include 'partials/campo.html' with campo=form.evento_valor %}
+                </div>
+                {% include 'partials/campo.html' with campo=form.evento_frase %}
+                {% include 'partials/campo.html' with campo=form.evento_cidades %}
+            </div>
+
+            {% include 'partials/campo.html' with campo=form.evento_com_sorteio %}
+        </div>
+    </div>
+
+    <div class="o-btnrow">
+        <button type="submit" class="o-btn o-btn--primary">Abrir rodada</button>
+        <a class="o-btn o-btn--ghost" href="{% url 'gerenciamento_jogo' %}">Voltar ao gerenciamento</a>
+    </div>
+</form>
 
 {{ estado_turmas|json_script:"estado-turmas" }}
-<script src="{% static 'js/abrir_rodada.js' %}?v=20260925a" defer></script>
+<script src="{% static 'js/abrir_rodada.js' %}?v=20260925b" defer></script>
 {% endblock %}

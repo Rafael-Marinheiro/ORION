@@ -36,8 +36,33 @@ class TrilhoRodadaContextTest(TestCase):
 
         self.assertTrue(resposta.context["mostrar_trilho"])
         self.assertEqual(resposta.context["rodada_corrente"], self.rodada)
-        self.assertEqual(resposta.context["evento_corrente"], evento)
+        # RN-10: a rodada pode ter ate dois eventos, entao o trilho recebe a
+        # lista. Era uma chave so, `evento_corrente`.
+        self.assertEqual(resposta.context["eventos_correntes"], [evento])
         self.assertFalse(resposta.context["submissao_realizada"])
+
+    def test_os_dois_eventos_da_rodada_chegam_ao_trilho(self):
+        """RN-10: "ate 2 eventos aleatorios simultaneos" na mesma rodada."""
+        sorteado = Evento.objects.create(
+            nome="Greve nos transportes", tipo="greve", impacto_percentual=-12
+        )
+        do_professor = Evento.objects.create(
+            nome="Feira regional", tipo="demanda", impacto_percentual=20, manual=True
+        )
+        EventoRodada.objects.create(
+            rodada=self.rodada.numero, jogo=None, evento=sorteado, manual=False
+        )
+        EventoRodada.objects.create(
+            rodada=self.rodada.numero, jogo=None, evento=do_professor, manual=True
+        )
+        self.client.force_login(self.user)
+
+        resposta = self.client.get(reverse("ajuda"))
+
+        # o sorteado primeiro: e a noticia que o 8.4 ja previa
+        self.assertEqual(
+            resposta.context["eventos_correntes"], [sorteado, do_professor]
+        )
 
     def test_submissao_existente_marca_o_trilho(self):
         Decisao.objects.create(grupo=self.grupo, rodada=self.rodada.numero)

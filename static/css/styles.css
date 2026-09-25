@@ -1458,3 +1458,11 @@ ul.errorlist {
 }
 .o-soma[data-estado="ok"] { color: var(--o-ok); }
 .o-table tr[data-falha="true"] th[scope="row"] { color: var(--o-bad); }
+/* Caixa de marcação: o rótulo fica ao lado, não acima -- ele é a pergunta
+   que a marca responde. */
+.o-campo:has(> input[type="checkbox"]) { grid-template-columns: auto 1fr; align-items: center; }
+.o-campo:has(> input[type="checkbox"]) > label { grid-column: 2; grid-row: 1; }
+.o-campo:has(> input[type="checkbox"]) > input { grid-column: 1; grid-row: 1; justify-self: start; }
+.o-campo:has(> input[type="checkbox"]) > .o-campo__ajuda { grid-column: 1 / -1; }
+.o-campo ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--o-1); }
+.o-campo ul label { display: flex; align-items: center; gap: var(--o-2); font-weight: 400; }

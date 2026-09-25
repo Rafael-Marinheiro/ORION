@@ -691,6 +691,10 @@ class Evento(models.Model):
     ]
     MODO_CHOICES = [
         ("percentual", "Percentual"),
+        # 8.4 so descreve efeito percentual. O modo absoluto existe para o
+        # evento que o professor cria na abertura da rodada: em sala ele
+        # quer poder dizer "a demanda de Recife cai 500 unidades", nao 12%.
+        ("absoluto", "Valor absoluto"),
         ("estado", "Estado"),
     ]
     EFEITO_ESTADO_CHOICES = [
@@ -716,6 +720,23 @@ class Evento(models.Model):
     retencao_entregas_percent = models.PositiveIntegerField(default=0)
     probabilidade = models.FloatField(default=0)
     descricao = models.TextField(blank=True)
+    # Evento criado pelo professor na abertura da rodada. Fica FORA do
+    # sorteio do 8.2 -- ele acontece porque o professor mandou, nao por
+    # peso.
+    manual = models.BooleanField(default=False)
+    # Turma dona do evento manual. Nulo e o catalogo do 8.4, comum a todas.
+    jogo = models.ForeignKey(
+        "Jogo", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="eventos_proprios",
+    )
+    valor_absoluto = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    # Pracas atingidas. Vazio significa TODAS -- e como o 8.4 trata os
+    # eventos do catalogo, que valem para o mercado inteiro.
+    cidades = models.ManyToManyField(
+        "Cidade", blank=True, related_name="eventos"
+    )
 
     class Meta:
         db_table = "EVENTOS"
@@ -728,6 +749,9 @@ class Evento(models.Model):
 
 class EventoRodada(models.Model):
     rodada = models.PositiveIntegerField()
+    # Entrou por escolha do professor, nao por sorteio. E o que distingue as
+    # duas linhas quando a rodada tem o evento manual E o sorteado.
+    manual = models.BooleanField(default=False)
     jogo = models.ForeignKey(
         Jogo,
         on_delete=models.CASCADE,
@@ -744,8 +768,14 @@ class EventoRodada(models.Model):
         verbose_name_plural = "Eventos da Rodada"
         ordering = ["rodada"]
         constraints = [
+            # O 8.2 fala de UM evento sorteado por rodada, e era isso que
+            # esta restricao garantia. A RN-10 do 5 preve outra coisa: "a
+            # cada rodada, o sistema pode ativar ate 2 eventos aleatorios
+            # simultaneos", com ativacao "definida pelo moderador ou
+            # aleatoriamente". A unicidade passou a ser por evento, para o
+            # par nao virar duplicata do mesmo evento.
             models.UniqueConstraint(
-                fields=["jogo", "rodada"],
+                fields=["jogo", "rodada", "evento"],
                 name="uniq_evento_rodada_por_jogo",
             ),
         ]
@@ -762,6 +792,10 @@ class Rodada(models.Model):
     inicio = models.DateTimeField(auto_now_add=True)
     fim = models.DateTimeField()
     fechada = models.BooleanField(default=False)
+    # 8.2 sorteia um evento por rodada, e e o que acontece por padrao. O
+    # professor pode desligar o sorteio quando escolhe a dedo o evento da
+    # rodada -- senao a turma receberia dois.
+    sorteio_evento = models.BooleanField(default=True)
 
     class Meta:
         db_table = "RODADAS"

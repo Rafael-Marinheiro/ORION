@@ -48,7 +48,7 @@ def garantir_capacidades_grupo(grupo):
         )
 
 
-def executar_producao(*, grupo, rodada, evento=None):
+def executar_producao(*, grupo, rodada, evento=None, eventos=None):
     """13.7 -- a ordem de producao vira producao, no fechamento da rodada.
 
     O 11.3.b poe "Producao" entre as acoes executadas no fechamento, e o
@@ -82,7 +82,9 @@ def executar_producao(*, grupo, rodada, evento=None):
         consumir_materia_prima_para_producao,
         maximo_produzivel_por_insumo,
     )
+    from .eventos import efeito_absoluto, fator_percentual, lista_de_eventos
 
+    ativos = lista_de_eventos(eventos, evento)
     custo_total = Decimal("0")
     ajustes = []
 
@@ -126,12 +128,10 @@ def executar_producao(*, grupo, rodada, evento=None):
             # 13.9: custo e o valor da MP consumida, sobre o que saiu.
             custo_unitario = produto.custo_unitario_estimado
             custo_linha = custo_unitario * Decimal(produzida)
-            if (
-                evento
-                and evento.modo_aplicacao == "percentual"
-                and evento.tipo == "custo_producao"
-            ):
-                custo_linha *= Decimal(1 + evento.impacto_percentual / 100)
+            # A rodada pode ter mais de um evento (o sorteado e o do
+            # professor): os efeitos se compoem, nao se substituem.
+            custo_linha *= fator_percentual(ativos, "custo_producao")
+            custo_linha += efeito_absoluto(ativos, "custo_producao")
             ordem.custo_unitario = custo_unitario
             custo_total += custo_linha
             # 5: transferencia para o estoque de acabados.

@@ -61,7 +61,7 @@ código.
 | B1 | Composição dos produtos | §6.1: A = 120 kg MP1 + 40 MP2 + 60 MP3 + 80 MP4 | §13.2: A = 2 un MP1 + 1 un MP2 | Versão A | **§6.1** (2026-09-18) |
 | B2 | Perecibilidade | §6.2: A não perece, B perece em 1 rodada, C não perece | §13.8: todos os produtos valem 2 rodadas | Versão A | **§6.2** — `RATIFICADA` pelo Dr. Pio em 24/09/2026 |
 | B3 | Capacidade de máquina | §13.4: 400 min por máquina por rodada | RN-06: turno único de 87 h = 5.220 min | Versão A (400) | **§13.4** (2026-09-18) |
-| B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | Versão A (1) | **§8.2** (2026-09-18) |
+| B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | 1 sorteado + até 1 do moderador | **§8.2 para o sorteio** (2026-09-18); a RN-10 entrou em 25/09/2026 pela ativação do moderador — ver abaixo |
 | B5 | Critério de desempate | §12.5: EO → SD → DS → Receita bruta → alfabética | RN-12: lucro acumulado → market share → caixa → penalidades → alfabética | — | **§12.5** — `RATIFICADA` pelo PO em 24/09/2026 |
 
 ### Critério usado nas decisões acima
@@ -632,6 +632,50 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### Evento determinado pelo professor — RN-10, implementada em 25/09/2026
+
+A RN-10 do §5 não estava implementada, e o guia a registrava como `AUSENTE`
+("fica como Sprint 29"). Ela diz, literalmente:
+
+> A cada rodada, o sistema pode ativar até 2 eventos aleatórios simultâneos.
+> A ativação é definida pelo moderador ou aleatoriamente, conforme
+> configuração. [...] Redução de demanda por cidade (ex: -30%). [...] Os
+> eventos aleatórios são informados na abertura da rodada.
+
+Três coisas que pareciam invenção nova estão no documento: **dois eventos na
+mesma rodada**, **ativação pelo moderador** e **efeito por cidade**. A
+abertura da rodada é o lugar que a própria regra aponta.
+
+A decisão B4 (2026-09-18) escolheu o §8.2 para o **sorteio**, e isso não
+mudou: o sorteio continua tirando um evento por rodada, pelos pesos do §8.4.
+O que entrou é a ativação pelo moderador, que convive com ele.
+
+Como ficou:
+
+- Sem tocar em nada, a rodada segue no sorteio — o comportamento anterior.
+- O professor pode escolher um evento do catálogo do §8.4 **ou** descrever
+  um novo pelo efeito: o que afeta (demanda, custo de produção, custo de
+  transporte), se ajuda ou prejudica, percentual ou valor absoluto, e em
+  quais praças (nenhuma marcada = todas). Ele escolhe em palavras; o sinal é
+  responsabilidade do sistema — "ajuda" na demanda vira `+20%`, "ajuda" no
+  custo vira `−15%`.
+- Marcando "deixar também um evento sorteado acontecer", a rodada tem os
+  dois (RN-10). O sorteio exclui o que já está na rodada: repetir o mesmo
+  evento seria anunciar duas vezes a mesma notícia — e violaria a unicidade.
+- O evento do professor nunca entra no sorteio de outras rodadas
+  (`Evento.manual`, probabilidade 0) e pertence à turma que o criou.
+
+Limites registrados de propósito:
+
+- O criador simplificado oferece só os três tipos que o fechamento aplica
+  por rodada. `greve` e `perda_estoque` são eventos de **estado** no §8.4,
+  com mecânica própria (duração, retenção de entregas), e continuam vindo do
+  catálogo.
+- Valor absoluto só existe nos eventos do professor; o catálogo do §8.4 é
+  todo percentual.
+- Dois eventos do mesmo tipo **compõem** o efeito: dois que encarecem a
+  produção encarecem as duas vezes.
+
 ### Telas de gestão por turma — 25/09/2026
 
 Com mais de uma turma no mesmo sistema, cada tela de gestão precisa dizer de
@@ -950,7 +994,10 @@ Consequências já mapeadas das decisões:
 | Probabilidades 15 / 20 / 20 / 15 / 15 / 15 | §8.4 | `CONFORME` | `seed_dados_base` + sorteio ponderado em `services/eventos.py` |
 | Impactos específicos por evento (ex.: greve retém 30% das entregas) | §8.4 | `CONFORME` | `services/retencao.py` + `Evento.retencao_entregas_percent` |
 | Frase indicativa por evento | §8.5 | `CONFORME` | `Evento.frase_indicativa`, exibida no boletim |
-| Até 2 eventos simultâneos | RN-10 | `AUSENTE` | decidido B4: 1 por rodada. "Até 2" fica como Sprint 29 |
+| Até 2 eventos simultâneos | RN-10 | `CONFORME` | 25/09/2026: o sorteio segue tirando um (B4, §8.2); o segundo vem da ativação pelo moderador na abertura da rodada |
+| Ativação do evento pelo moderador | RN-10 | `CONFORME` | `RodadaCreateView.registrar_evento_manual`, bloco "Evento da rodada" em `rodada_form.html` |
+| Efeito de evento por cidade (ex.: −30% de demanda) | RN-10 | `CONFORME` | `Evento.cidades`; vazio significa todas, como o catálogo do §8.4 |
+| Efeito em valor absoluto | RN-10 | `PARCIAL` | só nos eventos criados pelo professor; o catálogo do §8.4 é todo percentual |
 
 ### 4.7 Fechamento, financeiro e ranking
 

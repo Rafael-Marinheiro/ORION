@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260925c">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260925d">
     {% block head_extra %}{% endblock %}
 </head>
 <body{% if user.is_authenticated %} data-app="true"{% endif %}>
@@ -140,30 +140,37 @@
     </div>
     {% endif %}
 
-    {% if user.is_authenticated and evento_corrente %}
+    {% if user.is_authenticated and eventos_correntes %}
     {% comment %}
         Boletim da rodada. O 8.4 traz a frase indicativa justamente para o
-        evento chegar como noticia, e nao como nome de regra.
+        evento chegar como notícia, e não como nome de regra. Desde
+        25/09/2026 a rodada pode ter dois: o sorteado e o que o professor
+        determinou.
     {% endcomment %}
-    <aside class="o-boletim" data-boletim data-rodada="{{ rodada_corrente.numero|default:'0' }}"
-           aria-labelledby="boletim-titulo">
+    {% for evento in eventos_correntes %}
+    <aside class="o-boletim" data-boletim data-rodada="{{ rodada_corrente.numero|default:'0' }}-{{ forloop.counter }}"
+           aria-labelledby="boletim-titulo-{{ forloop.counter }}">
         <div class="o-shell o-boletim__inner">
             <span class="o-boletim__rule" aria-hidden="true"></span>
             <div class="o-boletim__texto">
-                <p class="o-boletim__manchete" id="boletim-titulo">
-                    {% if evento_corrente.frase_indicativa %}
-                        {{ evento_corrente.frase_indicativa }}
+                <p class="o-boletim__manchete" id="boletim-titulo-{{ forloop.counter }}">
+                    {% if evento.frase_indicativa %}
+                        {{ evento.frase_indicativa }}
                     {% else %}
-                        {{ evento_corrente.nome }}
+                        {{ evento.nome }}
                     {% endif %}
                 </p>
                 <p class="o-boletim__efeito">
-                    <strong>{{ evento_corrente.nome }}</strong>
-                    {% if evento_corrente.descricao %} — {{ evento_corrente.descricao }}{% endif %}
+                    <strong>{{ evento.nome }}</strong>
+                    {% if evento.descricao %} — {{ evento.descricao }}{% endif %}
+                    {% if evento.cidades.exists %}
+                        · Afeta {% for cidade in evento.cidades.all %}{{ cidade.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    {% endif %}
                 </p>
             </div>
         </div>
     </aside>
+    {% endfor %}
     {% endif %}
 </header>
 
