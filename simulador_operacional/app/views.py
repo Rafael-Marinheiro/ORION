@@ -33,6 +33,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+from .geografia import CIDADE_SEDE, montar_mapa, ponto_da_praca
 from .parametros import (
     CUSTO_ARMAZENAGEM_PERCENT,
     PERCENTUAL_PENALIDADE_SEM_SUBMISSAO,
@@ -1027,6 +1028,19 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
         pode_submeter = bool(grupo and rodada_ativa and self.usuario_pode_submeter(request.user, grupo, rodada_ativa.numero))
         permite_edicao = bool(grupo and rodada_ativa and pode_submeter and not submissao_realizada)
 
+        satisfacao_pracas = (
+            satisfacao_por_praca(grupo=grupo, rodada=rodada_mapa)
+            if grupo and rodada_mapa
+            else []
+        )
+        mapa_barras, mapa_fora = montar_mapa(satisfacao_pracas)
+        sede = ponto_da_praca(CIDADE_SEDE)
+        mapa_sede = (
+            {"nome": CIDADE_SEDE, "x": sede[0], "topo": round(sede[1] - 10, 1)}
+            if sede and mapa_barras
+            else None
+        )
+
         return {
             "nav": "painel",
             "grupo": grupo,
@@ -1058,11 +1072,13 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             "capacidades_produto": capacidades,
             # 12.3.4: a nota usa a SD Global, mas o grupo decide olhando praca
             # a praca -- e aqui que ele ve onde deixou demanda na mesa.
-            "satisfacao_pracas": (
-                satisfacao_por_praca(grupo=grupo, rodada=rodada_mapa)
-                if grupo and rodada_mapa
-                else []
-            ),
+            "satisfacao_pracas": satisfacao_pracas,
+            # O mesmo dado no mapa do 9.1: cada praca no lugar real dela,
+            # com a barra saindo do ponto. A lista acima continua sendo a
+            # leitura numerica -- o mapa mostra onde, ela mostra quanto.
+            "mapa_barras": mapa_barras,
+            "mapa_sede": mapa_sede,
+            "mapa_fora": mapa_fora,
             "linhas_fabrica": linhas_fabrica,
             "aplicacao_financeira": aplicacao_financeira,
             # 6.2: o aviso declara o estado, nao a jogada -- nem quanto,

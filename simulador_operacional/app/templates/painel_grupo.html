@@ -134,8 +134,13 @@
         <h2 id="satisfacao-titulo" class="o-panel__title">Satisfação da demanda por praça</h2>
         <p class="o-panel__hint">
             Quanto da demanda de cada cidade o grupo atendeu nesta rodada. A nota do eixo SD
-            usa o total do mercado; esta leitura mostra onde sobrou demanda na mesa.
+            usa a capacidade de venda das linhas do grupo; esta leitura mostra onde sobrou
+            demanda na mesa.
         </p>
+        {% if mapa_barras %}{% include 'partials/mapa_brasil.svg.html' %}{% endif %}
+        {% if mapa_fora %}
+        <p class="o-muted">Fora do mapa do §9.1: {{ mapa_fora|join:", " }}.</p>
+        {% endif %}
         <ul class="o-heat">
             {% for praca in satisfacao_pracas %}
             <li class="o-heat__row"
@@ -148,7 +153,7 @@
                       aria-valuenow="{{ praca.percentual|floatformat:0 }}">
                     <span style="--o-fill: {{ praca.percentual|floatformat:0 }}%"></span>
                 </span>
-                <span class="o-heat__valor o-num">{{ praca.percentual|floatformat:0 }}%</span>
+                <span class="o-heat__valor o-num">{{ praca.percentual|floatformat:1 }}%</span>
                 <span class="o-heat__detalhe o-muted">{{ praca.vendidas }} de {{ praca.demanda }} un</span>
             </li>
             {% endfor %}

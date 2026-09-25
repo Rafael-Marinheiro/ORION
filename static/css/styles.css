@@ -1392,3 +1392,31 @@ ul.errorlist {
 @media (max-width: 640px) {
     .o-boletim__manchete { font-size: 1rem; }
 }
+
+/* Mapa das praças (§9.1). O relevo é só sombreamento: a informação está na
+   altura da barra e no rótulo, que continuam legíveis em preto e branco. */
+.o-mapa { display: block; width: 100%; height: auto; max-height: 26rem; margin: var(--o-4) 0 0; }
+.o-mapa__parede { fill: #070c17; stroke: #070c17; stroke-width: 0.6; }
+.o-mapa__terra { fill: var(--o-panel-2); stroke: var(--o-line); stroke-width: 0.9; vector-effect: non-scaling-stroke; }
+.o-mapa__sombra { fill: #000; opacity: 0.45; }
+.o-mapa__cume { filter: brightness(1.15); }
+.o-mapa__lado { filter: brightness(0.7); }
+.o-mapa__praca[data-nivel="alto"] .o-mapa__face,
+.o-mapa__praca[data-nivel="alto"] .o-mapa__lado,
+.o-mapa__praca[data-nivel="alto"] .o-mapa__cume { fill: var(--o-ok); }
+.o-mapa__praca[data-nivel="medio"] .o-mapa__face,
+.o-mapa__praca[data-nivel="medio"] .o-mapa__lado,
+.o-mapa__praca[data-nivel="medio"] .o-mapa__cume { fill: var(--o-warn); }
+.o-mapa__praca[data-nivel="baixo"] .o-mapa__face,
+.o-mapa__praca[data-nivel="baixo"] .o-mapa__lado,
+.o-mapa__praca[data-nivel="baixo"] .o-mapa__cume { fill: var(--o-bad); }
+.o-mapa__rotulo {
+    font-size: 9px;
+    fill: var(--o-ink);
+    paint-order: stroke;
+    stroke: var(--o-void);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+.o-mapa__sede path { fill: var(--o-star); stroke: var(--o-void); stroke-width: 1; }
+.o-mapa__guia { stroke: var(--o-line); stroke-width: 0.7; fill: none; }

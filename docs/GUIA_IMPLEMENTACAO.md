@@ -592,6 +592,60 @@ rodadas fechadas:
 o documento traz texto **e** exemplo numérico: a mudança se afasta da letra e
 preserva os valores. Fica anotado para ele ratificar.
 
+### Telas do professor e do fechamento — revistas em 25/09/2026
+
+Nenhuma regra mudou; as três correções abaixo são de leitura de tela.
+
+**A rodada de prazo vencido sumia do gerenciamento.** A tela filtrava por
+`fim > agora`, e quem fecha a rodada é o serviço automático do §11.1. No
+instante do prazo a rodada saía da tela: com o serviço parado, o professor
+lia "nenhuma rodada aberta" e não havia sinal algum de que o prazo tinha
+vencido sem processamento. Agora ela permanece, marcada como aguardando
+fechamento.
+
+**A tela de execuções de jobs ficava inutilizável em aula.** Na turma o
+`fechar_rodadas` roda de segundo em segundo para cumprir o "momento exato
+do prazo-limite" do §11.1, e gravava um `ExecucaoJob` por chamada. A tela
+mostra as 200 últimas: em três minutos nenhum fechamento de verdade cabia
+mais na lista. O comando passou a registrar execução só quando há rodada
+para fechar.
+
+**O encerramento mostrava só quatro números.** O §11 faz dessa tela o
+momento em que o grupo descobre o resultado, e o §11.3.e diz que o
+fechamento também gera indicadores e ranking. A tela passou a trazer
+posição e pontuação da rodada, o evento sorteado (§8.4), a composição dos
+custos — perdas por perecibilidade e a penalidade do §11.2 — e as vendas
+contra o ofertado. Rodada sem operação segue a regra do ranking: sem
+posição, com a explicação do §7.3.
+
+### Mapa das praças — 25/09/2026
+
+O painel mostrava a satisfação da demanda por praça como lista. O §9 põe a
+fábrica em Natal-RN e lista dez cidades de venda espalhadas pelo país; a
+lista não mostrava a distância nem a dispersão que as decisões de
+comercialização enfrentam. O mesmo dado ganhou um mapa: o Brasil de viés,
+cada capital no ponto geográfico real e a demanda atendida subindo como
+barra dali.
+
+Decisões de implementação, registradas porque restringem quem mexer
+depois:
+
+- **SVG inline, sem biblioteca nem CDN** — o §2.1 exige operação offline.
+  Os contornos são a malha estadual do IBGE simplificada a 0,7 px
+  (`partials/mapa_brasil.svg.html`, 18 KB); as paredes da placa são o
+  mesmo desenho repetido com `<use>`, não uma segunda cópia dos traços.
+- **As coordenadas não são regra.** As distâncias continuam vindo de
+  `Cidade.distancia_km`, como o §9.1 determina. `app/geografia.py` só
+  desenha.
+- **O mapa é girado 22° e achatado em 0,55.** O giro separa as cinco
+  capitais do litoral nordestino, que sem ele se empilham numa coluna de
+  10 px; o achatamento é a inclinação do plano, que deixa as barras
+  saírem verticais do ponto.
+- **A lista continua embaixo do mapa.** Ela é a leitura numérica e o
+  equivalente acessível; o mapa responde "onde", ela responde "quanto".
+- **Cidade fora do §9.1 não some.** O professor pode cadastrar outras
+  praças; elas ficam na lista, identificadas abaixo do mapa.
+
 ### D12 · A matéria-prima sai do caixa uma vez — corrigido em 24/09/2026
 
 **O defeito.** O mesmo desembolso era cobrado duas vezes:
@@ -860,7 +914,7 @@ Consequências já mapeadas das decisões:
 |---|---|---|---|
 | Inicial | todos | `CONFORME` | `/` |
 | Login | todos | `CONFORME` | `/login/` |
-| Painel do grupo | CEO, membro | `CONFORME` | `/painel/` |
+| Painel do grupo | CEO, membro | `CONFORME` | `/painel/` — inclui o mapa das praças do §9.1 |
 | Decisões por rodada | CEO | `CONFORME` | integrado ao painel |
 | Relatórios financeiros | todos | `CONFORME` | `/relatorios/` — DRE e Fluxo de Caixa via `services/dre.py` |
 | Configuração do jogo | professor | `CONFORME` | `/config/`, `/config/wizard/` |
@@ -868,10 +922,10 @@ Consequências já mapeadas das decisões:
 | Grupos | professor | `CONFORME` | `/grupos/` |
 | Ranking | todos | `CONFORME` | `/ranking/` — classificação, destaques da rodada e evolução do grupo |
 | Ajuda | todos | `CONFORME` | `/ajuda/` |
-| **Encerramento da rodada** | CEO | `CONFORME` | `/encerramento/`, `EncerramentoRodadaView` |
+| **Encerramento da rodada** | CEO | `CONFORME` | `/encerramento/`, `EncerramentoRodadaView` — DRR, posição na rodada, evento e composição dos custos (§11.3) |
 | **Relatórios comparativos** | todos | `CONFORME` | `/relatorios/comparativos/`, `RelatoriosComparativosView` |
 | **Classificação final** | todos | `CONFORME` | `/classificacao/`, `ClassificacaoFinalView` |
-| **Gerenciamento do jogo** (monitorar participação) | professor | `CONFORME` | `/gerenciamento/` |
+| **Gerenciamento do jogo** (abrir rodada + monitorar participação) | professor | `CONFORME` | `/gerenciamento/` — desde 25/09/2026 também lista a rodada de prazo vencido ainda não processada |
 | **Painel de controle / Suporte** | professor | `CONFORME` | `/gerenciamento/`, `GerenciamentoJogoView`; execução e falhas de jobs em `/jobs/` |
 
 ---
