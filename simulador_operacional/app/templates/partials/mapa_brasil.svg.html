@@ -59,7 +59,7 @@
   <use href="#o-mapa-uf" class="o-mapa__terra"/>
 
   {% for barra in mapa_barras %}
-  <g class="o-mapa__praca" data-nivel="{{ barra.nivel }}">
+  <g class="o-mapa__praca" data-nivel="{{ barra.nivel }}" data-praca="{{ barra.nome }}">
     <title>{{ barra.nome }}: {{ barra.percentual|floatformat:1 }}% da demanda atendida ({{ barra.vendidas }} de {{ barra.demanda }} un)</title>
     <ellipse class="o-mapa__sombra" cx="{{ barra.x }}" cy="{{ barra.y }}" rx="3.5" ry="1.9"/>
     <rect class="o-mapa__face" x="{{ barra.esquerda }}" y="{{ barra.topo }}" width="3.5" height="{{ barra.altura }}"/>

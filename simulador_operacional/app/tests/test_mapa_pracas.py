@@ -138,3 +138,15 @@ class MapaNoPainelTest(TestCase):
 
         self.assertNotRegex(corpo, r'c[xy]="\d+,\d')
         self.assertNotRegex(corpo, r'<rect class="o-mapa__[a-z]+" x="\d+,\d')
+
+    def test_mapa_e_lista_compartilham_o_gancho_de_realce(self):
+        """Apontar uma praca acende a mesma praca nos dois lugares.
+
+        O script casa os elementos pelo `data-praca`; sem os dois lados
+        marcados, o realce ficaria so no mapa ou so na lista.
+        """
+        corpo = self.client.get(reverse("painel_grupo")).content.decode()
+
+        self.assertIn("data-pracas", corpo)
+        self.assertIn('class="o-mapa__praca" data-nivel="baixo" data-praca="Recife"', corpo)
+        self.assertIn('<li class="o-heat__row" data-praca="Recife"', corpo)

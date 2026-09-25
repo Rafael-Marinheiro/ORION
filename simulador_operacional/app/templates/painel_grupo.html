@@ -137,13 +137,19 @@
             usa a capacidade de venda das linhas do grupo; esta leitura mostra onde sobrou
             demanda na mesa.
         </p>
+        {% comment %}
+            O realce liga mapa e lista: passar o cursor (ou dar foco) numa
+            praça acende a mesma praça dos dois lados. Sem o script, mapa e
+            lista continuam legíveis -- o realce é acréscimo, não suporte.
+        {% endcomment %}
+        <div data-pracas>
         {% if mapa_barras %}{% include 'partials/mapa_brasil.svg.html' %}{% endif %}
         {% if mapa_fora %}
         <p class="o-muted">Fora do mapa do §9.1: {{ mapa_fora|join:", " }}.</p>
         {% endif %}
         <ul class="o-heat">
             {% for praca in satisfacao_pracas %}
-            <li class="o-heat__row"
+            <li class="o-heat__row" data-praca="{{ praca.cidade.nome }}" tabindex="0"
                 data-nivel="{% if praca.percentual >= 75 %}alto{% elif praca.percentual >= 40 %}medio{% else %}baixo{% endif %}">
                 <span class="o-heat__nome">{{ praca.cidade.nome }}</span>
                 <span class="o-heat__track"
@@ -158,6 +164,7 @@
             </li>
             {% endfor %}
         </ul>
+        </div>
     </section>
     {% endif %}
 

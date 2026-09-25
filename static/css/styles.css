@@ -1420,3 +1420,16 @@ ul.errorlist {
 }
 .o-mapa__sede path { fill: var(--o-star); stroke: var(--o-void); stroke-width: 1; }
 .o-mapa__guia { stroke: var(--o-line); stroke-width: 0.7; fill: none; }
+
+/* Realce da praça apontada: acende nos dois lugares (mapa e lista) e apaga
+   as outras. Só o script liga as classes; sem ele nada muda. */
+.o-mapa__praca, .o-heat__row { transition: opacity 120ms ease; }
+.o-mapa__praca.is-apagado, .o-heat__row.is-apagado { opacity: 0.25; }
+.o-mapa__praca.is-realce .o-mapa__rotulo { font-weight: 600; }
+.o-mapa__praca.is-realce .o-mapa__cume { stroke: var(--o-ink); stroke-width: 0.8; }
+.o-heat__row { padding: var(--o-1) var(--o-2); border-radius: 8px; }
+.o-heat__row.is-realce { background: var(--o-star-bg); }
+.o-heat__row:focus-visible { outline: 2px solid var(--o-star); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    .o-mapa__praca, .o-heat__row { transition: none; }
+}

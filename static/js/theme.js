@@ -169,4 +169,39 @@
             tick();
         }
     }
+
+    /* --- realce da praca sob o cursor ----------------------------------- */
+    /* Mapa e lista mostram a mesma praca em dois lugares. Apontar para uma
+       delas acende as duas e apaga as outras. Sem este script os dois
+       seguem legiveis: o realce e acrescimo, nao suporte. */
+    var pracas = document.querySelector('[data-pracas]');
+
+    if (pracas) {
+        var alvos = pracas.querySelectorAll('[data-praca]');
+
+        var realcar = function (nome) {
+            for (var i = 0; i < alvos.length; i++) {
+                var alvo = alvos[i];
+                var igual = alvo.dataset.praca === nome;
+                alvo.classList.toggle('is-realce', nome !== null && igual);
+                alvo.classList.toggle('is-apagado', nome !== null && !igual);
+            }
+        };
+
+        var daPraca = function (evento) {
+            var alvo = evento.target.closest && evento.target.closest('[data-praca]');
+            return alvo ? alvo.dataset.praca : null;
+        };
+
+        pracas.addEventListener('pointerover', function (evento) {
+            var nome = daPraca(evento);
+            if (nome) { realcar(nome); }
+        });
+        pracas.addEventListener('focusin', function (evento) {
+            var nome = daPraca(evento);
+            if (nome) { realcar(nome); }
+        });
+        pracas.addEventListener('pointerleave', function () { realcar(null); });
+        pracas.addEventListener('focusout', function () { realcar(null); });
+    }
 }());
