@@ -123,11 +123,17 @@ class PrimeiraTurmaTest(TestCase):
                     capacidades = CapacidadeProdutoGrupo.objects.filter(grupo=grupo)
                     self.assertEqual(sum(c.maquinas for c in capacidades), 40)
                     self.assertEqual(sum(c.operadores for c in capacidades), 80)
-                    self.painel({"enviar_decisao": "1", "descricao": "Plano aprovado", "quantidade": 0})
+                    self.painel({"enviar_decisao": "1"})
                     decisao = Decisao.objects.get(grupo=grupo, rodada=numero)
-                    self.painel({"enviar_decisao": "1", "descricao": "Duplicada", "quantidade": 0})
+                    criada_em = decisao.data_criacao
+                    # 11.2: submeter e o ato que fecha a rodada. A segunda
+                    # tentativa e recusada -- antes o teste provava isso pelo
+                    # texto digitado, que saiu da tela em 25/09/2026 porque
+                    # regra nenhuma o lia.
+                    self.painel({"enviar_decisao": "1"})
                     decisao.refresh_from_db()
-                    self.assertEqual(decisao.descricao, "Plano aprovado")
+                    self.assertEqual(Decisao.objects.filter(grupo=grupo, rodada=numero).count(), 1)
+                    self.assertEqual(decisao.data_criacao, criada_em)
                     auditoria = AuditoriaSubmissaoRodada.objects.get(grupo=grupo, rodada=numero)
                     self.assertEqual(auditoria.usuario_id, grupo.lider_id)
                     self.assertIsNotNone(auditoria.data_registro)

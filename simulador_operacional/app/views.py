@@ -1614,24 +1614,27 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
                 return redirect("painel_grupo")
 
         elif "enviar_decisao" in request.POST:
-            form = DecisaoForm(request.POST)
-            if form.is_valid():
-                decisao = form.save(commit=False)
-                decisao.grupo = grupo
-                decisao.rodada = rodada_ativa.numero
-                decisao.save()
-                AuditoriaSubmissaoRodada.objects.create(
-                    grupo=grupo,
-                    rodada=rodada_ativa.numero,
-                    usuario=request.user,
-                    decisao=decisao,
-                    ip_origem=obter_ip_origem(request),
-                )
-                messages.success(
-                    request,
-                    "Submissao oficial da rodada registrada. Novas alteracoes foram bloqueadas.",
-                )
-                return redirect("painel_grupo")
+            # A submissão é o ato de fechar a rodada (11.2), não um texto.
+            # A tela pedia "descrição" e "quantidade" -- dois campos que
+            # nenhuma regra lê: o fechamento só verifica se a submissão
+            # existe. O CEO respondia a uma pergunta sem consequência.
+            decisao = Decisao.objects.create(
+                grupo=grupo,
+                rodada=rodada_ativa.numero,
+                descricao=f"Decisões da rodada {rodada_ativa.numero}",
+            )
+            AuditoriaSubmissaoRodada.objects.create(
+                grupo=grupo,
+                rodada=rodada_ativa.numero,
+                usuario=request.user,
+                decisao=decisao,
+                ip_origem=obter_ip_origem(request),
+            )
+            messages.success(
+                request,
+                "Submissao oficial da rodada registrada. Novas alteracoes foram bloqueadas.",
+            )
+            return redirect("painel_grupo")
 
         contexto = self.montar_contexto(
             request,
@@ -1655,6 +1658,22 @@ class DecisoesRodadaView(PainelGrupoView):
     def montar_contexto(self, *args, **kwargs):
         contexto = super().montar_contexto(*args, **kwargs)
         contexto.update({"somente_decisoes": True, "nav": "decisoes"})
+
+        # A tela decide UMA rodada. As listas vinham com o histórico inteiro:
+        # a conferência final dizia "12 registros" para uma rodada em que a
+        # equipe tinha comprado 4 vezes -- as outras 8 eram de rodadas já
+        # fechadas. O histórico fica em Relatórios.
+        rodada = contexto.get("rodada_ativa")
+        if rodada:
+            numero = rodada.numero
+            contexto.update(
+                {
+                    "compras_mp": contexto["compras_mp"].filter(rodada_pedido=numero),
+                    "producoes": contexto["producoes"].filter(rodada=numero),
+                    "envios": contexto["envios"].filter(rodada=numero),
+                    "investimentos": contexto["investimentos"].filter(rodada=numero),
+                }
+            )
         return contexto
 
     def post(self, request, *args, **kwargs):

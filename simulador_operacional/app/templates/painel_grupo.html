@@ -276,6 +276,22 @@
             </ul>
             </section>
 
+            {% comment %}
+                O que limita a produção é a matéria-prima em estoque e a
+                capacidade da linha (§13.7). O saldo de MP estava só na etapa
+                de compra, uma aba adiante da decisão que ele governa.
+            {% endcomment %}
+            <section class="o-decision-card" aria-label="Matéria-prima disponível">
+            <h3>Matéria-prima disponível</h3>
+            <ul class="o-list o-list--metrics">
+                {% for s in saldos_mp %}
+                <li><span class="tag">{{ s.materia_prima.codigo }}</span> <span class="num">{{ s.quantidade_kg|floatformat:"-2" }}</span> kg</li>
+                {% empty %}
+                <li class="o-empty">Nenhum saldo registrado.</li>
+                {% endfor %}
+            </ul>
+            </section>
+
             <section class="o-decision-card" aria-label="Saldo de produtos">
             <h3>Saldo de produtos</h3>
             <ul class="o-list o-list--metrics">
@@ -347,17 +363,78 @@
 
         <section class="o-panel o-panel--step" data-flow-panel="revisao" role="tabpanel" id="etapa-revisao" aria-labelledby="tab-revisao">
             <h2 class="o-panel__title" data-step="5">Conferência final e submissão</h2>
-            <p class="o-panel__hint">Revise o que a equipe registrou antes de enviar. Sem submissão, a equipe recebe penalidade.</p>
-            <ul class="o-review-list" aria-label="Resumo das decisões registradas">
-                <li><strong>Compra</strong><span>{% if compras_mp %}{{ compras_mp|length }} registro(s) disponível(is) para conferência{% else %}Nenhuma compra registrada{% endif %}</span></li>
-                <li><strong>Produção</strong><span>{% if producoes %}{{ producoes|length }} registro(s) disponível(is) para conferência{% else %}Nenhuma produção registrada{% endif %}</span></li>
-                <li><strong>Distribuição</strong><span>{% if envios %}{{ envios|length }} registro(s) disponível(is) para conferência{% else %}Nenhuma distribuição registrada{% endif %}</span></li>
-                <li><strong>Investimentos</strong><span>{% if investimentos %}{{ investimentos|length }} registro(s) disponível(is) para conferência{% else %}Nenhum investimento registrado{% endif %}</span></li>
-            </ul>
+            <p class="o-panel__hint">
+                Isto é o que vai ser enviado{% if rodada_ativa %} na rodada {{ rodada_ativa.numero }}{% endif %}.
+                Depois de submeter, a rodada fica bloqueada para alterações; sem submeter, a
+                equipe assume os custos e a multa do §11.2.
+            </p>
+            {% comment %}
+                A conferência mostrava "12 registro(s) disponível(is)" -- um
+                número que não se confere. Aqui está cada decisão da rodada,
+                com o que ela faz e quanto custa.
+            {% endcomment %}
+            <div class="o-tablewrap">
+                <table class="o-table o-table--cartoes">
+                    <caption class="o-sr">Decisões registradas{% if rodada_ativa %} para a rodada {{ rodada_ativa.numero }}{% endif %}</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Etapa</th>
+                            <th scope="col">Decisão</th>
+                            <th scope="col" class="num">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in compras_mp %}
+                        <tr>
+                            <th scope="row" data-label="Etapa">Compra</th>
+                            <td data-label="Decisão">{{ c.quantidade_kg|floatformat:"-2" }} kg de {{ c.materia_prima.codigo }} — {{ c.cidade_fornecedora.nome }} · chega na rodada {{ c.rodada_recebimento }}</td>
+                            <td class="num" data-label="Valor">R$ {{ c.valor_total|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for p in producoes %}
+                        <tr>
+                            <th scope="row" data-label="Etapa">Produção</th>
+                            <td data-label="Decisão">{{ p.quantidade_planejada }} un de {{ p.produto.codigo }} — {{ p.produto.nome }}</td>
+                            <td class="num" data-label="Valor">—</td>
+                        </tr>
+                        {% endfor %}
+                        {% for e in envios %}
+                        <tr>
+                            <th scope="row" data-label="Etapa">Distribuição</th>
+                            <td data-label="Decisão">{{ e.quantidade }} un de {{ e.produto.codigo }} para {{ e.cidade.nome }}</td>
+                            <td class="num" data-label="Preço unitário">R$ {{ e.preco_unitario|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for i in investimentos %}
+                        <tr>
+                            <th scope="row" data-label="Etapa">Investimento</th>
+                            <td data-label="Decisão">{{ i.get_categoria_display }}{% if i.cidade %} — {{ i.cidade.nome }}{% endif %} · ativa na rodada {{ i.rodada_ativacao }}</td>
+                            <td class="num" data-label="Valor">R$ {{ i.valor|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if not compras_mp and not producoes and not envios and not investimentos %}
+                        <tr>
+                            <td colspan="3">
+                                <div class="o-empty o-empty--center">
+                                    {% include 'partials/empty.svg.html' %}
+                                    <p>Nenhuma decisão registrada nesta rodada.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% comment %}
+                A submissão é o ato de fechar a rodada (§11.2), não um
+                formulário: os campos "descrição" e "quantidade" que existiam
+                aqui não eram lidos por regra nenhuma.
+            {% endcomment %}
             <form method="post">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" name="enviar_decisao" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>Enviar submissão</button>
+                <button type="submit" name="enviar_decisao" class="o-btn o-btn--primary" {% if not permite_edicao %}disabled{% endif %}>
+                    Enviar submissão{% if rodada_ativa %} da rodada {{ rodada_ativa.numero }}{% endif %}
+                </button>
             </form>
 
             <h3>Submissões anteriores</h3>

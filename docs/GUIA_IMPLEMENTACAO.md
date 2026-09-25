@@ -632,6 +632,35 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### A conferência final não conferia nada — 25/09/2026
+
+O §10.3 poe "Decisoes por Rodada" com compras, producao, comercializacao e
+investimentos, e o §11.2 faz da submissao o ato que fecha a rodada para a
+equipe. A tela existia; o ultimo passo antes de submeter, nao.
+
+**A etapa de conferência resumia tudo num número errado.** Dizia "Compra ·
+12 registro(s) disponível(is) para conferência" — sem dizer o quê, quanto,
+para onde nem por quanto. E os 12 eram de **todas as rodadas**: na rodada
+corrente a equipe tinha comprado 4 vezes. Agora cada decisão da rodada
+aparece com o efeito e o valor ("500 kg de MP1 — Fortaleza · chega na
+rodada 5 · R$ 2.290,50"), e rodada sem decisão diz isso.
+
+**A tela misturava rodadas.** Envios, investimentos e produções vinham com
+o histórico inteiro. A tela decide uma rodada; o histórico é da tela de
+Relatórios, e o painel geral continua com tudo.
+
+**A submissão pedia um texto que ninguém lê.** O formulário exigia
+"descrição" e "quantidade": `Decisao.descricao` e `.quantidade` não são
+lidos por regra nenhuma — o fechamento e o lembrete só consultam se a
+submissão existe. Virou um botão, e o texto passou a ser gravado pelo
+sistema. O teste da primeira turma provava a idempotência pelo texto
+digitado; passou a prová-la pelo que importa: a segunda submissão não cria
+nem altera registro.
+
+Também: o saldo de matéria-prima aparecia só na etapa de compra, uma aba
+adiante da decisão que ele governa. Passou a aparecer também na produção,
+ao lado da capacidade da linha — as duas restrições do §13.7 juntas.
+
 ### Responsividade das telas — varredura de 25/09/2026
 
 Medido `scrollWidth` contra `clientWidth` em 15 telas, a 375 px e a 320 px,
