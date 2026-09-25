@@ -170,7 +170,7 @@
 {% if grafico_posicoes.labels %}
 {{ grafico_posicoes|json_script:"dados-posicoes-ranking" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-<script src="{% static 'js/charts.js' %}?v=20260924a" defer></script>
+<script src="{% static 'js/charts.js' %}?v=20260925a" defer></script>
 <script>
     (function () {
         var dados = JSON.parse(document.getElementById('dados-posicoes-ranking').textContent);
@@ -229,9 +229,24 @@
             });
             dados.series.forEach(function (serie, indice) {
                 var cor = cores[indice % cores.length];
-                var pontos = serie.data.map(function (valor, i) { return x(i) + ',' + y(valor); }).join(' ');
-                elemento('polyline', { points: pontos, fill: 'none', stroke: cor, 'stroke-width': '3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+                /* Rodada sem operacao vem como null (7.3): sem este corte
+                   a linha descia ate a posicao zero, que nao existe. */
+                var trecho = [];
                 serie.data.forEach(function (valor, i) {
+                    if (valor === null) {
+                        if (trecho.length > 1) {
+                            elemento('polyline', { points: trecho.join(' '), fill: 'none', stroke: cor, 'stroke-width': '3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+                        }
+                        trecho = [];
+                        return;
+                    }
+                    trecho.push(x(i) + ',' + y(valor));
+                });
+                if (trecho.length > 1) {
+                    elemento('polyline', { points: trecho.join(' '), fill: 'none', stroke: cor, 'stroke-width': '3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+                }
+                serie.data.forEach(function (valor, i) {
+                    if (valor === null) { return; }
                     var ponto = elemento('circle', { cx: x(i), cy: y(valor), r: '5', fill: cor, stroke: 'var(--o-panel)', 'stroke-width': '2' });
                     // sem Chart.js nao ha tooltip; o title nativo mantem a
                     // leitura "quem estava onde" ao parar o mouse no ponto

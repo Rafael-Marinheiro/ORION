@@ -165,7 +165,22 @@
                         beginAtZero: spec.yMin === undefined,
                         min: spec.yMin,
                         max: spec.yMax,
-                        reverse: !!spec.reverseY
+                        reverse: !!spec.reverseY,
+                        /* O eixo de posicoes tem uma folga de 0,25 nas duas
+                           pontas para a linha do 1o lugar nao encostar na
+                           moldura. O Chart.js rotulava essa folga: o eixo
+                           saia "0,8 ... 6,3" e -- pior -- deixava de marcar
+                           a posicao 1 e a ultima. Aqui as marcas voltam a
+                           ser as posicoes que existem. */
+                        afterBuildTicks: spec.integerY
+                            ? function (eixo) {
+                                var marcas = [];
+                                for (var v = Math.ceil(eixo.min); v <= Math.floor(eixo.max); v += 1) {
+                                    marcas.push({ value: v });
+                                }
+                                if (marcas.length) { eixo.ticks = marcas; }
+                            }
+                            : undefined
                     }
                 }
             }
