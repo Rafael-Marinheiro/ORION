@@ -7,7 +7,7 @@
 <div class="o-head">
     <div class="o-head__row">
         <div>
-            <h1>Ranking de grupos</h1>
+            <h1>Ranking de grupos{% if turma_em_foco %} · {{ turma_em_foco }}{% endif %}</h1>
             <p class="o-head__sub">
                 A pontuação combina cinco eixos — eficiência operacional, desempenho
                 financeiro, eficiência de estoques, satisfação da demanda e
@@ -16,11 +16,19 @@
             </p>
         </div>
         {# RN-12: o ranking provisorio sai a cada rodada, o final ao termino do jogo #}
+        {% include 'partials/seletor_turma.html' %}
         <div class="o-head__actions">
             <a class="o-btn o-btn--ghost" href="{% url 'classificacao_final' %}">Classificação final</a>
         </div>
     </div>
 </div>
+
+{% if sem_rodada_fechada %}
+<p class="o-note o-note--info">
+    Nenhuma rodada desta turma foi encerrada até agora. A lista abaixo mostra
+    quem está no jogo; a pontuação aparece no primeiro fechamento.
+</p>
+{% endif %}
 
 {% if rodada_sem_operacao %}
 {% comment %}
@@ -63,6 +71,9 @@
                 <td class="num" data-label="Eficiência de Estoques">{{ item.EE|floatformat:1 }}</td>
                 <td class="num" data-label="Satisfação da Demanda">{{ item.SD|floatformat:1 }}</td>
                 <td class="num" data-label="Sustentabilidade">{{ item.DS|floatformat:1 }}</td>
+                {% elif sem_rodada_fechada %}
+                <td class="num o-muted" data-label="Pontuação" colspan="6"
+                    title="A primeira rodada desta turma ainda não foi encerrada">rodada ainda não encerrada</td>
                 {% else %}
                 <td class="num o-muted" data-label="Pontuação" colspan="6"
                     title="A equipe não produziu nem vendeu nesta rodada">sem operação nesta rodada</td>

@@ -96,10 +96,16 @@ class RankingViewTest(TestCase):
             },
         )
 
-    def test_exibe_ranking_provisorio_sem_participacao_de_mercado(self):
-        """Antes da primeira rodada fechada não há market share consolidado."""
+    def test_antes_do_primeiro_fechamento_a_tela_lista_sem_destacar(self):
+        """Sem rodada fechada não há market share nem líder consolidados.
+
+        A lista existe para mostrar quem está no jogo. Até 25/09/2026 a tela
+        também coroava "Líder da rodada" com 0,00 pontos -- um desempenho que
+        ninguém teve.
+        """
         response = self.client.get(reverse("ranking"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Equipe Vega")
-        self.assertContains(response, "Maior participação de mercado")
+        self.assertEqual(response.context["destaques"], [])
+        self.assertNotContains(response, "Maior participação de mercado")

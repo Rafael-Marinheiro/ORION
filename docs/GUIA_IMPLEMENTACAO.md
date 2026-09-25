@@ -618,6 +618,31 @@ custos — perdas por perecibilidade e a penalidade do §11.2 — e as vendas
 contra o ofertado. Rodada sem operação segue a regra do ranking: sem
 posição, com a explicação do §7.3.
 
+### O ranking do professor mostrava todas as turmas juntas — 25/09/2026
+
+`RankingView` filtrava por jogo apenas para quem **não** é `is_staff`. Para o
+professor não havia filtro: a tela juntava numa classificação só os grupos de
+todos os jogos do banco, e a rodada de referência saía da maior rodada
+fechada de qualquer jogo. Com duas turmas em andamento, a rodada escolhida
+podia não existir na turma do professor — que então não via as próprias
+equipes na tela do próprio ranking.
+
+O §12 classifica os grupos **de um jogo**: turmas diferentes jogaram rodadas
+diferentes, com eventos diferentes, e somar as duas listas não produz
+classificação. O ranking por rodada e a classificação final passaram a
+recortar por turma, com seletor para o professor (`turma_em_foco`) e o nome
+da turma no título. A classificação final já escolhia uma turma sozinha — o
+jogo de maior `id` — sem dizer qual; agora segue a mesma escolha e a
+identifica. Para o aluno nada muda: ele continua preso à turma do grupo dele,
+e `?jogo=` na URL não o tira de lá.
+
+No mesmo exame, uma turma recém-aberta (sem nenhuma rodada fechada) exibia
+"Líder da rodada" com 0,00 pontos, mais "Maior lucro R$ 0,00" e "Maior
+participação de mercado 0,0%". A lista sem rodada fechada existe só para
+mostrar quem está no jogo: os destaques ficaram de fora dela, a linha passou
+a dizer "rodada ainda não encerrada" — distinto de "sem operação nesta
+rodada", que é o caso do §7.3 — e um aviso explica o estado.
+
 ### Mapa das praças — 25/09/2026
 
 O painel mostrava a satisfação da demanda por praça como lista. O §9 põe a

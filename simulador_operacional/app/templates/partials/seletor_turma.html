@@ -1,0 +1,18 @@
+{% comment %}
+    O §12 classifica os grupos de UM jogo. O professor pode ter mais de uma
+    turma no mesmo sistema, e é ele quem diz qual está olhando -- somar duas
+    turmas numa lista só não produz classificação nenhuma.
+{% endcomment %}
+{% if turmas %}
+<form method="get" class="o-filters" role="search">
+    <p>
+        <label for="turma">Turma</label>
+        <select id="turma" name="jogo">
+            {% for turma in turmas %}
+            <option value="{{ turma.valor }}" {% if turma.selecionada %}selected{% endif %}>{{ turma.nome }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <button type="submit" class="o-btn">Ver turma</button>
+</form>
+{% endif %}

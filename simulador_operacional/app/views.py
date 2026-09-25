@@ -636,6 +636,57 @@ def numeros_de_rodadas_fechadas(jogo_id=None, sem_jogo=False):
     return list(rodadas.values_list("numero", flat=True))
 
 
+AVULSO = "avulso"
+
+
+def turma_em_foco(request):
+    """Qual turma as telas de ranking mostram para o professor.
+
+    O 12 classifica os grupos DE UM JOGO: equipes de turmas diferentes
+    jogaram rodadas diferentes, com eventos diferentes, e somar as duas
+    listas nao produz classificacao nenhuma. Ate 25/09/2026 o ranking nao
+    filtrava nada para quem e `is_staff`: a tela misturava todas as turmas
+    do banco numa lista so, e a rodada de referencia saia da maior rodada
+    fechada de qualquer jogo -- podia nem existir na turma do professor,
+    que entao nao via as proprias equipes.
+
+    Devolve `(jogo_id, sem_jogo, opcoes)`. `sem_jogo` cobre os grupos
+    cadastrados fora de qualquer jogo.
+    """
+    jogos = list(Jogo.objects.order_by("nome"))
+    tem_avulsos = Grupo.objects.filter(jogo__isnull=True).exists()
+
+    escolha = (request.GET.get("jogo") or "").strip()
+    jogo_id = None
+    sem_jogo = False
+    if escolha == AVULSO and tem_avulsos:
+        sem_jogo = True
+    elif escolha.isdigit() and any(jogo.id == int(escolha) for jogo in jogos):
+        jogo_id = int(escolha)
+    else:
+        # Sem escolha explicita, a turma que esta jogando: a do ultimo
+        # periodo aberto ou fechado.
+        ultima = Rodada.objects.order_by("-id").first()
+        if ultima and ultima.jogo_id:
+            jogo_id = ultima.jogo_id
+        elif ultima and tem_avulsos:
+            sem_jogo = True
+        elif jogos:
+            jogo_id = jogos[0].id
+        elif tem_avulsos:
+            sem_jogo = True
+
+    opcoes = [
+        {"valor": str(jogo.id), "nome": jogo.nome, "selecionada": jogo.id == jogo_id}
+        for jogo in jogos
+    ]
+    if tem_avulsos:
+        opcoes.append(
+            {"valor": AVULSO, "nome": "Grupos sem turma", "selecionada": sem_jogo}
+        )
+    return jogo_id, sem_jogo, opcoes
+
+
 class RankingView(LoginRequiredMixin, TemplateView):
     template_name = "ranking.html"
 
@@ -670,7 +721,20 @@ class RankingView(LoginRequiredMixin, TemplateView):
         grupo_usuario = None
         rodada_kwargs = {}
 
-        if not self.request.user.is_staff:
+        if self.request.user.is_staff:
+            # O professor nao pertence a grupo: escolhe a turma na tela.
+            jogo_id, sem_jogo, opcoes = turma_em_foco(self.request)
+            context["turmas"] = opcoes
+            context["turma_em_foco"] = next(
+                (opcao["nome"] for opcao in opcoes if opcao["selecionada"]), None
+            )
+            if jogo_id:
+                indicadores = indicadores.filter(grupo__jogo_id=jogo_id)
+                rodada_kwargs["jogo_id"] = jogo_id
+            elif sem_jogo:
+                indicadores = indicadores.filter(grupo__jogo__isnull=True)
+                rodada_kwargs["sem_jogo"] = True
+        else:
             grupo_usuario = obter_grupo_do_usuario(self.request.user)
             if grupo_usuario and grupo_usuario.jogo_id:
                 indicadores = indicadores.filter(grupo__jogo_id=grupo_usuario.jogo_id)
@@ -689,13 +753,17 @@ class RankingView(LoginRequiredMixin, TemplateView):
         else:
             ranking = []
             grupos_base = Grupo.objects.order_by("-capital")
-            if not self.request.user.is_staff:
-                if grupo_usuario and grupo_usuario.jogo_id:
-                    grupos_base = grupos_base.filter(jogo_id=grupo_usuario.jogo_id)
-                elif grupo_usuario:
+            if self.request.user.is_staff:
+                if rodada_kwargs.get("jogo_id"):
+                    grupos_base = grupos_base.filter(jogo_id=rodada_kwargs["jogo_id"])
+                elif rodada_kwargs.get("sem_jogo"):
                     grupos_base = grupos_base.filter(jogo__isnull=True)
-                else:
-                    grupos_base = Grupo.objects.none()
+            elif grupo_usuario and grupo_usuario.jogo_id:
+                grupos_base = grupos_base.filter(jogo_id=grupo_usuario.jogo_id)
+            elif grupo_usuario:
+                grupos_base = grupos_base.filter(jogo__isnull=True)
+            else:
+                grupos_base = Grupo.objects.none()
             for grupo in grupos_base:
                 ranking.append(
                     {
@@ -708,14 +776,21 @@ class RankingView(LoginRequiredMixin, TemplateView):
                         "DS": Decimal("0"),
                         "lucro_rodada": Decimal("0"),
                         # Antes do primeiro fechamento ainda não existe venda
-                        # consolidada; o destaque continua sendo renderizável.
+                        # consolidada. A linha existe só para mostrar quem
+                        # está no jogo; os destaques ficam de fora.
                         "market_share": Decimal("0"),
                     }
                 )
 
         context["ranking"] = ranking
         context["rodada_referencia"] = rodada_referencia
-        context["destaques"] = self._destaques_da_rodada(ranking)
+        # Antes do primeiro fechamento a lista existe so para mostrar quem
+        # esta na turma: nao ha rodada medida. Coroar "Lider da rodada" com
+        # 0,00 pontos nesse estado anuncia um desempenho que ninguem teve.
+        context["sem_rodada_fechada"] = not rodada_referencia
+        context["destaques"] = (
+            self._destaques_da_rodada(ranking) if rodada_referencia else []
+        )
         classificacoes = self._classificacoes_por_rodada(indicadores, rodadas_fechadas)
         # 7.3: a MP so chega na rodada seguinte, entao na rodada 1 ninguem
         # produz nem vende. Apresentar posicao e pontuacao ali seria ordenar
@@ -838,8 +913,15 @@ class ClassificacaoFinalView(LoginRequiredMixin, TemplateView):
         elif self.request.user.is_staff:
             # 10.3 poe "Visualizacao de Ranking Geral" no perfil do
             # administrador, que nao pertence a grupo nenhum -- sem isso a
-            # tela nascia vazia justamente para quem ela foi pedida.
-            jogo = Jogo.objects.order_by("-id").first()
+            # tela nascia vazia justamente para quem ela foi pedida. A turma
+            # e a mesma escolhida no ranking por rodada, e a tela diz qual e:
+            # antes ela pegava o jogo de maior id, sem avisar.
+            jogo_id, _sem_jogo, opcoes = turma_em_foco(self.request)
+            jogo = Jogo.objects.filter(id=jogo_id).first() if jogo_id else None
+            context["turmas"] = opcoes
+            context["turma_em_foco"] = next(
+                (opcao["nome"] for opcao in opcoes if opcao["selecionada"]), None
+            )
         else:
             context["grupos"] = []
             return context
