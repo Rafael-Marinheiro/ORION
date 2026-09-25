@@ -429,6 +429,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         correlation_id = uuid4().hex[:16]
+        agora = timezone.now()
+        rodadas = Rodada.objects.filter(fechada=False, fim__lte=agora).order_by("numero")
+        if not rodadas:
+            # Na turma este comando roda de segundo em segundo (ver
+            # docker-compose.turma.yml). Registrar uma execucao a cada
+            # chamada enterraria os fechamentos de verdade sob milhares de
+            # linhas vazias na tela de execucoes de jobs -- que e onde o
+            # professor procura o que aconteceu no prazo.
+            logger.info("Nenhuma rodada para fechar em %s", agora, extra={"correlation_id": correlation_id})
+            self.stdout.write("Nenhuma rodada para fechar")
+            return
+
         job = ExecucaoJob.objects.create(
             comando="fechar_rodadas",
             correlation_id=correlation_id,
@@ -436,12 +448,6 @@ class Command(BaseCommand):
             detalhes="",
         )
         try:
-            agora = timezone.now()
-            rodadas = Rodada.objects.filter(fechada=False, fim__lte=agora).order_by("numero")
-            if not rodadas:
-                logger.info("Nenhuma rodada para fechar em %s", agora, extra={"correlation_id": correlation_id})
-                self.stdout.write("Nenhuma rodada para fechar")
-
             for rodada in rodadas:
                 # Uma falha deve desfazer todos os efeitos desta rodada.
                 # O job permanece fora da transação para registrar a falha.

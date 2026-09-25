@@ -5,7 +5,16 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from app.models import Grupo, ResultadoFinanceiro, Rodada, User
+from app.models import (
+    Cidade,
+    ConsolidadoRodadaGrupo,
+    Distribuicao,
+    Grupo,
+    Produto,
+    ResultadoFinanceiro,
+    Rodada,
+    User,
+)
 
 
 class EncerramentoRodadaViewTest(TestCase):
@@ -87,3 +96,82 @@ class EncerramentoRodadaViewTest(TestCase):
         self.assertIsNone(response.context["rodada"])
         self.assertIsNone(response.context["resultado"])
         self.assertContains(response, "Nenhuma rodada foi encerrada até agora.")
+
+
+class EncerramentoComoFechamentoTest(TestCase):
+    """11.3: o fechamento gera DRR, indicadores e ranking.
+
+    A tela mostrava so quatro numeros do DRR. O 11 a coloca como o momento
+    em que o grupo descobre o resultado da rodada -- posicao, penalidade do
+    11.2 e perdas incluidas.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email_usuario="ceo-enc@teste.com", nome_usuario="CEO",
+            password="senha123", tipo_usuario="lider_grupo",
+        )
+        self.grupo = Grupo.objects.create(nome="Equipe Vega", capital=Decimal("50000"))
+        self.grupo.membros.add(self.user)
+        self.rival = Grupo.objects.create(nome="Equipe Rigel", capital=Decimal("50000"))
+        self.client.force_login(self.user)
+        Rodada.objects.create(
+            numero=1, fim=timezone.now() - timedelta(minutes=2), fechada=True
+        )
+        ResultadoFinanceiro.objects.create(
+            grupo=self.grupo, rodada=1, receita=Decimal("1500"),
+            custos=Decimal("700"), lucro=Decimal("800"), saldo_caixa=Decimal("10800"),
+        )
+        self.produto = Produto.objects.create(
+            codigo="A", nome="Produto A", tempo_producao_min=2
+        )
+        self.cidade = Cidade.objects.create(
+            nome="Recife", distancia_km=290, demanda=4000
+        )
+
+    def _consolidar(self, grupo, score, **extra):
+        return ConsolidadoRodadaGrupo.objects.create(
+            grupo=grupo, rodada=1, score_multicriterio=Decimal(score), **extra
+        )
+
+    def _operar(self):
+        Distribuicao.objects.create(
+            grupo=self.grupo, produto=self.produto, cidade=self.cidade,
+            rodada=1, quantidade=10, preco_unitario=Decimal("100"),
+            custo_transporte=Decimal("0"),
+        )
+
+    def test_mostra_a_posicao_do_grupo_na_rodada(self):
+        self._operar()
+        self._consolidar(self.grupo, "40")
+        self._consolidar(self.rival, "70")
+
+        resposta = self.client.get(reverse("encerramento_rodada"))
+
+        self.assertEqual(resposta.context["posicao"], 2)
+        self.assertEqual(resposta.context["total_grupos"], 2)
+        self.assertContains(resposta, "Posição na rodada")
+
+    def test_penalidade_do_11_2_aparece_nos_custos(self):
+        self._operar()
+        self._consolidar(
+            self.grupo, "40", penalidade_sem_submissao=Decimal("1080"),
+            custos_totais=Decimal("1780"),
+        )
+
+        resposta = self.client.get(reverse("encerramento_rodada"))
+
+        self.assertContains(resposta, "Penalidade por não submeter")
+        self.assertContains(resposta, "1.080,00")
+
+    def test_rodada_sem_operacao_nao_mostra_posicao(self):
+        """7.3: sem MP disponivel nao ha producao nem despacho na rodada 1."""
+        self._consolidar(self.grupo, "8.26")
+
+        resposta = self.client.get(reverse("encerramento_rodada"))
+
+        self.assertFalse(resposta.context["operou"])
+        self.assertNotContains(resposta, "Posição na rodada")
+        self.assertContains(resposta, "só fica disponível na rodada seguinte")
+        # o DRR continua: gastar e um fato
+        self.assertContains(resposta, "Receita")

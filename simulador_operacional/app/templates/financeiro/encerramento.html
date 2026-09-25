@@ -4,10 +4,20 @@
 
 {% block content %}
 <div class="o-head">
-    <h1>Encerramento da rodada</h1>
-    {% if rodada %}
-    <p class="o-head__sub">Rodada {{ rodada.numero }}, fechada em {{ rodada.fim|date:'d/m/Y H:i' }}.</p>
-    {% endif %}
+    <div class="o-head__row">
+        <div>
+            <h1>Encerramento da rodada</h1>
+            {% if rodada %}
+            <p class="o-head__sub">Rodada {{ rodada.numero }}, fechada em {{ rodada.fim|date:'d/m/Y H:i' }}.</p>
+            {% endif %}
+        </div>
+        {% if rodada %}
+        <div class="o-head__actions">
+            <a class="o-btn o-btn--ghost" href="{% url 'relatorios' %}?rodada={{ rodada.numero }}">DRE da rodada</a>
+            <a class="o-btn o-btn--ghost" href="{% url 'ranking' %}">Ranking</a>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 {% if rodada and resultado %}
@@ -28,7 +38,85 @@
         <span class="o-kpi__label">Saldo em caixa</span>
         <span class="o-kpi__value">R$ {% include 'partials/valor.html' with valor=resultado.saldo_caixa %}</span>
     </div>
+    {% comment %}
+        11.3.e: o fechamento tambem gera indicadores e ranking. Sem
+        operacao na rodada nao ha o que classificar -- ver 7.3 e o aviso
+        equivalente na tela de ranking.
+    {% endcomment %}
+    {% if operou and consolidado %}
+    <div class="o-kpi">
+        <span class="o-kpi__label">Posição na rodada</span>
+        <span class="o-kpi__value">{{ posicao }}<span class="o-kpi__unit">de {{ total_grupos }}</span></span>
+    </div>
+    <div class="o-kpi">
+        <span class="o-kpi__label">Pontuação</span>
+        <span class="o-kpi__value">{{ consolidado.score_multicriterio|floatformat:2 }}<span class="o-kpi__unit">pts</span></span>
+    </div>
+    {% endif %}
 </div>
+
+{% if evento_rodada %}
+<section class="o-panel" aria-labelledby="evento-titulo">
+    <h2 id="evento-titulo" class="o-panel__title">O que aconteceu nesta rodada</h2>
+    <p>
+        <strong>{{ evento_rodada.evento.nome }}</strong>
+        {% if evento_rodada.evento.descricao %} — {{ evento_rodada.evento.descricao }}{% endif %}
+    </p>
+</section>
+{% endif %}
+
+{% if consolidado %}
+<section class="o-panel" aria-labelledby="pesou-titulo">
+    <h2 id="pesou-titulo" class="o-panel__title">O que entrou nos custos</h2>
+    <div class="o-tablewrap">
+        <table class="o-table">
+            <caption class="o-sr">Composição registrada no fechamento da rodada {{ rodada.numero }}</caption>
+            <thead><tr><th scope="col">Item</th><th scope="col" class="o-num">Valor</th></tr></thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Armazenagem de matéria-prima</th>
+                    <td class="o-num">R$ {{ consolidado.custo_armazenagem_mp|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Armazenagem de produtos</th>
+                    <td class="o-num">R$ {{ consolidado.custo_armazenagem_produtos|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Perdas por perecibilidade</th>
+                    <td class="o-num">R$ {{ consolidado.perda_pereciveis|floatformat:2 }}</td>
+                </tr>
+                {% if consolidado.penalidade_sem_submissao %}
+                <tr>
+                    <th scope="row">Penalidade por não submeter (§11.2)</th>
+                    <td class="o-num">R$ {{ consolidado.penalidade_sem_submissao|floatformat:2 }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th scope="row">Custos totais da rodada</th>
+                    <td class="o-num">R$ {{ consolidado.custos_totais|floatformat:2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if operou %}
+<section class="o-panel" aria-labelledby="vendas-titulo">
+    <h2 id="vendas-titulo" class="o-panel__title">Vendas da rodada</h2>
+    <ul class="o-facts">
+        <li>{{ consolidado.total_vendido }} de {{ consolidado.total_ofertado }} unidades enviadas foram vendidas.</li>
+        <li>Participação de mercado: {{ consolidado.market_share_percent|floatformat:2 }}%.</li>
+    </ul>
+</section>
+{% else %}
+<p class="o-note o-note--info">
+    Nesta rodada o grupo não produziu nem despachou: a matéria-prima pedida
+    só fica disponível na rodada seguinte ao pedido (§7.3). Por isso a rodada
+    não entra na classificação.
+</p>
+{% endif %}
+{% endif %}
+
 {% else %}
 <div class="o-panel">
     <div class="o-empty o-empty--center">

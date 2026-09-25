@@ -4,16 +4,63 @@
 
 {% block content %}
 <div class="o-head">
-    <h1>Gerenciamento do jogo</h1>
-    <p class="o-head__sub">Acompanhe as submissões dos grupos nas rodadas abertas.</p>
+    <div class="o-head__row">
+        <div>
+            <h1>Gerenciamento do jogo</h1>
+            <p class="o-head__sub">Abertura da rodada e participação dos grupos, enquanto o prazo corre.</p>
+        </div>
+        <div class="o-head__actions">
+            <a class="o-btn o-btn--primary" href="{% url 'abrir_rodada' %}">Abrir rodada</a>
+            <a class="o-btn o-btn--ghost" href="{% url 'jobs' %}">Execuções de jobs</a>
+        </div>
+    </div>
 </div>
 
 {% for painel in paineis %}
-<section class="o-section" aria-labelledby="rodada-{{ painel.rodada.id }}">
-    <h2 id="rodada-{{ painel.rodada.id }}" class="o-section-title">
-        {% if painel.rodada.jogo %}{{ painel.rodada.jogo.nome }} · {% endif %}Rodada {{ painel.rodada.numero }}
-    </h2>
-    <p class="o-note">{{ painel.submetidos }} de {{ painel.participacoes|length }} grupos submeteram. Prazo: {{ painel.rodada.fim|date:'d/m/Y H:i' }}.</p>
+<section class="o-panel" aria-labelledby="rodada-{{ painel.rodada.id }}">
+    <div class="o-head__row">
+        <h2 id="rodada-{{ painel.rodada.id }}" class="o-panel__title">
+            {% if painel.rodada.jogo %}{{ painel.rodada.jogo.nome }} · {% endif %}Rodada {{ painel.rodada.numero }}
+        </h2>
+        {% if painel.vencida %}
+        {% comment %}
+            O 11.1 fecha a rodada "no momento exato do prazo-limite", por
+            serviço automático. Enquanto ele não passa, a rodada fica aqui:
+            é o único lugar onde o professor vê que o prazo venceu e o
+            fechamento ainda não rodou.
+        {% endcomment %}
+        <span class="o-badge o-badge--warn">Prazo vencido há {{ painel.rodada.fim|timesince }} · aguardando fechamento</span>
+        {% else %}
+        <span class="o-badge o-badge--info">Fecha em {{ painel.rodada.fim|timeuntil }}</span>
+        {% endif %}
+    </div>
+    <p class="o-panel__hint">Prazo-limite: {{ painel.rodada.fim|date:'d/m/Y H:i' }}.</p>
+
+    <ul class="o-heat">
+        <li class="o-heat__row"
+            data-nivel="{% if painel.percentual == 100 %}alto{% elif painel.percentual >= 50 %}medio{% else %}baixo{% endif %}">
+            <span class="o-heat__nome">Submissões</span>
+            <span class="o-heat__track"
+                  role="progressbar"
+                  aria-label="Grupos que submeteram na rodada {{ painel.rodada.numero }}"
+                  aria-valuemin="0" aria-valuemax="{{ painel.total }}"
+                  aria-valuenow="{{ painel.submetidos }}">
+                <span style="--o-fill: {{ painel.percentual }}%"></span>
+            </span>
+            <span class="o-heat__valor o-num">{{ painel.submetidos }} de {{ painel.total }}</span>
+            <span class="o-heat__detalhe o-muted">
+                {% if painel.pendentes %}{{ painel.pendentes }} pendente{{ painel.pendentes|pluralize }}{% else %}Todos os grupos enviaram{% endif %}
+            </span>
+        </li>
+    </ul>
+
+    {% if painel.pendentes %}
+    <p class="o-note o-note--info">
+        Pelo §11.2, quem não submeter mantém as decisões da rodada anterior, assume os custos
+        normalmente e é multado em {{ penalidade_percent|floatformat:0 }}% do caixa do fim da rodada anterior.
+    </p>
+    {% endif %}
+
     <div class="o-tablewrap">
         <table class="o-table">
             <caption class="o-sr">Participação dos grupos na rodada {{ painel.rodada.numero }}</caption>
@@ -22,7 +69,7 @@
                 {% for item in painel.participacoes %}
                 <tr>
                     <th scope="row">{{ item.grupo.nome }}</th>
-                    <td>{% if item.ceo %}{{ item.ceo.usuario.nome_usuario }}{% else %}Não definido{% endif %}</td>
+                    <td>{% if item.ceo %}{{ item.ceo.usuario.nome_usuario }}{% else %}<span class="o-badge o-badge--warn">Não definido</span>{% endif %}</td>
                     <td>{% if item.auditoria %}<span class="o-badge o-badge--ok">Enviado</span>{% else %}<span class="o-badge o-badge--mute">Pendente</span>{% endif %}</td>
                     <td class="o-num">{% if item.auditoria %}{{ item.auditoria.data_registro|date:'d/m/Y H:i' }}{% else %}—{% endif %}</td>
                 </tr>
@@ -34,9 +81,21 @@
     </div>
 </section>
 {% empty %}
-<div class="o-empty o-empty--center">
-    {% include 'partials/empty.svg.html' %}
-    <p>Não há rodadas abertas para monitorar.</p>
+<div class="o-panel">
+    <div class="o-empty o-empty--center">
+        {% include 'partials/empty.svg.html' %}
+        <p>Nenhuma rodada em andamento.</p>
+        <p><a class="o-btn o-btn--primary" href="{% url 'abrir_rodada' %}">Abrir rodada</a></p>
+    </div>
 </div>
 {% endfor %}
+
+<p class="o-muted">
+    {% if ultimo_fechamento %}
+        Último fechamento automático: {{ ultimo_fechamento.iniciado_em|date:'d/m/Y H:i' }}
+        ({% if ultimo_fechamento.status == 'falha' %}<span class="o-badge o-badge--bad">falha</span>{% else %}sucesso{% endif %}).
+    {% else %}
+        Nenhum fechamento automático registrado até agora.
+    {% endif %}
+</p>
 {% endblock %}

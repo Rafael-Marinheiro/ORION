@@ -35,6 +35,7 @@ from rest_framework import status
 
 from .parametros import (
     CUSTO_ARMAZENAGEM_PERCENT,
+    PERCENTUAL_PENALIDADE_SEM_SUBMISSAO,
     CUSTO_MAQUINA,
     CUSTO_OPERADOR_POR_RODADA,
     OPERADORES_POR_MAQUINA,
@@ -541,8 +542,15 @@ class GerenciamentoJogoView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        agora = timezone.now()
+        # Toda rodada ainda nao fechada, inclusive a de prazo vencido: o
+        # 11.1 manda o fechamento acontecer "no momento exato do
+        # prazo-limite", e e o servico automatico que o executa. Filtrar por
+        # `fim__gt=agora` fazia a rodada sumir da tela no instante do prazo
+        # -- se o servico estivesse parado, o professor via "nao ha rodadas
+        # abertas" e nada mais.
         rodadas = Rodada.objects.filter(
-            fechada=False, fim__gt=timezone.now()
+            fechada=False
         ).select_related("jogo").order_by("jogo__nome", "numero")
         paineis = []
 
@@ -572,15 +580,27 @@ class GerenciamentoJogoView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
                 }
                 for grupo in grupos
             ]
+            submetidos = sum(item["auditoria"] is not None for item in participacoes)
+            total = len(participacoes)
             paineis.append(
                 {
                     "rodada": rodada,
                     "participacoes": participacoes,
-                    "submetidos": sum(item["auditoria"] is not None for item in participacoes),
+                    "submetidos": submetidos,
+                    "pendentes": total - submetidos,
+                    "total": total,
+                    "percentual": round(100 * submetidos / total) if total else 0,
+                    "vencida": rodada.fim <= agora,
                 }
             )
 
         context["paineis"] = paineis
+        context["penalidade_percent"] = PERCENTUAL_PENALIDADE_SEM_SUBMISSAO * 100
+        context["ultimo_fechamento"] = (
+            ExecucaoJob.objects.filter(comando="fechar_rodadas")
+            .order_by("-iniciado_em")
+            .first()
+        )
         return context
 
 
@@ -1880,12 +1900,54 @@ class EncerramentoRodadaView(LoginRequiredMixin, TemplateView):
             rodadas_fechadas = rodadas_fechadas.filter(jogo__isnull=True)
         rodada = rodadas_fechadas.order_by("-numero").first()
         resultado = None
+        consolidado = None
+        posicao = None
+        total_grupos = 0
+        operou = False
+        evento = None
         if rodada:
             resultado = ResultadoFinanceiro.objects.filter(
                 grupo=grupo, rodada=rodada.numero
             ).first()
+            # 11.3.e: o fechamento calcula os indicadores e atualiza o
+            # ranking. Esta tela e onde o grupo ve o proprio resultado --
+            # sem a posicao ela conta metade da rodada.
+            consolidados = list(
+                ConsolidadoRodadaGrupo.objects.filter(
+                    rodada=rodada.numero, grupo__jogo_id=grupo.jogo_id
+                ).select_related("grupo")
+            )
+            classificados = RankingView._ordenar_consolidados(consolidados)
+            total_grupos = len(classificados)
+            for indice, linha in enumerate(classificados, start=1):
+                if linha["grupo"].id == grupo.id:
+                    posicao = indice
+            consolidado = next(
+                (c for c in consolidados if c.grupo_id == grupo.id), None
+            )
+            operou = bool(
+                pares_com_operacao([grupo], [rodada.numero])
+            )
+            evento = (
+                EventoRodada.objects.filter(
+                    rodada=rodada.numero, jogo_id=grupo.jogo_id
+                )
+                .select_related("evento")
+                .first()
+            )
 
-        context.update({"rodada": rodada, "resultado": resultado, "nav": "encerramento_rodada"})
+        context.update(
+            {
+                "rodada": rodada,
+                "resultado": resultado,
+                "consolidado": consolidado,
+                "posicao": posicao,
+                "total_grupos": total_grupos,
+                "operou": operou,
+                "evento_rodada": evento,
+                "nav": "encerramento_rodada",
+            }
+        )
         return context
 
 
