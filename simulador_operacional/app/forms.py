@@ -349,6 +349,22 @@ class GrupoForm(forms.ModelForm):
     )
     jogo = forms.ModelChoiceField(queryset=Jogo.objects.all(), required=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Oferecia `User.objects.all()`: o professor via os alunos de todas as
+        # turmas e a si mesmo numa lista unica. Marcar ali o lider de outra
+        # equipe trocava o CEO deste grupo, porque o CEO sai de
+        # `membros.filter(tipo_usuario="lider_grupo")`.
+        alunos = User.objects.exclude(tipo_usuario="gamemaster").exclude(
+            is_superuser=True
+        )
+        disponiveis = alunos.filter(grupos__isnull=True)
+        if self.instance.pk:
+            disponiveis = disponiveis | self.instance.membros.all()
+        self.fields["membros"].queryset = disponiveis.distinct().order_by(
+            "nome_usuario"
+        )
+
     class Meta:
         model = Grupo
         fields = [
@@ -394,20 +410,30 @@ class MembroForm(forms.Form):
 
 
 class BaseMembroFormSet(BaseFormSet):
+    @property
+    def preenchidos(self):
+        """Os tres campos extras em branco nao sao integrantes."""
+        return [form for form in self.forms if form.cleaned_data.get("email")]
+
     def clean(self):
         super().clean()
         if any(self.errors):
             return
-        emails = [form.cleaned_data["email"].casefold() for form in self.forms]
+        formularios = self.preenchidos
+        emails = [form.cleaned_data["email"].casefold() for form in formularios]
         if len(emails) != len(set(emails)):
             raise forms.ValidationError("Cada integrante deve ter um e-mail diferente.")
-        if sum(bool(form.cleaned_data.get("lider")) for form in self.forms) != 1:
+        if sum(bool(form.cleaned_data.get("lider")) for form in formularios) != 1:
             raise forms.ValidationError("Selecione exatamente um líder para o grupo.")
 
 
+# 5: "cada grupo deve possuir no minimo 3 e no maximo 6 participantes". A tela
+# abria com `extra=0`, ou seja, tres campos fixos e nenhum botao de adicionar:
+# uma equipe de quatro a seis alunos nao tinha como ser cadastrada. Os tres
+# ultimos campos sao opcionais e podem ficar em branco.
 MembroFormSet = formset_factory(
     MembroForm, formset=BaseMembroFormSet,
-    min_num=3, max_num=6, validate_min=True, validate_max=True, extra=0,
+    min_num=3, max_num=6, validate_min=True, validate_max=True, extra=3,
 )
 
 

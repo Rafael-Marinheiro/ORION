@@ -2076,7 +2076,7 @@ class GrupoCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                     grupo.trabalhadores = config.trabalhadores_iniciais
                     grupo.save()
                     lider = None
-                    for form in membro_formset:
+                    for form in membro_formset.preenchidos:
                         user = User.objects.create_user(
                             email_usuario=form.cleaned_data["email"],
                             nome_usuario=form.cleaned_data["nome"],

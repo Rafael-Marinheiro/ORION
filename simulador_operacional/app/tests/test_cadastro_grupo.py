@@ -126,3 +126,105 @@ class CadastroGrupoTest(TestCase):
                 self.assertEqual(resposta.status_code, 302 if total == 6 else 200)
                 if total == 6:
                     self.assertEqual(Grupo.objects.get().membros.count(), 6)
+
+
+class EquipeDeQuatroASeisTest(TestCase):
+    """5: "no minimo 3 e no maximo 6 participantes".
+
+    O POST aceitava seis integrantes, mas a tela abria com tres campos fixos
+    (`extra=0`) e nenhum botao de adicionar: uma equipe de quatro, cinco ou
+    seis alunos nao tinha como ser cadastrada pelo professor.
+    """
+
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            email_usuario="prof-equipe@teste.com",
+            nome_usuario="Professor",
+            password="senha123",
+            tipo_usuario="gamemaster",
+        )
+        self.client.force_login(self.staff)
+        self.url = reverse("criar_grupo")
+        GameConfig.objects.get_or_create(id=1)
+
+    def _payload(self, quantos):
+        dados = {
+            "nome": "Equipe Vega",
+            "form-TOTAL_FORMS": "6",
+            "form-INITIAL_FORMS": "0",
+            "form-MIN_NUM_FORMS": "3",
+            "form-MAX_NUM_FORMS": "6",
+        }
+        for i in range(quantos):
+            dados[f"form-{i}-nome"] = f"Aluno {i}"
+            dados[f"form-{i}-email"] = f"aluno{i}@teste.com"
+            dados[f"form-{i}-senha"] = "senha12345"
+        dados["form-0-lider"] = "on"
+        return dados
+
+    def test_a_tela_abre_com_seis_campos_de_integrante(self):
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(len(resposta.context["membro_formset"].forms), 6)
+        self.assertContains(resposta, "Integrante 6")
+        self.assertContains(resposta, "opcional")
+
+    def test_equipe_de_cinco_e_cadastrada(self):
+        resposta = self.client.post(self.url, self._payload(5))
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(Grupo.objects.get(nome="Equipe Vega").membros.count(), 5)
+
+    def test_os_campos_extras_em_branco_nao_viram_integrante(self):
+        resposta = self.client.post(self.url, self._payload(3))
+
+        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(Grupo.objects.get(nome="Equipe Vega").membros.count(), 3)
+        self.assertEqual(User.objects.count(), 4)
+
+    def test_menos_de_tres_continua_recusado(self):
+        resposta = self.client.post(self.url, self._payload(2))
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(Grupo.objects.exists())
+
+
+class EdicaoDeGrupoTest(TestCase):
+    """A edicao listava todos os usuarios do sistema.
+
+    O CEO sai de `membros.filter(tipo_usuario="lider_grupo")`, entao marcar
+    na lista o lider de outra equipe trocava o CEO deste grupo. A lista
+    agora traz os integrantes da propria equipe e os alunos sem equipe.
+    """
+
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            email_usuario="prof-edicao@teste.com", nome_usuario="Professor",
+            password="senha123", tipo_usuario="gamemaster",
+        )
+        self.client.force_login(self.staff)
+        self.grupo = Grupo.objects.create(nome="Equipe Vega")
+        self.dentro = User.objects.create_user(
+            email_usuario="dentro@teste.com", nome_usuario="Aluno de dentro",
+            password="senha12345", tipo_usuario="lider_grupo",
+        )
+        self.grupo.membros.add(self.dentro)
+        self.sem_equipe = User.objects.create_user(
+            email_usuario="livre@teste.com", nome_usuario="Aluno sem equipe",
+            password="senha12345", tipo_usuario="membro_grupo",
+        )
+        outro = Grupo.objects.create(nome="Equipe Lira")
+        self.de_outra_equipe = User.objects.create_user(
+            email_usuario="outra@teste.com", nome_usuario="CEO da outra equipe",
+            password="senha12345", tipo_usuario="lider_grupo",
+        )
+        outro.membros.add(self.de_outra_equipe)
+
+    def test_a_lista_de_membros_nao_traz_aluno_de_outra_equipe_nem_o_professor(self):
+        resposta = self.client.get(reverse("editar_grupo", args=[self.grupo.pk]))
+
+        oferecidos = list(resposta.context["form"].fields["membros"].queryset)
+        self.assertIn(self.dentro, oferecidos)
+        self.assertIn(self.sem_equipe, oferecidos)
+        self.assertNotIn(self.de_outra_equipe, oferecidos)
+        self.assertNotIn(self.staff, oferecidos)

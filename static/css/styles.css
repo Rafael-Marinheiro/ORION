@@ -1313,6 +1313,11 @@ ul.errorlist {
     font-weight: 600;
     color: var(--o-ink-dim);
 }
+.o-member__opcional {
+    font-weight: 400;
+    text-transform: lowercase;
+    color: var(--o-ink-mute, var(--o-ink-dim));
+}
 .o-member > p:last-of-type { margin-bottom: 0; }
 
 /* --- 29. Boletim da rodada ----------------------------------------------- */

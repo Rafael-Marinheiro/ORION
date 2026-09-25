@@ -632,6 +632,28 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### Uma equipe de cinco alunos não tinha como ser cadastrada — 25/09/2026
+
+O §5 diz: "cada grupo deve possuir no mínimo 3 e no máximo 6 participantes".
+A validação e o POST cumpriam os dois limites — há teste de seis integrantes
+passando desde o começo. **A tela não.**
+
+`MembroFormSet` era criado com `extra=0` e `min_num=3`: três campos fixos e
+nenhum botão de adicionar. Uma equipe de quatro, cinco ou seis alunos só
+entraria no sistema por quem soubesse montar o POST à mão. O caso de teste
+que "provava" o limite de seis montava o formulário direto no cliente de
+teste, nunca pela tela — por isso o defeito atravessou a suíte inteira.
+
+Agora são seis campos, os três últimos marcados como opcionais, e os que
+ficarem em branco não viram integrante. Menos de três continua recusado.
+
+**A edição oferecia todos os usuários do sistema.** `GrupoForm.membros` usava
+`User.objects.all()`: o professor via os alunos de todas as turmas e a si
+mesmo numa lista única de caixas. Não é só desconforto — o CEO é resolvido
+por `membros.filter(tipo_usuario="lider_grupo")`, então marcar ali o líder de
+outra equipe podia trocar o CEO deste grupo. A lista passou a trazer os
+integrantes da própria equipe e os alunos sem equipe.
+
 ### A configuração era gravada na turma errada — 25/09/2026
 
 Cada `Jogo` tem a sua `GameConfig`, e o fechamento lê a do jogo da rodada

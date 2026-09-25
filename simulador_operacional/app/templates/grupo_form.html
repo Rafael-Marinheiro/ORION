@@ -7,8 +7,9 @@
     <h1>{% if form.instance.pk %}Editar grupo{% else %}Novo grupo{% endif %}</h1>
     {% if membro_formset %}
     <p class="o-head__sub">
-        Uma equipe tem de 3 a 6 integrantes e exatamente um líder. Cada integrante
-        recebe um acesso próprio com o e-mail informado aqui.
+        Uma equipe tem de 3 a 6 integrantes e exatamente um líder. Os três
+        primeiros são obrigatórios; deixe os demais em branco se a equipe for
+        menor. Cada integrante recebe um acesso próprio com o e-mail informado aqui.
     </p>
     {% endif %}
 </div>
@@ -34,7 +35,10 @@
             <div class="o-members">
                 {% for membro in membro_formset %}
                 <fieldset class="o-member">
-                    <legend>Integrante {{ forloop.counter }}</legend>
+                    <legend>
+                        Integrante {{ forloop.counter }}
+                        {% if forloop.counter0 >= membro_formset.min_num %}<span class="o-member__opcional">opcional</span>{% endif %}
+                    </legend>
                     {{ membro.as_p }}
                 </fieldset>
                 {% endfor %}
