@@ -71,7 +71,6 @@ class GameConfigForm(forms.ModelForm):
             "modulo_producao",
             "modulo_distribuicao",
             "modulo_financeiro",
-            "regra_eventos",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -211,11 +210,33 @@ class InvestimentoForm(RotuloSemDoisPontos, forms.ModelForm):
 
 
 class RodadaForm(forms.ModelForm):
-    jogo = forms.ModelChoiceField(queryset=Jogo.objects.all(), required=False)
+    jogo = forms.ModelChoiceField(
+        queryset=Jogo.objects.all(), required=False, label="Turma",
+        empty_label="Grupos sem turma",
+    )
 
     class Meta:
         model = Rodada
         fields = ["jogo", "numero", "fim"]
+        labels = {"numero": "Rodada", "fim": "Prazo-limite"}
+        help_texts = {
+            # 11.1: "o professor define obrigatoriamente o prazo-limite de
+            # encerramento (data e hora exatas)". O fechamento acontece
+            # sozinho nesse instante.
+            "fim": "Data e hora em que a rodada fecha sozinha (§11.1).",
+        }
+        widgets = {
+            # Era um campo de texto: a professora digitava o formato do
+            # Django de cabeca. `datetime-local` abre o calendario do
+            # proprio sistema.
+            "fim": forms.DateTimeInput(
+                attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["fim"].input_formats = ["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
 
     def clean(self):
         dados = super().clean()
@@ -339,7 +360,6 @@ class ConfigWizardStep2Form(forms.Form):
     modulo_producao = forms.BooleanField(required=False, initial=True)
     modulo_distribuicao = forms.BooleanField(required=False, initial=True)
     modulo_financeiro = forms.BooleanField(required=False, initial=True)
-    regra_eventos = forms.JSONField(required=False)
 
 
 class FeedbackForm(forms.Form):

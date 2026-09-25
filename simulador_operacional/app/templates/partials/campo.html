@@ -1,0 +1,10 @@
+{% comment %}
+    Um campo de formulário com rótulo visível, ajuda e erro junto do campo --
+    não no topo da página, onde quem errou não olha.
+{% endcomment %}
+<p class="o-campo{% if campo.errors %} o-campo--erro{% endif %}">
+    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    {{ campo }}
+    {% if campo.help_text %}<span class="o-campo__ajuda">{{ campo.help_text }}</span>{% endif %}
+    {% for erro in campo.errors %}<span class="o-fielderror">{{ erro }}</span>{% endfor %}
+</p>

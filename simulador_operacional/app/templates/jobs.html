@@ -7,65 +7,107 @@
     <div class="o-head__row">
         <div>
             <h1>Execuções de jobs</h1>
-            <p class="o-head__sub">Histórico das rotinas agendadas: fechamento de rodadas, lembretes e sorteio de eventos.</p>
+            <p class="o-head__sub">
+                As rotinas que o sistema executa sozinho: o fechamento da rodada no
+                prazo (§11.1), os lembretes e o sorteio do evento.
+            </p>
+        </div>
+        <div class="o-head__actions">
+            <a class="o-btn o-btn--ghost" href="{% url 'gerenciamento_jogo' %}">Gerenciamento</a>
         </div>
     </div>
 </div>
 
-<form method="get" class="o-panel o-filters" style="margin-bottom: var(--o-5);">
+{% comment %}
+    A pergunta que traz o professor a esta tela é "o fechamento rodou?". Ela
+    se responde aqui em cima, não lendo 200 linhas de tabela.
+{% endcomment %}
+{% if ultimas_execucoes %}
+<div class="o-kpis">
+    {% for job in ultimas_execucoes %}
+    <div class="o-kpi">
+        <span class="o-kpi__label">{{ job.comando }}{% if job.jogo %} · {{ job.jogo.nome }}{% endif %}</span>
+        <span class="o-kpi__value o-kpi__value--text">{{ job.iniciado_em|date:'d/m H:i' }}</span>
+        <span class="o-kpi__foot">
+            {% if job.status == 'falha' %}<span class="o-badge o-badge--bad">falha</span>
+            {% else %}<span class="o-badge o-badge--ok">sucesso</span>{% endif %}
+            {% if job.duracao_segundos is not None %} · {{ job.duracao_segundos }}s{% endif %}
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if falhas_recentes %}
+<p class="o-note o-note--warning">
+    {{ falhas_recentes }} execuç{{ falhas_recentes|pluralize:"ão,ões" }} terminou em falha.
+    O detalhe de cada uma está na coluna “Detalhes”.
+</p>
+{% endif %}
+
+<form method="get" class="o-panel o-filters o-filters--bar">
     <p>
-        <label for="filtro-comando">Comando</label>
-        <input id="filtro-comando" type="search" name="comando" value="{{ request.GET.comando }}">
+        <label for="filtro-turma">Turma</label>
+        <select id="filtro-turma" name="jogo">
+            {% for turma in turmas %}
+            <option value="{{ turma.valor }}" {% if turma.selecionada %}selected{% endif %}>{{ turma.nome }}</option>
+            {% endfor %}
+        </select>
     </p>
     <p>
-        <label for="filtro-status">Status</label>
+        <label for="filtro-comando">Rotina</label>
+        <input id="filtro-comando" type="search" name="comando" value="{{ request.GET.comando }}" placeholder="fechar_rodadas">
+    </p>
+    <p>
+        <label for="filtro-status">Resultado</label>
         <select id="filtro-status" name="status">
             <option value="">Todos</option>
             <option value="sucesso" {% if request.GET.status == "sucesso" %}selected{% endif %}>Sucesso</option>
             <option value="falha" {% if request.GET.status == "falha" %}selected{% endif %}>Falha</option>
         </select>
     </p>
-    <button type="submit" class="o-btn">Filtrar</button>
+    <div class="o-btnrow">
+        <button type="submit" class="o-btn">Filtrar</button>
+        <a class="o-btn o-btn--ghost" href="{% url 'jobs' %}">Limpar</a>
+    </div>
 </form>
 
 <div class="o-tablewrap">
     <table class="o-table">
+        <caption class="o-sr">Últimas execuções das rotinas automáticas</caption>
         <thead>
             <tr>
-                <th scope="col">Comando</th>
-                <th scope="col">Status</th>
-                <th scope="col">Correlation ID</th>
+                <th scope="col">Rotina</th>
+                <th scope="col">Turma</th>
+                <th scope="col">Resultado</th>
                 <th scope="col" class="num">Rodada</th>
                 <th scope="col">Início</th>
-                <th scope="col">Fim</th>
+                <th scope="col" class="num">Duração</th>
                 <th scope="col">Detalhes</th>
             </tr>
         </thead>
         <tbody>
             {% for job in jobs %}
-            <tr>
+            <tr{% if job.status == 'falha' %} data-falha="true"{% endif %}>
                 <th scope="row">{{ job.comando }}</th>
+                <td>{% if job.jogo %}{{ job.jogo.nome }}{% else %}Sem turma{% endif %}</td>
                 <td>
-                    {% if job.status == "sucesso" %}
-                        <span class="o-badge o-badge--ok">sucesso</span>
-                    {% elif job.status == "falha" %}
-                        <span class="o-badge o-badge--bad">falha</span>
-                    {% else %}
-                        <span class="o-badge o-badge--mute">{{ job.status }}</span>
-                    {% endif %}
+                    {% if job.status == "sucesso" %}<span class="o-badge o-badge--ok">sucesso</span>
+                    {% elif job.status == "falha" %}<span class="o-badge o-badge--bad">falha</span>
+                    {% else %}<span class="o-badge o-badge--mute">{{ job.status }}</span>{% endif %}
                 </td>
-                <td class="o-num">{{ job.correlation_id }}</td>
-                <td class="num">{{ job.rodada }}</td>
+                <td class="num">{{ job.rodada|default:"—" }}</td>
                 <td class="o-num">{{ job.iniciado_em|date:'d/m/Y H:i:s' }}</td>
-                <td class="o-num">{{ job.finalizado_em|date:'d/m/Y H:i:s' }}</td>
-                <td>{{ job.detalhes }}</td>
+                <td class="o-num">{% if job.duracao_segundos is not None %}{{ job.duracao_segundos }}s{% else %}em curso{% endif %}</td>
+                <td>{{ job.detalhes|default:"—" }}</td>
             </tr>
             {% empty %}
             <tr>
                 <td colspan="7">
                     <div class="o-empty o-empty--center">
                         {% include 'partials/empty.svg.html' %}
-                        <p>Nenhuma execução encontrada para este filtro.</p>
+                        <p>Nenhuma execução registrada para este filtro.</p>
+                        <p class="o-muted">O fechamento só registra execução quando há rodada vencida para processar.</p>
                     </div>
                 </td>
             </tr>

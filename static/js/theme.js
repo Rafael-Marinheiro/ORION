@@ -71,21 +71,33 @@
     }
 
     /* --- menu de gestao ------------------------------------------------- */
-    var menuToggle = document.querySelector('[data-menu-toggle]');
+    /* O menu do professor tem mais de um grupo (10.4): abrir um fecha o
+       outro, senao os dois paineis se sobrepoem. */
+    var menuToggles = document.querySelectorAll('[data-menu-toggle]');
 
-    if (menuToggle) {
-        menuToggle.addEventListener('click', function (event) {
-            event.stopPropagation();
-            var open = menuToggle.getAttribute('aria-expanded') === 'true';
-            menuToggle.setAttribute('aria-expanded', open ? 'false' : 'true');
-        });
-        document.addEventListener('click', function () {
-            menuToggle.setAttribute('aria-expanded', 'false');
-        });
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                menuToggle.setAttribute('aria-expanded', 'false');
+    function fecharMenus(exceto) {
+        for (var i = 0; i < menuToggles.length; i++) {
+            if (menuToggles[i] !== exceto) {
+                menuToggles[i].setAttribute('aria-expanded', 'false');
             }
+        }
+    }
+
+    for (var m = 0; m < menuToggles.length; m++) {
+        (function (menuToggle) {
+            menuToggle.addEventListener('click', function (event) {
+                event.stopPropagation();
+                var open = menuToggle.getAttribute('aria-expanded') === 'true';
+                fecharMenus(menuToggle);
+                menuToggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+            });
+        }(menuToggles[m]));
+    }
+
+    if (menuToggles.length) {
+        document.addEventListener('click', function () { fecharMenus(null); });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') { fecharMenus(null); }
         });
     }
 

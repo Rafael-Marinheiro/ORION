@@ -96,6 +96,12 @@ class GameConfig(models.Model):
     modulo_distribuicao = models.BooleanField(default=True)
     modulo_financeiro = models.BooleanField(default=True)
 
+    # Campo legado: nunca foi lido por regra nenhuma. O sorteio do 8.2 usa
+    # `Evento.probabilidade`, semeado com os pesos do 8.4. A tela oferecia um
+    # JSON livre que nao mudava nada no jogo -- saiu da configuracao e do
+    # assistente em 25/09/2026, e o controle de eventos do professor passou a
+    # ser o evento manual da abertura da rodada. A coluna fica ate a proxima
+    # limpeza de esquema.
     regra_eventos = models.JSONField(default=dict, blank=True)
     ranking_pesos = models.JSONField(default=default_ranking_pesos, blank=True)
 
@@ -865,6 +871,14 @@ class ExecucaoJob(models.Model):
 
     comando = models.CharField(max_length=120)
     correlation_id = models.CharField(max_length=40, db_index=True)
+    # Turma cuja rodada foi processada nesta execucao. Uma chamada do
+    # `fechar_rodadas` pode encontrar rodadas vencidas de turmas diferentes:
+    # cada uma vira uma execucao propria, senao a tela de execucoes diz que
+    # "algo rodou" sem dizer para quem.
+    jogo = models.ForeignKey(
+        "Jogo", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="execucoes_job",
+    )
     rodada = models.PositiveIntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="sucesso")
     detalhes = models.TextField(blank=True)
@@ -879,3 +893,10 @@ class ExecucaoJob(models.Model):
 
     def __str__(self):
         return f"{self.comando} - {self.status} - {self.correlation_id}"
+
+    @property
+    def duracao_segundos(self):
+        """Quanto a execucao levou, ou None se ainda esta rodando."""
+        if not self.finalizado_em:
+            return None
+        return round((self.finalizado_em - self.iniciado_em).total_seconds(), 1)

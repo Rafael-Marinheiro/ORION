@@ -1433,3 +1433,28 @@ ul.errorlist {
 @media (prefers-reduced-motion: reduce) {
     .o-mapa__praca, .o-heat__row { transition: none; }
 }
+
+/* Formulários longos do professor: seções com rótulo visível, campos em
+   grade e o erro colado no campo que o causou. */
+.o-config { display: grid; gap: var(--o-5); }
+.o-config fieldset { border: 1px solid var(--o-line); }
+.o-config legend { padding: 0 var(--o-2); }
+.o-config__grid {
+    display: grid;
+    gap: var(--o-4);
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    margin-top: var(--o-4);
+}
+.o-campo { display: grid; gap: var(--o-1); margin: 0; }
+.o-campo label { font-weight: 500; }
+.o-campo input, .o-campo select, .o-campo textarea { width: 100%; }
+.o-campo input[type="checkbox"] { width: auto; }
+.o-campo__ajuda { font-size: 0.8125rem; color: var(--o-ink-dim); }
+.o-campo--erro input, .o-campo--erro select, .o-campo--erro textarea { border-color: var(--o-bad); }
+.o-soma {
+    margin: var(--o-4) 0 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--o-warn);
+}
+.o-soma[data-estado="ok"] { color: var(--o-ok); }
+.o-table tr[data-falha="true"] th[scope="row"] { color: var(--o-bad); }

@@ -441,19 +441,29 @@ class Command(BaseCommand):
             self.stdout.write("Nenhuma rodada para fechar")
             return
 
-        job = ExecucaoJob.objects.create(
-            comando="fechar_rodadas",
-            correlation_id=correlation_id,
-            status="sucesso",
-            detalhes="",
-        )
+        job = None
         try:
             for rodada in rodadas:
+                # Uma execucao por rodada fechada, com a turma e o numero
+                # dela. O registro era um so por chamada, sem turma e sem
+                # rodada: a tela de execucoes dizia que "algo rodou" e o
+                # professor com duas turmas nao sabia qual.
+                job = ExecucaoJob.objects.create(
+                    comando="fechar_rodadas",
+                    correlation_id=correlation_id,
+                    jogo_id=rodada.jogo_id,
+                    rodada=rodada.numero,
+                    status="sucesso",
+                    detalhes="",
+                )
                 # Uma falha deve desfazer todos os efeitos desta rodada.
                 # O job permanece fora da transação para registrar a falha.
                 with transaction.atomic():
                     rodada = Rodada.objects.select_for_update().get(pk=rodada.pk)
                     if rodada.fechada:
+                        job.detalhes = "Rodada ja estava fechada."
+                        job.finalizado_em = timezone.now()
+                        job.save(update_fields=["detalhes", "finalizado_em"])
                         continue
                     config = rodada.jogo.config if rodada.jogo_id else GameConfig.objects.filter(pk=1).first()
                     pesos = self.obter_pesos_ranking(config.ranking_pesos if config else None)
@@ -739,13 +749,16 @@ class Command(BaseCommand):
                         extra={"correlation_id": correlation_id, "rodada": rodada.numero},
                     )
 
-            job.status = "sucesso"
-            job.detalhes = "Execucao concluida com sucesso."
+                job.status = "sucesso"
+                job.detalhes = "Rodada fechada com sucesso."
+                job.finalizado_em = timezone.now()
+                job.save(update_fields=["status", "detalhes", "finalizado_em"])
         except Exception as exc:
+            if job is None:
+                raise
             job.status = "falha"
             job.detalhes = str(exc)
-            logger.exception("Falha no fechamento de rodadas", extra={"correlation_id": correlation_id})
-            raise
-        finally:
             job.finalizado_em = timezone.now()
             job.save(update_fields=["status", "detalhes", "finalizado_em"])
+            logger.exception("Falha no fechamento de rodadas", extra={"correlation_id": correlation_id})
+            raise

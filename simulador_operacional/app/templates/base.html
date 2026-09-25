@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260925b">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260925c">
     {% block head_extra %}{% endblock %}
 </head>
 <body{% if user.is_authenticated %} data-app="true"{% endif %}>
@@ -40,27 +40,46 @@
 
             <ul class="o-nav__links" id="nav-links" data-nav-links>
                 {% if user.is_authenticated %}
+                {% comment %}
+                    O 10.4 traz DOIS menus: o do CEO (painel, decisões,
+                    relatórios, ranking, encerramento) e o do administrador
+                    (configuração, gerenciamento, relatórios, ranking geral,
+                    painel de controle, suporte). Eram um só, com as telas do
+                    professor penduradas num "Gestão" ao lado das do aluno --
+                    e o professor, que não tem grupo, abria "Painel geral"
+                    para ver um painel vazio.
+                {% endcomment %}
+                {% if user.is_staff %}
+                    <li><a class="o-nav__link" href="{% url 'gerenciamento_jogo' %}" {% if request.resolver_match.url_name == 'gerenciamento_jogo' %}aria-current="page"{% endif %}>Gerenciamento</a></li>
+                    <li><a class="o-nav__link" href="{% url 'abrir_rodada' %}" {% if request.resolver_match.url_name == 'abrir_rodada' %}aria-current="page"{% endif %}>Abrir rodada</a></li>
+                    <li><a class="o-nav__link" href="{% url 'lista_grupos' %}" {% if request.resolver_match.url_name == 'lista_grupos' %}aria-current="page"{% endif %}>Grupos</a></li>
+                    <li class="o-menu" data-menu>
+                        <button class="o-menu__toggle" type="button" aria-expanded="false" data-menu-toggle>Relatórios</button>
+                        <ul class="o-menu__panel">
+                            <li><a class="o-nav__link" href="{% url 'relatorios' %}">Por grupo (DRE e caixa)</a></li>
+                            <li><a class="o-nav__link" href="{% url 'relatorios_comparativos' %}">Comparativos</a></li>
+                        </ul>
+                    </li>
+                    <li><a class="o-nav__link" href="{% url 'ranking' %}" {% if nav == 'ranking' %}aria-current="page"{% endif %}>Ranking</a></li>
+                    <li class="o-menu" data-menu>
+                        <button class="o-menu__toggle" type="button" aria-expanded="false" data-menu-toggle>Configuração</button>
+                        <ul class="o-menu__panel">
+                            <li><a class="o-nav__link" href="{% url 'game_config' %}">Parâmetros do jogo</a></li>
+                            <li><a class="o-nav__link" href="{% url 'game_config_wizard' %}">Assistente de configuração</a></li>
+                            <li><a class="o-nav__link" href="{% url 'jobs' %}">Execuções de jobs</a></li>
+                        </ul>
+                    </li>
+                    <li><a class="o-nav__link" href="{% url 'ajuda' %}" {% if nav == 'ajuda' %}aria-current="page"{% endif %}>Ajuda</a></li>
+                {% else %}
                     <li><a class="o-nav__link" href="{% url 'painel_grupo' %}" {% if nav == 'painel' %}aria-current="page"{% endif %}>Painel geral</a></li>
                     <li><a class="o-nav__link" href="{% url 'decisoes_rodada' %}" {% if nav == 'decisoes' %}aria-current="page"{% endif %}>Decisões por rodada</a></li>
                     <li><a class="o-nav__link" href="{% url 'relatorios' %}" {% if nav == 'relatorios' %}aria-current="page"{% endif %}>Relatórios financeiros</a></li>
                     <li><a class="o-nav__link" href="{% url 'relatorios_comparativos' %}" {% if nav == 'comparativos' %}aria-current="page"{% endif %}>Relatórios comparativos</a></li>
                     <li><a class="o-nav__link" href="{% url 'ranking' %}" {% if nav == 'ranking' %}aria-current="page"{% endif %}>Ranking</a></li>
                     <li><a class="o-nav__link" href="{% url 'encerramento_rodada' %}" {% if nav == 'encerramento_rodada' %}aria-current="page"{% endif %}>Encerramento</a></li>
-                    {% if user.is_staff %}
-                    <li class="o-menu" data-menu>
-                        <button class="o-menu__toggle" type="button" aria-expanded="false" data-menu-toggle>Gestão</button>
-                        <ul class="o-menu__panel">
-                            <li><a class="o-nav__link" href="{% url 'gerenciamento_jogo' %}">Gerenciamento do jogo</a></li>
-                            <li><a class="o-nav__link" href="{% url 'abrir_rodada' %}">Abrir rodada</a></li>
-                            <li><a class="o-nav__link" href="{% url 'lista_grupos' %}">Grupos</a></li>
-                            <li><a class="o-nav__link" href="{% url 'game_config' %}">Configuração</a></li>
-                            <li><a class="o-nav__link" href="{% url 'game_config_wizard' %}">Assistente de configuração</a></li>
-                            <li><a class="o-nav__link" href="{% url 'jobs' %}">Execuções de jobs</a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
                     <li><a class="o-nav__link" href="{% url 'ajuda' %}" {% if nav == 'ajuda' %}aria-current="page"{% endif %}>Ajuda</a></li>
                     <li><a class="o-nav__link" href="{% url 'feedback' %}" {% if nav == 'feedback' %}aria-current="page"{% endif %}>Feedback</a></li>
+                {% endif %}
                 {% else %}
                     <li><a class="o-nav__link" href="{% url 'ajuda' %}" {% if nav == 'ajuda' %}aria-current="page"{% endif %}>Ajuda</a></li>
                     <li><a class="o-nav__link" href="{% url 'feedback' %}" {% if nav == 'feedback' %}aria-current="page"{% endif %}>Feedback</a></li>
@@ -104,7 +123,14 @@
             <span class="o-rail__spacer"></span>
 
             <span class="o-rail__facts">
-                {% if submissao_realizada %}
+                {% comment %}
+                    O estado da submissão é do grupo. O professor não tem
+                    grupo: para ele o trilho mostrava "Sem submissão" como se
+                    ele devesse algo.
+                {% endcomment %}
+                {% if user.is_staff %}
+                    {% if rodada_corrente %}<a class="o-badge o-badge--plain" href="{% url 'gerenciamento_jogo' %}">Ver submissões da turma</a>{% endif %}
+                {% elif submissao_realizada %}
                     <span class="o-badge o-badge--ok">Submissão enviada</span>
                 {% elif rodada_corrente %}
                     <span class="o-badge o-badge--mute">Sem submissão</span>
@@ -162,7 +188,7 @@
     </div>
 </footer>
 
-<script src="{% static 'js/theme.js' %}?v=20260925a" defer></script>
+<script src="{% static 'js/theme.js' %}?v=20260925b" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

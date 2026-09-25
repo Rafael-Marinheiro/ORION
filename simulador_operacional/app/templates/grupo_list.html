@@ -7,7 +7,7 @@
     <div class="o-head__row">
         <div>
             <h1>Grupos</h1>
-            <p class="o-head__sub">Equipes cadastradas na simulação.</p>
+            <p class="o-head__sub">Equipes cadastradas, separadas por turma.</p>
         </div>
         <div class="o-head__actions">
             <a href="{% url 'criar_grupo' %}" class="o-btn o-btn--primary">Novo grupo</a>
@@ -15,22 +15,37 @@
     </div>
 </div>
 
+{% for turma in turmas %}
+<section class="o-panel" aria-labelledby="turma-{{ forloop.counter }}">
+    <div class="o-head__row">
+        <h2 id="turma-{{ forloop.counter }}" class="o-panel__title">{{ turma.nome }}</h2>
+        <span class="o-badge o-badge--plain">{{ turma.grupos|length }} equipe{{ turma.grupos|length|pluralize }}</span>
+    </div>
+    <div class="o-tablewrap">
+        <table class="o-table">
+            <caption class="o-sr">Equipes da turma {{ turma.nome }}</caption>
+            <thead><tr><th scope="col">Equipe</th><th scope="col">CEO</th><th scope="col" class="num">Integrantes</th><th scope="col" class="num">Capital</th><th scope="col"><span class="o-sr">Ações</span></th></tr></thead>
+            <tbody>
+                {% for grupo in turma.grupos %}
+                <tr>
+                    <th scope="row">{{ grupo.nome }}</th>
+                    <td>{% if grupo.lider %}{{ grupo.lider.nome_usuario }}{% else %}<span class="o-badge o-badge--warn">Não definido</span>{% endif %}</td>
+                    <td class="o-num">{{ grupo.membros.count }}</td>
+                    <td class="o-num">R$ {% include 'partials/valor.html' with valor=grupo.capital %}</td>
+                    <td><a class="o-btn o-btn--sm o-btn--ghost" href="{% url 'editar_grupo' grupo.pk %}">Editar</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% empty %}
 <div class="o-panel">
-    <ul class="o-list">
-        {% for g in grupos %}
-        <li>
-            {{ g.nome }}
-            <span style="margin-left:auto"><a class="o-btn o-btn--sm o-btn--ghost" href="{% url 'editar_grupo' g.pk %}">Editar</a></span>
-        </li>
-        {% empty %}
-        <li>
-            <div class="o-empty o-empty--center" style="width:100%">
-                {% include 'partials/empty.svg.html' %}
-                <p>Nenhum grupo cadastrado.</p>
-                <p><a class="o-btn o-btn--primary" href="{% url 'criar_grupo' %}">Criar o primeiro grupo</a></p>
-            </div>
-        </li>
-        {% endfor %}
-    </ul>
+    <div class="o-empty o-empty--center">
+        {% include 'partials/empty.svg.html' %}
+        <p>Nenhum grupo cadastrado.</p>
+        <p><a class="o-btn o-btn--primary" href="{% url 'criar_grupo' %}">Criar o primeiro grupo</a></p>
+    </div>
 </div>
+{% endfor %}
 {% endblock %}

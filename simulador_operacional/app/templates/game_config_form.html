@@ -1,28 +1,93 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Configuração do jogo — ORION{% endblock %}
+{% block title %}Parâmetros do jogo — ORION{% endblock %}
 
 {% block content %}
 <div class="o-head">
-    <h1>Configuração do jogo</h1>
-    <p class="o-head__sub">Parâmetros base da simulação. Valem para as próximas rodadas.</p>
+    <div class="o-head__row">
+        <div>
+            <h1>Parâmetros do jogo</h1>
+            <p class="o-head__sub">
+                O que cada turma recebe ao começar e como o desempenho é pontuado.
+                Vale para as próximas rodadas; o que já fechou não muda.
+            </p>
+        </div>
+        <div class="o-head__actions">
+            <a class="o-btn o-btn--ghost" href="{% url 'game_config_wizard' %}">Assistente</a>
+        </div>
+    </div>
 </div>
 
-<div class="o-form-panel o-panel">
-    <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-        <div class="o-note o-note--error" role="alert">{{ form.non_field_errors }}</div>
-        {% endif %}
-        {% for field in form %}
-        <p>
-            {{ field.label_tag }}
-            {{ field }}
-            {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
-            {% if field.errors %}<span class="o-fielderror">{{ field.errors|join:" " }}</span>{% endif %}
+<form method="post" class="o-config">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <ul class="o-notes" role="alert">
+        {% for erro in form.non_field_errors %}<li class="o-note o-note--error">{{ erro }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <fieldset class="o-panel">
+        <legend class="o-panel__title">Largada das equipes</legend>
+        <p class="o-panel__hint">Capital e estoque com que toda equipe começa a simulação (§5).</p>
+        <div class="o-config__grid">
+            {% include 'partials/campo.html' with campo=form.capital_inicial %}
+            {% include 'partials/campo.html' with campo=form.estoque_inicial %}
+            {% include 'partials/campo.html' with campo=form.numero_rodadas %}
+        </div>
+    </fieldset>
+
+    <fieldset class="o-panel">
+        <legend class="o-panel__title">Parque fabril</legend>
+        <p class="o-panel__hint">
+            Máquinas por linha e operadores de largada (§13.4). Cada máquina exige
+            dois operadores e produz 400 minutos por rodada.
         </p>
-        {% endfor %}
-        <button type="submit" class="o-btn o-btn--primary">Salvar configuração</button>
-    </form>
-</div>
+        <div class="o-config__grid">
+            {% include 'partials/campo.html' with campo=form.maquinas_iniciais_a %}
+            {% include 'partials/campo.html' with campo=form.maquinas_iniciais_b %}
+            {% include 'partials/campo.html' with campo=form.maquinas_iniciais_c %}
+            {% include 'partials/campo.html' with campo=form.maquinas_iniciais %}
+            {% include 'partials/campo.html' with campo=form.trabalhadores_iniciais %}
+        </div>
+    </fieldset>
+
+    <fieldset class="o-panel">
+        <legend class="o-panel__title">Módulos em jogo</legend>
+        <p class="o-panel__hint">Desligar um módulo tira as decisões dele do painel das equipes.</p>
+        <div class="o-config__grid">
+            {% include 'partials/campo.html' with campo=form.modulo_producao %}
+            {% include 'partials/campo.html' with campo=form.modulo_distribuicao %}
+            {% include 'partials/campo.html' with campo=form.modulo_financeiro %}
+            {% include 'partials/campo.html' with campo=form.produtos_habilitados %}
+        </div>
+    </fieldset>
+
+    <fieldset class="o-panel" data-pesos>
+        <legend class="o-panel__title">Pesos da pontuação</legend>
+        <p class="o-panel__hint">
+            Os cinco eixos do §12.2. A soma precisa dar exatamente 1,0 — é assim que
+            a nota final do §12.4 fecha em 100.
+        </p>
+        <div class="o-config__grid">
+            {% include 'partials/campo.html' with campo=form.peso_eo %}
+            {% include 'partials/campo.html' with campo=form.peso_df %}
+            {% include 'partials/campo.html' with campo=form.peso_ee %}
+            {% include 'partials/campo.html' with campo=form.peso_sd %}
+            {% include 'partials/campo.html' with campo=form.peso_ds %}
+        </div>
+        {% comment %}
+            A soma aparece enquanto se digita: o erro do servidor chega tarde,
+            depois de perder o que foi preenchido nos outros campos.
+        {% endcomment %}
+        <p class="o-soma" data-soma-pesos aria-live="polite"></p>
+    </fieldset>
+
+    <div class="o-btnrow">
+        <button type="submit" class="o-btn o-btn--primary">Salvar parâmetros</button>
+        <a class="o-btn o-btn--ghost" href="{% url 'gerenciamento_jogo' %}">Voltar ao gerenciamento</a>
+    </div>
+</form>
+
+<script src="{% static 'js/config_pesos.js' %}?v=20260925a" defer></script>
 {% endblock %}

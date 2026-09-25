@@ -618,6 +618,39 @@ custos — perdas por perecibilidade e a penalidade do §11.2 — e as vendas
 contra o ofertado. Rodada sem operação segue a regra do ranking: sem
 posição, com a explicação do §7.3.
 
+### "Regra de eventos" era um controle inerte — removido em 25/09/2026
+
+O §10.3 pede "Configuração de eventos aleatórios" na tela de configurações.
+O que existia era um campo JSON livre (`GameConfig.regra_eventos`) que o
+professor preenchia e que **nenhuma regra lia**: o sorteio do §8.2 usa
+`Evento.probabilidade`, semeado com os pesos do §8.4. Escrever qualquer
+coisa ali não mudava nada no jogo.
+
+Decisão do Rafael em 25/09/2026: o formato não era utilizável por um
+professor, e o controle de eventos passa a ser **o evento manual na abertura
+da rodada** (pendente de implementação, ver backlog). O campo saiu da
+configuração, do assistente e do serializer; a coluna fica no banco marcada
+como legada até a próxima limpeza de esquema.
+
+### Telas de gestão por turma — 25/09/2026
+
+Com mais de uma turma no mesmo sistema, cada tela de gestão precisa dizer de
+qual turma está falando. Além do ranking (acima):
+
+- **Abrir rodada** (§10.3, §11.1): a tela passou a saber a próxima rodada de
+  cada turma e a avisar quando a anterior ainda não fechou — antes o número
+  era digitado de cabeça. O prazo virou campo de data e hora nativo.
+- **Grupos**: lista separada por turma, com CEO, integrantes e capital.
+- **Execuções de jobs**: uma chamada do `fechar_rodadas` pode encontrar
+  rodadas vencidas de turmas diferentes e gravava **uma** execução, sem
+  turma e sem número de rodada (a coluna "Rodada" nunca era preenchida).
+  Agora cada rodada fechada vira uma execução própria, com turma e número, e
+  a tela filtra por turma. Exigiu `ExecucaoJob.jogo` nas duas trilhas de
+  migração.
+- **Menu** (§10.4): o documento traz dois menus, o do administrador e o do
+  CEO, e o sistema tinha um só — o professor via "Painel geral" e "Decisões
+  por rodada" de um grupo que ele não tem. Cada perfil passou a ter o seu.
+
 ### O ranking do professor mostrava todas as turmas juntas — 25/09/2026
 
 `RankingView` filtrava por jogo apenas para quem **não** é `is_staff`. Para o

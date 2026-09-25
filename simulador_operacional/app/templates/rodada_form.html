@@ -1,18 +1,49 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Abrir rodada — ORION{% endblock %}
 
 {% block content %}
 <div class="o-head">
     <h1>Abrir rodada</h1>
-    <p class="o-head__sub">Ao abrir, as equipes passam a registrar decisões até o horário de fechamento.</p>
+    <p class="o-head__sub">
+        Ao abrir, as equipes registram decisões até o prazo. No horário marcado a
+        rodada fecha sozinha e o resultado é processado (§11.1).
+    </p>
 </div>
 
 <div class="o-form-panel o-panel">
-    <form method="post">
+    <form method="post" novalidate>
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="o-btn o-btn--primary">Abrir rodada</button>
+        {% if form.non_field_errors %}
+        <ul class="o-notes" role="alert">
+            {% for erro in form.non_field_errors %}<li class="o-note o-note--error">{{ erro }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
+        {% for campo in form %}
+        <p>
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+            {% if campo.help_text %}<span class="o-panel__hint">{{ campo.help_text }}</span>{% endif %}
+            {% for erro in campo.errors %}<span class="o-fielderror">{{ erro }}</span>{% endfor %}
+        </p>
+        {% if campo.name == 'jogo' %}
+        {% comment %}
+            O estado da turma fica colado no seletor dela: é a resposta à
+            pergunta que a professora acabou de fazer ao escolher a turma.
+        {% endcomment %}
+        <p class="o-note o-note--info" data-estado-turma hidden></p>
+        {% endif %}
+        {% endfor %}
+
+        <div class="o-btnrow">
+            <button type="submit" class="o-btn o-btn--primary">Abrir rodada</button>
+            <a class="o-btn o-btn--ghost" href="{% url 'gerenciamento_jogo' %}">Voltar ao gerenciamento</a>
+        </div>
     </form>
 </div>
+
+{{ estado_turmas|json_script:"estado-turmas" }}
+<script src="{% static 'js/abrir_rodada.js' %}?v=20260925a" defer></script>
 {% endblock %}

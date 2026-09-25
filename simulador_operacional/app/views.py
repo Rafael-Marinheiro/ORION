@@ -381,7 +381,6 @@ class GameConfigUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
 
     def form_valid(self, form):
         form.instance.produtos_habilitados = form.cleaned_data["produtos_habilitados"]
-        form.instance.regra_eventos = form.cleaned_data.get("regra_eventos", {})
         return super().form_valid(form)
 
 
@@ -419,7 +418,6 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
                 "modulo_producao": config.modulo_producao,
                 "modulo_distribuicao": config.modulo_distribuicao,
                 "modulo_financeiro": config.modulo_financeiro,
-                "regra_eventos": config.regra_eventos,
             }
             initial.update(wizard_data.get("step2", {}))
             form = self.get_form_for_step(step, initial=initial)
@@ -479,7 +477,6 @@ class GameConfigWizardView(LoginRequiredMixin, PermissionRequiredMixin, Template
             config.modulo_producao = dados_step2.get("modulo_producao", False)
             config.modulo_distribuicao = dados_step2.get("modulo_distribuicao", False)
             config.modulo_financeiro = dados_step2.get("modulo_financeiro", False)
-            config.regra_eventos = dados_step2.get("regra_eventos") or {}
             config.save()
             request.session.pop(self.session_key, None)
             messages.success(request, "Configuracao atualizada pelo wizard com sucesso.")
@@ -497,6 +494,52 @@ class RodadaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
 
     def has_permission(self):
         return self.request.user.is_staff or super().has_permission()
+
+    @staticmethod
+    def estado_das_turmas():
+        """Em que pe esta cada turma: proxima rodada e pendencia.
+
+        A professora abria a rodada digitando o numero de cabeca. O sistema
+        ja sabe qual e a proxima -- e sabe tambem quando a anterior ainda
+        nao fechou, que e o caso em que abrir outra so embaralha a aula.
+        """
+        estados = []
+        jogos = list(Jogo.objects.select_related("config").order_by("nome"))
+        avulsos = Grupo.objects.filter(jogo__isnull=True).exists()
+
+        for jogo in jogos + ([None] if avulsos else []):
+            rodadas = Rodada.objects.filter(jogo=jogo) if jogo else Rodada.objects.filter(jogo__isnull=True)
+            ultima = rodadas.order_by("-numero").first()
+            aberta = rodadas.filter(fechada=False).order_by("numero").first()
+            config = jogo.config if jogo else GameConfig.objects.filter(pk=1).first()
+            total = config.numero_rodadas if config else 0
+            estados.append(
+                {
+                    "valor": str(jogo.id) if jogo else "",
+                    "nome": jogo.nome if jogo else "Grupos sem turma",
+                    "proxima": (ultima.numero + 1) if ultima else 1,
+                    "total": total,
+                    "pendente": aberta.numero if aberta else None,
+                    "encerrada": bool(total) and bool(ultima) and ultima.numero >= total,
+                }
+            )
+        return estados
+
+    def get_initial(self):
+        """Abre ja na turma que esta jogando, com a proxima rodada dela."""
+        inicial = super().get_initial()
+        jogo_id, _sem_jogo, _opcoes = turma_em_foco(self.request)
+        estados = {estado["valor"]: estado for estado in self.estado_das_turmas()}
+        escolhido = estados.get(str(jogo_id) if jogo_id else "")
+        if escolhido:
+            inicial.setdefault("jogo", jogo_id)
+            inicial.setdefault("numero", escolhido["proxima"])
+        return inicial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["estado_turmas"] = self.estado_das_turmas()
+        return context
 
     def form_valid(self, form):
         fim = form.cleaned_data["fim"]
@@ -1814,6 +1857,36 @@ class GrupoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     def has_permission(self):
         return self.request.user.is_staff or super().has_permission()
 
+    def get_queryset(self):
+        return (
+            Grupo.objects.select_related("jogo", "lider")
+            .prefetch_related("membros")
+            .order_by("jogo__nome", "nome")
+        )
+
+    def get_context_data(self, **kwargs):
+        """Grupos agrupados por turma.
+
+        Uma lista corrida de nomes nao diz de que turma cada equipe e, e a
+        professora com duas turmas no mesmo sistema precisa disso antes de
+        qualquer outra coisa.
+        """
+        context = super().get_context_data(**kwargs)
+        turmas = {}
+        for grupo in context["grupos"]:
+            chave = grupo.jogo_id
+            turma = turmas.setdefault(
+                chave,
+                {
+                    "nome": grupo.jogo.nome if grupo.jogo else "Grupos sem turma",
+                    "jogo": grupo.jogo,
+                    "grupos": [],
+                },
+            )
+            turma["grupos"].append(grupo)
+        context["turmas"] = list(turmas.values())
+        return context
+
 
 class GrupoCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "grupo_form.html"
@@ -2058,8 +2131,27 @@ class JobsView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     def has_permission(self):
         return self.request.user.is_staff or super().has_permission()
 
+    def turma_pedida(self):
+        """Turma escolhida no filtro, ou None para "todas"."""
+        escolha = (self.request.GET.get("jogo") or "").strip()
+        if escolha == AVULSO:
+            return AVULSO
+        if escolha.isdigit() and Jogo.objects.filter(id=int(escolha)).exists():
+            return int(escolha)
+        return None
+
+    def _por_turma(self, queryset):
+        turma = self.turma_pedida()
+        if turma == AVULSO:
+            return queryset.filter(jogo__isnull=True)
+        if turma:
+            return queryset.filter(jogo_id=turma)
+        return queryset
+
     def get_queryset(self):
-        qs = ExecucaoJob.objects.order_by("-iniciado_em")
+        qs = self._por_turma(
+            ExecucaoJob.objects.select_related("jogo").order_by("-iniciado_em")
+        )
         comando = self.request.GET.get("comando")
         status = self.request.GET.get("status")
         if comando:
@@ -2067,6 +2159,32 @@ class JobsView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         if status:
             qs = qs.filter(status=status)
         return qs[:200]
+
+    def get_context_data(self, **kwargs):
+        """Resumo antes da lista: como foi a ultima execucao de cada rotina.
+
+        A tela abria numa tabela de 200 linhas. A pergunta que leva o
+        professor ate aqui e "o fechamento da MINHA turma rodou?", e ela nao
+        se responde lendo linha por linha nem misturando turmas.
+        """
+        context = super().get_context_data(**kwargs)
+        escopo = self._por_turma(ExecucaoJob.objects.select_related("jogo"))
+        ultimas = {}
+        for job in escopo.order_by("comando", "-iniciado_em"):
+            ultimas.setdefault(job.comando, job)
+        context["ultimas_execucoes"] = list(ultimas.values())
+        context["falhas_recentes"] = escopo.filter(status="falha").count()
+
+        turma = self.turma_pedida()
+        context["turmas"] = [
+            {"valor": "", "nome": "Todas as turmas", "selecionada": turma is None}
+        ] + [
+            {"valor": str(jogo.id), "nome": jogo.nome, "selecionada": turma == jogo.id}
+            for jogo in Jogo.objects.order_by("nome")
+        ] + [
+            {"valor": AVULSO, "nome": "Grupos sem turma", "selecionada": turma == AVULSO}
+        ]
+        return context
 
 
 @login_required
