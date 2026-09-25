@@ -54,7 +54,11 @@ from .services.logistica import calcular_frete, calcular_frete_materia_prima, pe
 from .services.marketing import fator_marketing
 from .services.perecibilidade import risco_de_perda_de_estoque
 from .services.suprimentos import limite_de_compra
-from .services.pontuacao import ordenar_classificacao, satisfacao_por_praca
+from .services.pontuacao import (
+    ordenar_classificacao,
+    pares_com_operacao,
+    satisfacao_por_praca,
+)
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
     ConfigWizardStep1Form,
@@ -580,6 +584,20 @@ class GerenciamentoJogoView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         return context
 
 
+def rodada_do_filtro(request):
+    """Rodada pedida na querystring, ou None.
+
+    O valor vem do usuario: texto, numero negativo ou rodada inexistente
+    viram None. Sem isso, `?rodada=abc` chegava ao ORM e levantava
+    ValueError -- HTTP 500 nas quatro exportacoes.
+    """
+    valor = (request.GET.get("rodada") or "").strip()
+    if not valor.isdigit():
+        return None
+    numero = int(valor)
+    return numero if numero > 0 else None
+
+
 def numeros_de_rodadas_fechadas(jogo_id=None, sem_jogo=False):
     """Numeros das rodadas ja encerradas.
 
@@ -678,11 +696,27 @@ class RankingView(LoginRequiredMixin, TemplateView):
         context["rodada_referencia"] = rodada_referencia
         context["destaques"] = self._destaques_da_rodada(ranking)
         classificacoes = self._classificacoes_por_rodada(indicadores, rodadas_fechadas)
+        # 7.3: a MP so chega na rodada seguinte, entao na rodada 1 ninguem
+        # produz nem vende. Apresentar posicao e pontuacao ali seria ordenar
+        # equipes por um desempenho que a rodada nao teve como medir.
+        grupos_no_ranking = {item["grupo"] for item in ranking}
+        grupos_no_ranking.update(
+            item["grupo"] for lista in classificacoes.values() for item in lista
+        )
+        com_operacao = pares_com_operacao(grupos_no_ranking, rodadas_fechadas)
+
+        for item in ranking:
+            item["operou"] = (item["grupo"].id, rodada_referencia) in com_operacao
+        rodada_operou = any(item["operou"] for item in ranking)
+        context["rodada_sem_operacao"] = bool(rodada_referencia) and not rodada_operou
+        # Destaque de uma rodada sem operacao seria coroar quem nao jogou.
+        if context["rodada_sem_operacao"]:
+            context["destaques"] = []
         context["grafico_posicoes"] = self._grafico_posicoes(
-            classificacoes, rodadas_fechadas
+            classificacoes, rodadas_fechadas, com_operacao
         )
         context["evolucao_grupo"] = self._evolucao_do_grupo(
-            classificacoes, rodadas_fechadas, grupo_usuario
+            classificacoes, rodadas_fechadas, grupo_usuario, com_operacao
         )
         return context
 
@@ -701,8 +735,12 @@ class RankingView(LoginRequiredMixin, TemplateView):
             for rodada in rodadas_fechadas
         }
 
-    def _grafico_posicoes(self, classificacoes, rodadas_fechadas):
-        """Converte a classificação de cada rodada em trajetórias por equipe."""
+    def _grafico_posicoes(self, classificacoes, rodadas_fechadas, com_operacao):
+        """Converte a classificação de cada rodada em trajetórias por equipe.
+
+        Rodada em que a equipe não operou fica como lacuna: posição ali seria
+        ordenar quem não jogou.
+        """
         series_por_grupo = {}
         for indice, rodada in enumerate(rodadas_fechadas):
             classificacao = classificacoes.get(rodada, [])
@@ -710,6 +748,8 @@ class RankingView(LoginRequiredMixin, TemplateView):
                 nome = item["grupo"].nome
                 if nome not in series_por_grupo:
                     series_por_grupo[nome] = [None] * len(rodadas_fechadas)
+                if (item["grupo"].id, rodada) not in com_operacao:
+                    continue
                 series_por_grupo[nome][indice] = posicao
 
         return {
@@ -739,7 +779,8 @@ class RankingView(LoginRequiredMixin, TemplateView):
              "valor": maior_market_share["market_share"], "formato": "percentual"},
         ]
 
-    def _evolucao_do_grupo(self, classificacoes, rodadas_fechadas, grupo_usuario):
+    def _evolucao_do_grupo(self, classificacoes, rodadas_fechadas, grupo_usuario,
+                           com_operacao):
         if not grupo_usuario:
             return []
         evolucao = []
@@ -747,8 +788,14 @@ class RankingView(LoginRequiredMixin, TemplateView):
             ranking = classificacoes.get(rodada, [])
             for posicao, item in enumerate(ranking, start=1):
                 if item["grupo"].id == grupo_usuario.id:
+                    operou = (grupo_usuario.id, rodada) in com_operacao
                     evolucao.append(
-                        {"rodada": rodada, "posicao": posicao, "pontuacao": item["pontuacao"]}
+                        {
+                            "rodada": rodada,
+                            "posicao": posicao if operou else None,
+                            "pontuacao": item["pontuacao"] if operou else None,
+                            "operou": operou,
+                        }
                     )
                     break
         return evolucao
@@ -1737,7 +1784,19 @@ class RelatoriosView(LoginRequiredMixin, TemplateView):
     modo_comparativo = False
 
     def get(self, request, *args, **kwargs):
-        form = ResultadoFilterForm(request.GET or None)
+        grupo_do_usuario = (
+            None if request.user.is_staff else obter_grupo_do_usuario(request.user)
+        )
+        if request.user.is_staff:
+            rodadas_ofertadas = numeros_de_rodadas_fechadas()
+        elif grupo_do_usuario:
+            rodadas_ofertadas = numeros_de_rodadas_fechadas(
+                jogo_id=grupo_do_usuario.jogo_id,
+                sem_jogo=grupo_do_usuario.jogo_id is None,
+            )
+        else:
+            rodadas_ofertadas = []
+        form = ResultadoFilterForm(request.GET or None, rodadas=rodadas_ofertadas)
         resultados = ResultadoFinanceiro.objects.select_related("grupo")
         consolidados = ConsolidadoRodadaGrupo.objects.select_related("grupo")
         if not request.user.is_staff:
@@ -1852,7 +1911,7 @@ class JobsView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 
 @login_required
 def export_resultados_pdf(request):
-    rodada = request.GET.get("rodada")
+    rodada = rodada_do_filtro(request)
     grupo_id = request.GET.get("grupo")
     qs = ConsolidadoRodadaGrupo.objects.select_related("grupo")
     if not request.user.is_staff:
@@ -1897,7 +1956,7 @@ def export_resultados_pdf(request):
 
 @login_required
 def export_resultados_excel(request):
-    rodada = request.GET.get("rodada")
+    rodada = rodada_do_filtro(request)
     grupo_id = request.GET.get("grupo")
     qs = ConsolidadoRodadaGrupo.objects.select_related("grupo")
     if not request.user.is_staff:
@@ -1966,7 +2025,7 @@ def export_resultados_excel(request):
 
 @login_required
 def export_resultados_csv(request):
-    rodada = request.GET.get("rodada")
+    rodada = rodada_do_filtro(request)
     grupo_id = request.GET.get("grupo")
     qs = ResultadoFinanceiro.objects.select_related("grupo")
     if rodada:
@@ -1991,7 +2050,7 @@ def export_resultados_csv(request):
 
 @login_required
 def export_resultados_json(request):
-    rodada = request.GET.get("rodada")
+    rodada = rodada_do_filtro(request)
     grupo_id = request.GET.get("grupo")
     qs = ResultadoFinanceiro.objects.select_related("grupo")
     if rodada:

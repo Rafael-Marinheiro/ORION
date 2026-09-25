@@ -307,8 +307,25 @@ class GrupoCadastroForm(forms.ModelForm):
 
 
 class ResultadoFilterForm(forms.Form):
-    rodada = forms.IntegerField(required=False, label="Rodada")
+    """Filtro dos relatorios. So oferece rodada que existe.
+
+    Era um `IntegerField` livre: dava para pedir a rodada -5 ou a 99 e
+    receber a tela vazia, sem nada dizendo que aquela rodada nao existe. A
+    lista sai das rodadas fechadas do jogo do proprio usuario, entao o campo
+    tambem informa o que ha para ver.
+    """
+
+    rodada = forms.TypedChoiceField(
+        required=False, label="Rodada", coerce=int, empty_value=None,
+        choices=[("", "Todas as rodadas")],
+    )
     grupo = forms.ModelChoiceField(queryset=Grupo.objects.all(), required=False)
+
+    def __init__(self, *args, rodadas=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["rodada"].choices = [("", "Todas as rodadas")] + [
+            (numero, f"Rodada {numero}") for numero in sorted(rodadas)
+        ]
 
 
 class ConfigWizardStep1Form(forms.Form):

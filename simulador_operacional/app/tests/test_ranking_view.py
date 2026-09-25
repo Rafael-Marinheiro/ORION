@@ -5,7 +5,16 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from app.models import ConsolidadoRodadaGrupo, GameConfig, Grupo, Jogo, Rodada, User
+from app.models import (
+    ConsolidadoRodadaGrupo,
+    GameConfig,
+    Grupo,
+    Jogo,
+    Producao,
+    Produto,
+    Rodada,
+    User,
+)
 
 
 class RankingViewTest(TestCase):
@@ -17,9 +26,20 @@ class RankingViewTest(TestCase):
         self.vega = Grupo.objects.create(nome="Equipe Vega", jogo=self.jogo)
         self.rigel = Grupo.objects.create(nome="Equipe Rigel", jogo=self.jogo)
         self.vega.membros.add(usuario)
+        self.produto = Produto.objects.create(
+            codigo="A", nome="Produto A", tempo_producao_min=2
+        )
         self.client.force_login(usuario)
 
-    def _consolidar(self, grupo, rodada, score, lucro=0, market_share=0):
+    def _consolidar(self, grupo, rodada, score, lucro=0, market_share=0, operou=True):
+        if operou:
+            # Rodada em que a equipe produziu: sem isso ela conta como "sem
+            # operacao" e a tela nao apresenta posicao nem pontuacao, porque
+            # pelo 7.3 a rodada 1 nao tem como medir desempenho.
+            Producao.objects.get_or_create(
+                grupo=grupo, produto=self.produto, rodada=rodada,
+                defaults={"quantidade_planejada": 10, "quantidade_produzida": 10},
+            )
         return ConsolidadoRodadaGrupo.objects.create(
             grupo=grupo, rodada=rodada, score_multicriterio=Decimal(score),
             lucro_rodada=Decimal(lucro), market_share_percent=Decimal(market_share),
@@ -61,8 +81,8 @@ class RankingViewTest(TestCase):
         self.assertEqual(
             response.context["evolucao_grupo"],
             [
-                {"rodada": 1, "posicao": 2, "pontuacao": Decimal("60")},
-                {"rodada": 2, "posicao": 1, "pontuacao": Decimal("90")},
+                {"rodada": 1, "posicao": 2, "pontuacao": Decimal("60"), "operou": True},
+                {"rodada": 2, "posicao": 1, "pontuacao": Decimal("90"), "operou": True},
             ],
         )
         self.assertEqual(

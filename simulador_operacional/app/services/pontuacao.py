@@ -173,6 +173,35 @@ def capacidade_de_venda(grupo):
     )
 
 
+def pares_com_operacao(grupos, rodadas):
+    """Pares (grupo, rodada) em que houve operacao de fato.
+
+    "Operou" e ter produzido ou despachado alguma coisa. Comprar
+    materia-prima nao conta: pelo 7.3 a MP so fica disponivel "a partir da
+    rodada seguinte ao pedido", entao na rodada 1 nenhuma equipe pode
+    produzir nem vender -- ela compra e espera.
+
+    Serve para a tela nao apresentar como medida o que a rodada nao mediu.
+    Numa rodada sem operacao o EO sai 20,0 porque o terceiro termo do
+    12.3.1 da 1 quando nao ha perdas (e nao ha o que perder), e o DS sai
+    76,6 pelo mesmo motivo no DS1. Sao artefatos de denominador vazio, nao
+    desempenho.
+    """
+    from app.models import Distribuicao, Producao
+
+    ids = [g.id if hasattr(g, "id") else g for g in grupos]
+    pares = set()
+    for modelo, campo in ((Producao, "quantidade_produzida"), (Distribuicao, "quantidade")):
+        linhas = (
+            modelo.objects.filter(grupo_id__in=ids, rodada__in=rodadas)
+            .values("grupo_id", "rodada")
+            .annotate(total=Sum(campo))
+            .filter(total__gt=0)
+        )
+        pares.update((linha["grupo_id"], linha["rodada"]) for linha in linhas)
+    return pares
+
+
 def satisfacao_por_praca(*, grupo, rodada):
     """SD Local de cada praca atendida, para o mapa de calor do painel.
 

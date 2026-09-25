@@ -15,12 +15,25 @@
                 Este é o ranking provisório da rodada; a classificação final soma o ciclo inteiro.
             </p>
         </div>
-        {# RN-12: o ranking provisorio sai a cada rodada, o final ao termino do jogo. #}
+        {# RN-12: o ranking provisorio sai a cada rodada, o final ao termino do jogo #}
         <div class="o-head__actions">
             <a class="o-btn o-btn--ghost" href="{% url 'classificacao_final' %}">Classificação final</a>
         </div>
     </div>
 </div>
+
+{% if rodada_sem_operacao %}
+{% comment %}
+    7.3: a MP pedida so chega na rodada seguinte, entao a primeira rodada
+    nao tem producao nem venda. Sem isso a tela coroava um lider que nao
+    operou, com eixos vindos de denominador vazio.
+{% endcomment %}
+<p class="o-note o-note--info">
+    A rodada {{ rodada_referencia }} não teve produção nem venda de nenhuma
+    equipe: a matéria-prima pedida só fica disponível na rodada seguinte.
+    Não há desempenho a classificar ainda.
+</p>
+{% endif %}
 
 <div class="o-tablewrap o-tablewrap--ranking">
     <table class="o-table o-table--ranking">
@@ -43,12 +56,17 @@
             <tr {% if forloop.counter <= 3 %}data-top="true"{% endif %}>
                 <td class="rank rank--{{ forloop.counter }}" data-label="Posição">{% if forloop.counter <= 3 %}{% include 'partials/trophy.svg.html' %}{% endif %}<span>{{ forloop.counter }}</span></td>
                 <th scope="row" data-label="Grupo">{{ item.grupo.nome }}</th>
+                {% if item.operou %}
                 <td class="num" data-label="Pontuação">{{ item.pontuacao|floatformat:2 }}</td>
                 <td class="num" data-label="Eficiência Operacional">{{ item.EO|floatformat:1 }}</td>
                 <td class="num" data-label="Desempenho Financeiro">{{ item.DF|floatformat:1 }}</td>
                 <td class="num" data-label="Eficiência de Estoques">{{ item.EE|floatformat:1 }}</td>
                 <td class="num" data-label="Satisfação da Demanda">{{ item.SD|floatformat:1 }}</td>
                 <td class="num" data-label="Sustentabilidade">{{ item.DS|floatformat:1 }}</td>
+                {% else %}
+                <td class="num o-muted" data-label="Pontuação" colspan="6"
+                    title="A equipe não produziu nem vendeu nesta rodada">sem operação nesta rodada</td>
+                {% endif %}
                 <td class="num" data-label="Lucro da rodada">{% include 'partials/valor.html' with valor=item.lucro_rodada %}</td>
             </tr>
             {% empty %}
@@ -107,7 +125,20 @@
             <thead><tr><th scope="col">Rodada</th><th scope="col" class="num">Posição</th><th scope="col" class="num">Pontuação</th></tr></thead>
             <tbody>
                 {% for item in evolucao_grupo %}
-                <tr><th scope="row">{{ item.rodada }}</th><td class="num">{{ item.posicao }}º</td><td class="num">{{ item.pontuacao|floatformat:2 }}</td></tr>
+                <tr>
+                    <th scope="row">{{ item.rodada }}</th>
+                    {% if item.operou %}
+                        <td class="num">{{ item.posicao }}º</td>
+                        <td class="num">{{ item.pontuacao|floatformat:2 }}</td>
+                    {% else %}
+                        {% comment %}
+                            7.3: sem MP recebida nao ha producao nem venda --
+                            a rodada nao teve o que medir.
+                        {% endcomment %}
+                        <td class="num o-muted" title="Rodada sem produção nem venda">—</td>
+                        <td class="num o-muted">sem operação</td>
+                    {% endif %}
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -118,6 +149,9 @@
 <p class="o-note">
     Empate na pontuação é resolvido, nesta ordem, por maior EO, maior SD,
     maior DS, maior receita bruta e ordem alfabética do nome do grupo.
+    Rodada sem produção nem venda aparece como <strong>sem operação</strong>:
+    a matéria-prima pedida só chega na rodada seguinte, então não há
+    desempenho a medir.
 </p>
 {% endblock %}
 
