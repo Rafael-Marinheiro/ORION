@@ -306,13 +306,21 @@ class AjudaView(TemplateView):
 
 
 
-class FeedbackView(FormView):
+class FeedbackView(LoginRequiredMixin, FormView):
+    """A sugestao vira uma linha no roadmap, entao pede login.
+
+    A tela estava aberta: qualquer visitante da internet podia gravar texto
+    num arquivo do servidor, sem limite de envios e sem deixar quem foi. O
+    campo tambem aceitava quebras de linha, que no markdown do roadmap viram
+    varios itens -- da para forjar uma lista inteira num envio so.
+    """
+
     template_name = 'feedback.html'
     form_class = FeedbackForm
     success_url = reverse_lazy('feedback')
 
     def form_valid(self, form):
-        suggestion = form.cleaned_data['suggestion']
+        suggestion = ' '.join(form.cleaned_data['suggestion'].split())
         email = form.cleaned_data.get('email')
         line = f"- {suggestion}"
         if email:
@@ -330,11 +338,6 @@ class FeedbackView(FormView):
             f.write(line)
         messages.success(self.request, 'Obrigado pelo feedback!')
         return super().form_valid(form)
-
-@login_required
-def home(request):
-    return render(request, "home.html")
-
 
 class RegisterView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     template_name = "registration/register.html"

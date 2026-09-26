@@ -632,6 +632,40 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### A caixa de sugestões escrevia no servidor sem login — 25/09/2026
+
+`FeedbackView` era um `FormView` sem `LoginRequiredMixin`, e o link está no
+cabeçalho para quem não entrou. Qualquer visitante podia acrescentar linhas a
+`docs/roadmap.md` — um arquivo do servidor — sem limite de envios e sem
+deixar registro de quem foi.
+
+O campo também aceitava quebras de linha, gravadas cruas como `- {texto}`
+num markdown: um envio só podia forjar uma lista inteira de itens. Agora o
+texto é colapsado numa linha.
+
+**O teste dessa tela nunca rodou.** `test_feedback.py` tinha uma função no
+estilo pytest (`def test_feedback_saves_suggestion(client, tmp_path)`), e o
+runner do Django só coleta `TestCase`. A tela ficou sem cobertura real desde
+o início. Reescrito como `TestCase`, com os três casos.
+
+Na mesma passagem, `@login_required def home` foi removida: a rota usa
+`HomeView`, e a função era código morto.
+
+### A home descrevia um ranking que não existe — 25/09/2026
+
+O §12.2 define **cinco** eixos ponderados; o §12.4 dá os pesos. O painel
+"Ranking multicritério" da tela inicial listava quatro, e um deles —
+"participação de mercado" — não é critério nenhum, é sub-ranking.
+
+O que faltava era **Sustentabilidade (DS)**, justamente o eixo que o §12.1 e
+o §12.7 apontam como o diferencial pedagógico do modelo ("responsabilidade
+ambiental", competências dos ODS). O eixo está implementado
+(`pontuacao.sustentabilidade`, peso 0,10) e pesa na nota — mas o aluno não
+era informado de que ele existe em nenhuma tela.
+
+O texto passou a nomear os cinco. A tela de **Ajuda continua sem explicar
+como a nota é calculada**: diz apenas onde ver a posição. Fica registrado.
+
 ### Uma equipe de cinco alunos não tinha como ser cadastrada — 25/09/2026
 
 O §5 diz: "cada grupo deve possuir no mínimo 3 e no máximo 6 participantes".
