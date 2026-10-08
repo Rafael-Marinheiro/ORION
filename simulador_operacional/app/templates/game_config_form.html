@@ -64,6 +64,19 @@
         </div>
     </fieldset>
 
+    <fieldset class="o-panel">
+        <legend class="o-panel__title">Eventos aleatórios</legend>
+        <p class="o-panel__hint">
+            Por padrão a turma sorteia apenas os seis eventos do §8.4, com as
+            probabilidades do documento. O pool estendido acrescenta oito eventos
+            fora da especificação — entre eles os que duram mais de uma rodada —
+            e passa a responder por metade dos sorteios.
+        </p>
+        <div class="o-config__grid">
+            {% include 'partials/campo.html' with campo=form.eventos_estendidos %}
+        </div>
+    </fieldset>
+
     <fieldset class="o-panel" data-pesos>
         <legend class="o-panel__title">Pesos da pontuação</legend>
         <p class="o-panel__hint">

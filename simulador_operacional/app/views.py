@@ -44,7 +44,13 @@ from .parametros import (
     TAXA_APLICACAO_FINANCEIRA_RODADA,
 )
 from .services.dre import montar_dre, montar_fluxo_de_caixa, resumo_do_fluxo
-from .services.eventos import evento_estado_ativo, sortear_evento
+from .services.eventos import (
+    custo_da_oferta,
+    evento_de_decisao,
+    evento_estado_ativo,
+    registrar_decisao,
+    sortear_evento,
+)
 from .services.estoque import (
     adicionar_estoque_produto,
     consumir_materia_prima_para_producao,
@@ -83,6 +89,7 @@ from .models import (
     AplicacaoFinanceiraGrupo,
     AuditoriaSubmissaoRodada,
     CapacidadeProdutoGrupo,
+    DecisaoEventoGrupo,
     CEOGrupoRodada,
     Cidade,
     ConsolidadoRodadaGrupo,
@@ -1297,8 +1304,23 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
             else None
         )
 
+        # Oferta do evento de decisao, se a rodada tiver uma.
+        oferta = (
+            evento_de_decisao(rodada_ativa.numero, grupo.jogo_id)
+            if grupo and rodada_ativa
+            else None
+        )
+        oferta_decidida = None
+        if oferta:
+            oferta_decidida = DecisaoEventoGrupo.objects.filter(
+                grupo=grupo, rodada=rodada_ativa.numero, evento=oferta
+            ).first()
+
         return {
             "nav": "painel",
+            "oferta": oferta,
+            "oferta_custo": custo_da_oferta(oferta, grupo) if oferta else None,
+            "oferta_decidida": oferta_decidida,
             "grupo": grupo,
             "decisoes": decisoes,
             "envios": envios,
@@ -1395,6 +1417,19 @@ class PainelGrupoView(LoginRequiredMixin, TemplateView):
 
         if Decisao.objects.filter(grupo=grupo, rodada=rodada_ativa.numero).exists():
             messages.error(request, "A submissao desta rodada ja foi enviada e esta bloqueada.")
+            return redirect("painel_grupo")
+
+        if "responder_oferta" in request.POST:
+            oferta = evento_de_decisao(rodada_ativa.numero, grupo.jogo_id)
+            # as duas guardas acima ja garantem CEO da rodada e rodada
+            # ainda aberta -- e o mesmo que  significa.
+            if oferta:
+                aceitou = request.POST.get("responder_oferta") == "aceitar"
+                registrar_decisao(grupo, rodada_ativa.numero, oferta, aceitou)
+                messages.success(
+                    request,
+                    "Resposta registrada. Pode ser alterada até a submissão.",
+                )
             return redirect("painel_grupo")
 
         if "enviar_compra_mp" in request.POST:

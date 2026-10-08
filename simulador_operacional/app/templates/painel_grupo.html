@@ -178,6 +178,47 @@
     {% endif %}
     {% endif %}
 
+    {% if oferta %}
+    {% comment %}
+        Evento de decisao: a oferta e a mesma para todas as equipes, e o que
+        muda e a resposta. Diz o preco e que ha risco, sem dizer o tamanho
+        dele -- medir o risco e parte do que se avalia.
+    {% endcomment %}
+    <section class="o-panel o-oferta" aria-labelledby="oferta-titulo">
+        <h2 class="o-panel__title" id="oferta-titulo">{{ oferta.nome }}</h2>
+        <p>{{ oferta.frase_indicativa }}</p>
+        <p class="o-muted">{{ oferta.descricao }}</p>
+        <p class="o-oferta__preco">
+            Custo para a equipe inteira:
+            <strong>R$ {{ oferta_custo|floatformat:2 }}</strong>
+            <span class="o-muted">({{ grupo.trabalhadores }} trabalhadores)</span>
+        </p>
+
+        {% if oferta_decidida %}
+            <p class="o-note {% if oferta_decidida.aceitou %}o-note--success{% else %}o-note--warning{% endif %}">
+                {% if oferta_decidida.aceitou %}
+                    Equipe imunizada. O valor é debitado no fechamento.
+                {% else %}
+                    A equipe optou por não imunizar.
+                {% endif %}
+                {% if permite_edicao %}A resposta pode ser alterada até a submissão.{% endif %}
+            </p>
+        {% endif %}
+
+        {% if permite_edicao %}
+        <form method="post" class="o-btnrow">
+            {% csrf_token %}
+            <button type="submit" name="responder_oferta" value="aceitar"
+                    class="o-btn o-btn--primary">Contratar a imunização</button>
+            <button type="submit" name="responder_oferta" value="recusar"
+                    class="o-btn o-btn--ghost">Dispensar</button>
+        </form>
+        {% elif not oferta_decidida %}
+        <p class="o-note o-note--info">Apenas o CEO da rodada responde a esta oferta.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
     {% comment %}
         `evento` saiu da condicao: o boletim do cabecalho ja anuncia o evento,
         e mante-lo aqui abria a secao "Atencao na rodada" sem nada dentro.

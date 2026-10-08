@@ -72,6 +72,7 @@ class GameConfigForm(forms.ModelForm):
             "modulo_producao",
             "modulo_distribuicao",
             "modulo_financeiro",
+            "eventos_estendidos",
         ]
 
     def __init__(self, *args, **kwargs):

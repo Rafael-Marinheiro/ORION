@@ -632,6 +632,86 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### Surto de gripe: o primeiro evento com decisão da equipe — 07/10/2026
+
+**PENDENTE DE RATIFICAÇÃO DO DR. PIO.** Está implementado e funcionando, mas
+depende de duas confirmações dele para valer em sala.
+
+Até aqui todo evento era passivo: sorteia, aplica igual para todos, calcula.
+O surto faz uma oferta — imunizar a equipe por um valor por trabalhador — e o
+resultado depende da resposta de cada equipe. Quem aceita paga no fechamento
+e atravessa a rodada; quem recusa, ou não responde, tem uma parcela da força
+de trabalho afastada.
+
+O efeito sai da própria RN-06: "cada máquina exige 2 trabalhadores para
+funcionar. Máquinas sem operadores não produzem". Menos operadores derruba o
+teto da linha pelo degrau da fórmula, não por regra de três.
+
+**A parcela afastada é sorteada numa faixa (15% a 35%), não fixa.** Com valor
+conhecido o aluno calcula uma vez qual lado é mais barato e nunca mais pensa
+no assunto; com faixa, recusar é aposta — que é o que o §8.6 diz querer
+ensinar ("prática da gestão de riscos e planejamento de contingência"). O
+painel diz o preço e que há risco, nunca o tamanho dele. O sorteio acontece
+uma única vez, no fechamento, e fica gravado em `DecisaoEventoGrupo`, para o
+número não mudar a cada consulta do relatório.
+
+Não responder equivale a recusar: nada foi pago. É o tratamento que o §11 dá
+à omissão.
+
+**O que precisa de ratificação:**
+
+- **§8.2** — "o evento sorteado afeta todos os grupos de maneira igual". A
+  oferta é igual para todos; a consequência depende da decisão. É leitura,
+  não o texto.
+- **§8.3** — a tabela de variáveis afetadas não lista força de trabalho nem
+  caixa, que é onde o surto atua.
+
+### Pool estendido de eventos aleatórios — 07/10/2026
+
+O §8.4 traz seis eventos cujas probabilidades somam 100%, e o seed apagava
+do banco qualquer evento fora dessa lista — justamente para a soma não
+quebrar. Ampliar o repertório exige mexer na tabela do documento.
+
+A solução não mexe. Os seis continuam sendo o padrão, com as probabilidades
+do §8.4 intactas. A turma que ligar `GameConfig.eventos_estendidos` passa a
+sortear também um pool de oito eventos fora da especificação, que somam 100%
+entre si — com o pool ligado, metade dos sorteios cai no documento e metade
+na extensão. Turma sem a opção sorteia exatamente o §8.4.
+
+Os oito: Tarifação externa, Retração de consumo, Entrada de concorrente,
+Alta do combustível, Atraso de fornecedores, Safra regular, Avaria no
+armazém e Baixa sazonal no frete.
+
+Três lacunas do §8.4 guiaram a escolha:
+
+- **O eixo econômico só sobe.** Há o *Boom de consumo* de +15% e nada
+  simétrico. *Retração de consumo* e *Entrada de concorrente* fecham isso.
+- **O eixo logístico só pune.** Greve e enchente, nenhum favorável. Entrou
+  *Baixa sazonal no frete*.
+- **Nada atinge o planejamento de compra.** *Atraso de fornecedores* usa
+  `atraso_mp`, efeito de estado que já existia e nenhum evento acionava.
+  *Avaria no armazém* faz o mesmo com `quebra_estoque`.
+
+**`duracao_rodadas` só valia para eventos de estado.** O §8.2 ressalva
+"reversão automática dos impactos na rodada seguinte (salvo eventos
+recorrentes)" e o campo existe no modelo desde o início, mas
+`eventos_da_rodada` só devolvia o que fora sorteado *naquela* rodada: um
+evento percentual de três rodadas durava uma, em silêncio. Nenhum dos seis
+do §8.4 expunha isso, porque todos têm duração 1. Agora a vigência é
+calculada para qualquer modo, e a *Tarifação externa* dura as três rodadas
+que declara.
+
+Fora do escopo desta entrega, por dependerem de ratificação do Dr. Pio:
+
+- **Surto de gripe com oferta de vacinação.** Seria o primeiro evento com
+  decisão da equipe — oferta uniforme, resultado dependente da escolha.
+  Contraria a letra do §8.2 ("o evento afeta todos os grupos de maneira
+  igual") e exige variáveis que o §8.3 não lista (força de trabalho e
+  caixa).
+- **Apagão com `bloqueio_producao`.** O efeito de estado existe, mas é
+  verificado apenas no registro pela tela; o fechamento não o honra. Evento
+  que o usasse teria efeito parcial.
+
 ### A caixa de sugestões escrevia no servidor sem login — 25/09/2026
 
 `FeedbackView` era um `FormView` sem `LoginRequiredMixin`, e o link está no

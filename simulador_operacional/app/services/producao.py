@@ -48,7 +48,8 @@ def garantir_capacidades_grupo(grupo):
         )
 
 
-def executar_producao(*, grupo, rodada, evento=None, eventos=None):
+def executar_producao(*, grupo, rodada, evento=None, eventos=None,
+                      fracao_operadores=1.0):
     """13.7 -- a ordem de producao vira producao, no fechamento da rodada.
 
     O 11.3.b poe "Producao" entre as acoes executadas no fechamento, e o
@@ -104,7 +105,9 @@ def executar_producao(*, grupo, rodada, evento=None, eventos=None):
         if linha is None or produto.tempo_producao_min <= 0:
             teto_tempo = 0
         else:
-            teto_tempo = linha.capacidade_unidades_rodada
+            # Afastamento de pessoal na rodada derruba o teto da linha:
+            # maquina sem os dois operadores do RN-06 nao produz.
+            teto_tempo = linha.capacidade_com_operadores(fracao_operadores)
         teto_insumo = maximo_produzivel_por_insumo(grupo, produto)
 
         # 4: producao parcial, limitada pelo menor dos tres.
@@ -112,6 +115,8 @@ def executar_producao(*, grupo, rodada, evento=None, eventos=None):
 
         if produzida < ordem.quantidade_planejada:
             limitador = "tempo de linha" if teto_tempo <= teto_insumo else "matéria-prima"
+            if fracao_operadores < 1 and teto_tempo <= teto_insumo:
+                limitador = "equipe afastada"
             ajustes.append(
                 {
                     "produto": produto,

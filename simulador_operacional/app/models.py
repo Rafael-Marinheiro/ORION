@@ -114,6 +114,12 @@ class GameConfig(models.Model):
         default=3,
         validators=[MinValueValidator(3), MaxValueValidator(12)],
     )
+    # O 8.4 e a tabela fechada do documento, e continua sendo o padrao. Com
+    # isto ligado, a turma sorteia tambem o pool estendido -- eventos que
+    # nao estao no documento e que o professor assume por conta.
+    eventos_estendidos = models.BooleanField(
+        default=False, verbose_name="Sortear também o pool estendido"
+    )
 
     class Meta:
         db_table = "CONFIG"
@@ -409,13 +415,23 @@ class CapacidadeProdutoGrupo(models.Model):
     def __str__(self):
         return f"{self.grupo.nome} - {self.produto.codigo}: {self.maquinas} maquinas"
 
-    @property
-    def capacidade_unidades_rodada(self):
+    def capacidade_com_operadores(self, fracao=1.0):
+        """RN-06: "cada maquina exige 2 trabalhadores para funcionar".
+
+        `fracao` abaixo de 1 e afastamento de pessoal na rodada -- maquina
+        sem operador nao produz, entao o teto cai pelo degrau da formula, e
+        nao por regra de tres.
+        """
         if self.produto.tempo_producao_min <= 0:
             return 0
-        maquinas_ativas = min(self.maquinas, self.operadores // 2)
+        operadores = int(self.operadores * fracao)
+        maquinas_ativas = min(self.maquinas, operadores // 2)
         minutos_total = maquinas_ativas * self.minutos_por_maquina
         return int(minutos_total // self.produto.tempo_producao_min)
+
+    @property
+    def capacidade_unidades_rodada(self):
+        return self.capacidade_com_operadores()
 
 
 class EstoqueProduto(models.Model):
@@ -696,12 +712,18 @@ class Evento(models.Model):
         # quer poder dizer "a demanda de Recife cai 500 unidades", nao 12%.
         ("absoluto", "Valor absoluto"),
         ("estado", "Estado"),
+        # O evento nao se aplica sozinho: ele faz uma oferta igual a todas
+        # as equipes e o resultado depende da resposta de cada uma. Fora da
+        # letra do 8.2 ("afeta todos os grupos de maneira igual"), pendente
+        # de ratificacao do autor da especificacao.
+        ("decisao", "Decisao da equipe"),
     ]
     EFEITO_ESTADO_CHOICES = [
         ("atraso_mp", "Atraso de Materia-Prima"),
         ("retencao_entrega", "Retencao de Entregas"),
         ("bloqueio_producao", "Bloqueio de Producao"),
         ("quebra_estoque", "Quebra de Estoque"),
+        ("afastamento_equipe", "Afastamento da Equipe"),
     ]
 
     nome = models.CharField(max_length=100)
@@ -724,6 +746,9 @@ class Evento(models.Model):
     # sorteio do 8.2 -- ele acontece porque o professor mandou, nao por
     # peso.
     manual = models.BooleanField(default=False)
+    # Fora da tabela do 8.4. So entra no sorteio da turma que ligou o pool
+    # estendido em `GameConfig.eventos_estendidos`.
+    extensao = models.BooleanField(default=False)
     # Turma dona do evento manual. Nulo e o catalogo do 8.4, comum a todas.
     jogo = models.ForeignKey(
         "Jogo", on_delete=models.CASCADE, null=True, blank=True,
@@ -731,6 +756,15 @@ class Evento(models.Model):
     )
     valor_absoluto = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    # Piso da faixa de impacto. `impacto_percentual` e o teto: o efeito do
+    # evento de decisao e sorteado entre os dois. Faixa, e nao numero fixo,
+    # para que recusar seja risco e nao aritmetica -- com valor conhecido o
+    # aluno calcula o lado barato uma vez e nunca mais pensa no assunto.
+    impacto_percentual_minimo = models.PositiveIntegerField(default=0)
+    # Preco por trabalhador da oferta do evento de decisao.
+    custo_unitario_decisao = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
     )
     # Pracas atingidas. Vazio significa TODAS -- e como o 8.4 trata os
     # eventos do catalogo, que valem para o mercado inteiro.
@@ -745,6 +779,42 @@ class Evento(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class DecisaoEventoGrupo(models.Model):
+    """Resposta de uma equipe a oferta de um evento de decisao.
+
+    Sem linha significa que a equipe nao respondeu ate o fechamento, o que
+    o 11 trata como omissao: vale o mesmo que recusar, porque nada foi pago.
+    A linha e entao criada no fechamento, com o sorteio ja feito, para que o
+    percentual afetado nao mude a cada consulta do relatorio.
+    """
+
+    grupo = models.ForeignKey(
+        "Grupo", on_delete=models.CASCADE, related_name="decisoes_evento"
+    )
+    rodada = models.PositiveIntegerField()
+    evento = models.ForeignKey(
+        Evento, on_delete=models.CASCADE, related_name="decisoes"
+    )
+    aceitou = models.BooleanField(default=False)
+    custo = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    afetados_percent = models.PositiveIntegerField(default=0)
+    data = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "DECISOES_EVENTO"
+        verbose_name = "Decisao de Evento"
+        verbose_name_plural = "Decisoes de Evento"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["grupo", "rodada", "evento"],
+                name="decisao_evento_unica_por_rodada",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.grupo} - {self.evento} (rodada {self.rodada})"
 
 
 class EventoRodada(models.Model):

@@ -265,36 +265,185 @@ class Command(BaseCommand):
                 "Colheita excepcional reduz o custo dos insumos.",
             ),
         ]
-        # O 8.4 e a lista fechada de eventos. Evento que nao esteja nela sai,
-        # senao a soma das probabilidades deixa de fechar em 100%.
         nomes_do_documento = [evento[0] for evento in eventos]
-        Evento.objects.exclude(nome__in=nomes_do_documento).delete()
 
-        for (
-            nome,
-            frase,
-            tipo,
-            modo,
-            efeito_estado,
-            duracao,
-            impacto,
-            retencao,
-            probabilidade,
-            descricao,
-        ) in eventos:
-            Evento.objects.update_or_create(
-                nome=nome,
-                defaults={
-                    "frase_indicativa": frase,
-                    "tipo": tipo,
-                    "modo_aplicacao": modo,
-                    "efeito_estado": efeito_estado,
-                    "duracao_rodadas": duracao,
-                    "impacto_percentual": impacto,
-                    "retencao_entregas_percent": retencao,
-                    "probabilidade": probabilidade,
-                    "descricao": descricao,
-                },
-            )
+        # Pool estendido: eventos que NAO estao no 8.4, sorteados apenas
+        # pelas turmas que ligarem `GameConfig.eventos_estendidos`. Somam
+        # 100% entre si, entao com o pool ligado metade das rodadas cai no
+        # documento e metade aqui.
+        #
+        # Tres deles exercitam mecanica que ja existia e nenhum evento do
+        # 8.4 acionava: `duracao_rodadas` (evento recorrente, ressalvado no
+        # 8.2), `atraso_mp` e `quebra_estoque`.
+        estendidos = [
+            (
+                "Tarifacao externa",
+                "Novas tarifas de importacao elevam o custo dos insumos.",
+                "custo_producao",
+                "percentual",
+                "",
+                3,
+                15,
+                0,
+                14,
+                "Barreira tarifaria encarece o insumo importado por tres rodadas. "
+                "Choque moderado e persistente, ao contrario da crise de "
+                "abastecimento, que e aguda e passa.",
+            ),
+            (
+                "Retracao de consumo",
+                "O mercado esfriou e os consumidores estao segurando as compras.",
+                "demanda",
+                "percentual",
+                "",
+                1,
+                -15,
+                0,
+                14,
+                "Queda generalizada da demanda. O 8.4 traz o boom de +15% e nada "
+                "simetrico: sem isto o eixo economico so empurra para cima.",
+            ),
+            (
+                "Entrada de concorrente",
+                "Um novo concorrente entrou no mercado e disputa as mesmas pracas.",
+                "demanda",
+                "percentual",
+                "",
+                2,
+                -10,
+                0,
+                11,
+                "Perda de participacao por duas rodadas.",
+            ),
+            (
+                "Alta do combustivel",
+                "O reajuste do diesel encareceu o frete rodoviario.",
+                "custo_transporte",
+                "percentual",
+                "",
+                1,
+                15,
+                0,
+                12,
+                "Custo logistico sobe sem reter entregas: versao branda da greve.",
+            ),
+            (
+                "Atraso de fornecedores",
+                "Os fornecedores comunicaram atraso na entrega dos pedidos.",
+                "greve",
+                "estado",
+                "atraso_mp",
+                1,
+                0,
+                0,
+                11,
+                "A materia-prima pedida chega uma rodada depois do previsto. "
+                "Atinge o planejamento de compra, que nenhum evento do 8.4 toca.",
+            ),
+            (
+                "Safra regular",
+                "A colheita veio dentro do esperado e os insumos ficaram mais baratos.",
+                "custo_producao",
+                "percentual",
+                "",
+                1,
+                -10,
+                0,
+                11,
+                "Alivio moderado no custo de insumo: versao branda da superoferta.",
+            ),
+            (
+                "Avaria no armazem",
+                "Uma avaria no armazem comprometeu parte do estoque.",
+                "perda_estoque",
+                "estado",
+                "quebra_estoque",
+                1,
+                10,
+                0,
+                9,
+                "10% do estoque de produto acabado e perdido, com a baixa "
+                "financeira correspondente.",
+            ),
+            (
+                "Baixa sazonal no frete",
+                "A baixa temporada reduziu o preco do frete rodoviario.",
+                "custo_transporte",
+                "percentual",
+                "",
+                1,
+                -10,
+                0,
+                9,
+                "Unico evento logistico favoravel: o 8.4 so tem greve e enchente, "
+                "ambos contra o grupo.",
+            ),
+        ]
+        nomes_estendidos = [evento[0] for evento in estendidos]
+
+        # Evento de decisao. Nao cabe na tupla dos outros: tem preco por
+        # trabalhador e faixa de impacto, campos que so ele usa.
+        surto, _ = Evento.objects.update_or_create(
+            nome="Surto de gripe",
+            defaults={
+                "frase_indicativa": (
+                    "Um surto de gripe avanca na regiao e o servico de saude "
+                    "oferece imunizacao as empresas."
+                ),
+                "tipo": "greve",
+                "modo_aplicacao": "decisao",
+                "efeito_estado": "afastamento_equipe",
+                "duracao_rodadas": 1,
+                # faixa do afastamento de quem nao imunizar
+                "impacto_percentual_minimo": 15,
+                "impacto_percentual": 35,
+                "custo_unitario_decisao": Decimal("180.00"),
+                "retencao_entregas_percent": 0,
+                "probabilidade": 9,
+                "descricao": (
+                    "A imunizacao custa um valor por trabalhador e protege a "
+                    "equipe pela rodada. Sem ela, parte da forca de trabalho "
+                    "pode ser afastada, e maquina sem os dois operadores do "
+                    "RN-06 nao produz."
+                ),
+                "extensao": True,
+            },
+        )
+        nomes_estendidos.append(surto.nome)
+
+        # Evento fora das duas listas sai -- menos o que o professor criou
+        # a mao, que nao pertence a catalogo nenhum.
+        Evento.objects.filter(manual=False).exclude(
+            nome__in=nomes_do_documento + nomes_estendidos
+        ).delete()
+
+        for lista, extensao in ((eventos, False), (estendidos, True)):
+            for (
+                nome,
+                frase,
+                tipo,
+                modo,
+                efeito_estado,
+                duracao,
+                impacto,
+                retencao,
+                probabilidade,
+                descricao,
+            ) in lista:
+                Evento.objects.update_or_create(
+                    nome=nome,
+                    defaults={
+                        "frase_indicativa": frase,
+                        "tipo": tipo,
+                        "modo_aplicacao": modo,
+                        "efeito_estado": efeito_estado,
+                        "duracao_rodadas": duracao,
+                        "impacto_percentual": impacto,
+                        "retencao_entregas_percent": retencao,
+                        "probabilidade": probabilidade,
+                        "descricao": descricao,
+                        "extensao": extensao,
+                    },
+                )
 
         self.stdout.write(self.style.SUCCESS("Dados base populados com sucesso."))

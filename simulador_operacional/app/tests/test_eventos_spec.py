@@ -13,11 +13,21 @@ from app.views import sortear_evento
 
 
 class SeedDosEventosTest(TestCase):
+    """O catalogo do documento, que o pool estendido nao pode contaminar.
+
+    Desde 07/10/2026 o banco tambem guarda eventos fora do 8.4
+    (`extensao=True`), sorteados so pela turma que os ligar. Estas asercoes
+    continuam valendo para o catalogo do documento, e sao justamente o que
+    impede o pool de alterar as probabilidades de la.
+    """
+
     def setUp(self):
         call_command("seed_dados_base")
 
     def test_sao_exatamente_os_seis_do_documento(self):
-        nomes = set(Evento.objects.values_list("nome", flat=True))
+        nomes = set(
+            Evento.objects.filter(extensao=False).values_list("nome", flat=True)
+        )
 
         self.assertEqual(
             nomes,
@@ -33,7 +43,12 @@ class SeedDosEventosTest(TestCase):
 
     def test_probabilidades_somam_cem_por_cento(self):
         """8.4: "A soma total das probabilidades e de 100%"."""
-        total = sum(Decimal(str(p)) for p in Evento.objects.values_list("probabilidade", flat=True))
+        total = sum(
+            Decimal(str(p))
+            for p in Evento.objects.filter(extensao=False).values_list(
+                "probabilidade", flat=True
+            )
+        )
 
         self.assertEqual(total, Decimal("100"))
 
@@ -57,7 +72,8 @@ class SeedDosEventosTest(TestCase):
             "Superoferta agrícola": Decimal("15"),
         }
         obtido = {
-            e.nome: Decimal(str(e.probabilidade)) for e in Evento.objects.all()
+            e.nome: Decimal(str(e.probabilidade))
+            for e in Evento.objects.filter(extensao=False)
         }
 
         self.assertEqual(obtido, esperado)

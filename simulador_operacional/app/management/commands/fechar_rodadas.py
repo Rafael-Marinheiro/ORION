@@ -22,6 +22,11 @@ from app.services.eventos import (
     lista_de_eventos,
     sortear_evento,
 )
+from app.services.eventos import (
+    evento_de_decisao,
+    fracao_de_operadores,
+    resolver_decisao,
+)
 from app.services.suprimentos import processar_recebimentos_materia_prima
 from app.services.distribuicao_service import executar_expedicao
 from app.services.producao import executar_producao, garantir_capacidades_grupo
@@ -521,13 +526,29 @@ class Command(BaseCommand):
                         # produto, o valor do estoque e o custo das vendas do
                         # 12.3.2. Ate 24/09/2026 ele tambem era debitado, e a
                         # mesma materia-prima saia do caixa duas vezes.
+                        # Evento de decisao: quem aceitou a oferta paga
+                        # agora; quem recusou -- ou nao respondeu -- tem a
+                        # parcela afastada sorteada aqui, uma unica vez.
+                        oferta = evento_de_decisao(rodada.numero, rodada.jogo_id)
+                        custo_oferta = Decimal("0")
+                        if oferta:
+                            custo_oferta, _ = resolver_decisao(
+                                grupo, rodada.numero, oferta
+                            )
                         executar_producao(
-                            grupo=grupo, rodada=rodada.numero, eventos=eventos
+                            grupo=grupo,
+                            rodada=rodada.numero,
+                            eventos=eventos,
+                            fracao_operadores=fracao_de_operadores(
+                                grupo, rodada.numero
+                            ),
                         )
                         custo_frete, _ = executar_expedicao(
                             grupo=grupo, rodada=rodada.numero, eventos=eventos
                         )
-                        operacional = custo_frete
+                        # A oferta aceita e desembolso da rodada, como o
+                        # frete: entra no mesmo debito e no mesmo DRE.
+                        operacional = custo_frete + custo_oferta
                         if operacional > 0:
                             grupo.capital -= operacional
                             grupo.save(update_fields=["capital"])
