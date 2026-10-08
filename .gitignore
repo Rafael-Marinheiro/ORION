@@ -109,3 +109,7 @@ docs/reports/smoke_*.md
 
 # Relatorios gerados pelo fechamento de rodada
 simulador_operacional/relatorios/
+
+# Material de divulgacao, fora do projeto
+ORION-carrossel.pdf
+carrossel.py
