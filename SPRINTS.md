@@ -133,36 +133,49 @@ Para facilitar o desenvolvimento, recomenda-se dividir esta etapa em três sprin
 
 ## Sprint 28 – Ranking Completo
 - Ordenar grupos por resultado financeiro, market share e eficiência com critérios de desempate.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 29 – Eventos Aleatórios Avançados
 - Permitir sorteio de até dois eventos simultâneos em cada rodada.
-*Status: não implementado.*
+*Status: implementado.*
 ## Sprint 30 – Telas de Login e Registro
 - Centralizar formulário em um card Bootstrap.
 - Definir largura máxima (~400 px) e bordas com sombra.
 - Padronizar mensagens de erro com classes `alert`.
+- Incluir campos para e-mail e senha.
+- Direcionar o usuário ao painel adequado (Administrador, CEO ou leitura) após o login.
 *Status: não implementado.*
 
 ## Sprint 31 – Tela Home
 - Adicionar logotipo e frase institucional centralizados.
 - Incluir botão destacado para login ou acesso ao painel.
 - Garantir que o layout funcione em telas menores.
-*Status: não implementado.*
+*Status: implementado.*
 
 ## Sprint 32 – Painel do Grupo
+- Exibir nome do grupo, cidade e rodada atual.
+- Indicar status da rodada e notificações.
+- Disponibilizar botões de acesso rápido para decisões pendentes.
 - Mostrar indicadores (capital, estoque, máquinas) em cards.
 - Organizar formulários (decisões, distribuição) em colunas.
 - Converter listagens em tabelas responsivas.
 *Status: não implementado.*
 
 ## Sprint 33 – Configuração do Jogo e Rodadas
+- Permitir cadastro de grupos.
+- Definir número de rodadas.
+- Configurar eventos aleatórios.
+- Abrir e fechar rodadas.
+- Monitorar participação dos grupos.
 - Agrupar campos em grid para facilitar a leitura.
 - Posicionar botões de ação (Salvar/Abrir) alinhados à direita.
 - Exibir mensagens de confirmação após salvar.
 *Status: não implementado.*
 
 ## Sprint 34 – Relatórios Financeiros e Ranking
+- Gerar relatórios gerais e por grupo (DRE e Fluxo de Caixa).
+- Incluir relatórios comparativos entre grupos.
+- Disponibilizar visualização de ranking geral.
 - Colocar filtros em formulário horizontal.
 - Tabelas com cabeçalho fixo e destaques nos totalizadores.
 - Gráficos centralizados e responsivos.
