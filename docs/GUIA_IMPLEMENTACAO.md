@@ -61,8 +61,13 @@ código.
 | B1 | Composição dos produtos | §6.1: A = 120 kg MP1 + 40 MP2 + 60 MP3 + 80 MP4 | §13.2: A = 2 un MP1 + 1 un MP2 | Versão A | **§6.1** (2026-09-18) |
 | B2 | Perecibilidade | §6.2: A não perece, B perece em 1 rodada, C não perece | §13.8: todos os produtos valem 2 rodadas | Versão A | **§6.2** — `RATIFICADA` pelo Dr. Pio em 24/09/2026 |
 | B3 | Capacidade de máquina | §13.4: 400 min por máquina por rodada | RN-06: turno único de 87 h = 5.220 min | Versão A (400) | **§13.4** (2026-09-18) |
-| B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | 1 sorteado + até 1 do moderador | **§8.2 para o sorteio** (2026-09-18); a RN-10 entrou em 25/09/2026 pela ativação do moderador — ver abaixo |
+| B4 | Eventos por rodada | §8.2: exatamente 1, probabilidades somam 100% | RN-10: até 2 simultâneos | 1 ou 2 sorteados (30% de chance de dois) + o do moderador, limitado a 2 no total | **RN-10** — ratificada em 14/10/2026: prevalece sobre a frase do §8.2. Probabilidades iguais e cooldown; ver abaixo |
 | B5 | Critério de desempate | §12.5: EO → SD → DS → Receita bruta → alfabética | RN-12: lucro acumulado → market share → caixa → penalidades → alfabética | — | **§12.5** — `RATIFICADA` pelo PO em 24/09/2026 |
+
+> **Ratificação de 14/10/2026.** As decisões **B4, B6, B11, B12, D10 e D12**
+> foram ratificadas pelo Rafael, como dono do produto junto ao Dr. Pio. Onde
+> o texto adiante disser "aguarda ratificação" para um desses códigos, leia
+> "ratificada em 14/10/2026". As demais seguem como estão.
 
 ### Critério usado nas decisões acima
 
@@ -631,6 +636,40 @@ professor, e o controle de eventos passa a ser **o evento manual na abertura
 da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
+
+### Sorteio igualitário, cooldown e evento único — 14/10/2026
+
+Quatro decisões do dono do produto, tomadas juntas porque se sustentam:
+
+**Todos os eventos têm a mesma chance.** O §8.4 define probabilidades
+distintas (15/20/20/15/15/15); o sorteio passou a tratar todo evento
+elegível por igual. A coluna `probabilidade` continua gravada com o valor
+do documento — o banco segue fiel, o que mudou foi a política. Reverter é
+trocar um parâmetro, não migrar dado. **Pendente de ratificação do Dr. Pio.**
+
+**Cooldown de verdade.** Até aqui o evento recente era apenas penalizado no
+peso, nunca bloqueado. O motivo era sólido: cooldown duro achata
+probabilidades distintas — com pesos 60/30/10, bloquear duas rodadas os
+transforma em 33/33/33, destruindo a configuração em silêncio. **A decisão
+de igualar as chances tirou o chão dessa objeção**: não há peso a preservar,
+e o bloqueio por 3 rodadas passou a ser a ferramenta certa. Com 19 eventos
+no pool sobram ao menos 16 candidatos. Se o pool ficar menor que a janela,
+o cooldown é solto antes de deixar a rodada sem evento, porque o §8.2
+garante que "sempre haja um evento ativo".
+
+**Evento único por turma.** O surto de gripe acontece no máximo uma vez. Na
+segunda, a equipe já conhece preço e efeito exatos: deixa de ser decisão sob
+incerteza e vira conta. É o único marcado assim.
+
+**30% de chance de evento duplo (B4/RN-10).** A RN-10 prevê "até 2 eventos
+aleatórios simultâneos"; agora a rodada sai com dois em 30% das vezes. O
+total nunca passa de dois, contando o que o professor marcou na abertura —
+a seleção manual continua disponível na criação da rodada.
+
+**Três eventos logísticos favoráveis** entraram no pool: *Nova rota
+pavimentada* (−15% por três rodadas), *Acordo setorial de fretes* (−12%) e
+*Janela portuária antecipada* (−8% no insumo). O §8.4 só tinha greve e
+enchente — nada que aliviasse a logística.
 
 ### O surto foi ratificado, com emenda: afastamento único — 14/10/2026
 

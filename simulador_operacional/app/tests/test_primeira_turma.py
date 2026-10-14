@@ -75,7 +75,12 @@ class PrimeiraTurmaTest(TestCase):
         fornecedores = {"MP1": ("Fortaleza", 120), "MP2": ("Recife", 40),
                         "MP3": ("Aracaju", 60), "MP4": ("João Pessoa", 80)}
 
-        with patch("app.services.eventos.random.choices", return_value=[estabilidade]):
+        # O sorteio passou a usar `random.choice` (14/10/2026), e sem
+        # fixar o evento duplo uma greve pode reter entregas e quebrar
+        # as asercoes de recebimento por sorte, nao por regra.
+        with patch(
+            "app.services.eventos.random.choice", return_value=estabilidade
+        ), patch("app.services.eventos.CHANCE_EVENTO_DUPLO", 0):
             for numero in (1, 2, 3, 4, 5):
                 self.login(prof)
                 resposta = self.client.post(reverse("abrir_rodada"), {

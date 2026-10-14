@@ -268,9 +268,12 @@ class Command(BaseCommand):
         nomes_do_documento = [evento[0] for evento in eventos]
 
         # Pool estendido: eventos que NAO estao no 8.4, sorteados apenas
-        # pelas turmas que ligarem `GameConfig.eventos_estendidos`. Somam
-        # 100% entre si, entao com o pool ligado metade das rodadas cai no
-        # documento e metade aqui.
+        # pelas turmas que ligarem `GameConfig.eventos_estendidos`.
+        #
+        # Desde 14/10/2026 o sorteio e uniforme -- todo evento elegivel tem
+        # a mesma chance --, entao a coluna `probabilidade` nao pesa mais no
+        # resultado. Fica igual para todos aqui, para o dado nao contradizer
+        # o comportamento. Os seis do 8.4 mantem os valores do documento.
         #
         # Tres deles exercitam mecanica que ja existia e nenhum evento do
         # 8.4 acionava: `duracao_rodadas` (evento recorrente, ressalvado no
@@ -285,7 +288,7 @@ class Command(BaseCommand):
                 3,
                 15,
                 0,
-                13,
+                8,
                 "Barreira tarifaria encarece o insumo importado por tres rodadas. "
                 "Choque moderado e persistente, ao contrario da crise de "
                 "abastecimento, que e aguda e passa.",
@@ -299,7 +302,7 @@ class Command(BaseCommand):
                 1,
                 -15,
                 0,
-                13,
+                8,
                 "Queda generalizada da demanda. O 8.4 traz o boom de +15% e nada "
                 "simetrico: sem isto o eixo economico so empurra para cima.",
             ),
@@ -312,7 +315,7 @@ class Command(BaseCommand):
                 2,
                 -10,
                 0,
-                10,
+                8,
                 "Perda de participacao por duas rodadas.",
             ),
             (
@@ -324,7 +327,7 @@ class Command(BaseCommand):
                 1,
                 15,
                 0,
-                11,
+                8,
                 "Custo logistico sobe sem reter entregas: versao branda da greve.",
             ),
             (
@@ -336,7 +339,7 @@ class Command(BaseCommand):
                 1,
                 0,
                 0,
-                10,
+                8,
                 "A materia-prima pedida chega uma rodada depois do previsto. "
                 "Atinge o planejamento de compra, que nenhum evento do 8.4 toca.",
             ),
@@ -349,7 +352,7 @@ class Command(BaseCommand):
                 1,
                 -10,
                 0,
-                10,
+                8,
                 "Alivio moderado no custo de insumo: versao branda da superoferta.",
             ),
             (
@@ -361,7 +364,7 @@ class Command(BaseCommand):
                 1,
                 10,
                 0,
-                9,
+                8,
                 "10% do estoque de produto acabado e perdido, com a baixa "
                 "financeira correspondente.",
             ),
@@ -377,6 +380,44 @@ class Command(BaseCommand):
                 8,
                 "Sem energia nao ha producao na rodada. O estoque e as entregas "
                 "seguem normalmente -- o que para e a fabrica.",
+            ),
+            (
+                "Nova rota pavimentada",
+                "A conclusao da obra na rodovia encurtou o trajeto ate as pracas.",
+                "custo_transporte",
+                "percentual",
+                "",
+                3,
+                -15,
+                0,
+                8,
+                "Melhoria permanente de malha: o frete cai por tres rodadas. "
+                "Favorece quem ja tinha estrutura de distribuicao montada.",
+            ),
+            (
+                "Acordo setorial de fretes",
+                "As transportadoras fecharam acordo e reduziram as tarifas.",
+                "custo_transporte",
+                "percentual",
+                "",
+                1,
+                -12,
+                0,
+                8,
+                "Alivio de uma rodada no custo logistico.",
+            ),
+            (
+                "Janela portuaria antecipada",
+                "O porto liberou janela extra e os pedidos chegaram antes.",
+                "custo_producao",
+                "percentual",
+                "",
+                1,
+                -8,
+                0,
+                8,
+                "A antecipacao reduz o custo do insumo na rodada. Contrapeso "
+                "favoravel ao atraso de fornecedores.",
             ),
             (
                 "Baixa sazonal no frete",
@@ -420,6 +461,9 @@ class Command(BaseCommand):
                     "RN-06 nao produz."
                 ),
                 "extensao": True,
+                # So acontece uma vez por turma: na segunda, a equipe ja
+                # conhece preco e efeito, e a decisao vira conta.
+                "unico_por_jogo": True,
             },
         )
         nomes_estendidos.append(surto.nome)

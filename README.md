@@ -8,7 +8,10 @@ O levantamento de requisitos e a modelagem do sistema foram publicados no **XIV 
 
 ## Status
 
-🚧 **Backend concluído, interface e testes em andamento.**
+✅ **Backend, interface e suíte de testes concluídos.** 517 testes automatizados.
+
+Pontos de regra que aguardam ratificação do autor da especificação estão em
+[`docs/RATIFICACOES_PENDENTES.md`](docs/RATIFICACOES_PENDENTES.md).
 
 ## Stack
 
@@ -25,7 +28,27 @@ cp .env.example .env   # ajuste DJANGO_SECRET_KEY
 docker compose up --build
 ```
 
-A API sobe em `http://localhost:8000`.
+A API sobe em `http://localhost:8000`. O catálogo de produtos, matérias-primas,
+praças e eventos é populado automaticamente na subida.
+
+### Para verificar o sistema pela interface
+
+Depois que o contêiner subir, em outro terminal:
+
+```bash
+docker compose exec web python simulador_operacional/manage.py createsuperuser
+```
+
+```bash
+docker compose exec web python simulador_operacional/manage.py seed_turma_demo --abrir-rodada
+```
+
+O primeiro cria a conta do professor/moderador. O segundo monta uma turma de
+demonstração com três equipes de três alunos e a rodada 1 já aberta, e imprime
+a senha das contas de aluno.
+
+Entre em `http://localhost:8000/` com o professor para ver o painel de
+gerenciamento, ou com um CEO de equipe para ver o painel do grupo.
 
 ## Autoria
 

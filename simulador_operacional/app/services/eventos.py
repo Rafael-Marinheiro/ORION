@@ -3,27 +3,30 @@
 Estava implementado duas vezes -- em `views.sortear_evento` e dentro de
 `fechar_rodadas` -- com comportamentos que ja divergiam. Fica um so.
 
-O 8.2 define o mecanismo: um evento por rodada, sorteado pelos pesos do 8.4,
-que somam 100%.
+Politica de sorteio (decisao de 14/10/2026)
+-------------------------------------------
+Todos os eventos elegiveis tem a MESMA chance, e o que saiu entra em
+cooldown por algumas rodadas. Antes o sorteio usava os pesos do 8.4 e
+apenas penalizava o evento recente, para nao achatar pesos distintos --
+objecao que deixou de existir quando os pesos passaram a ser iguais.
 
-Variedade sem mentir sobre os pesos
------------------------------------
-Rodar o mesmo evento em sequencia empobrece a aula, mas bloquear o evento
-recente achata as probabilidades: medido com 3 eventos de pesos 60/30/10,
-um cooldown duro de 2 rodadas os transforma em 33/33/33 -- a configuracao do
-professor e destruida em silencio.
+A coluna `probabilidade` continua gravada com o valor do 8.4: o banco
+segue fiel ao documento, e o que mudou foi a politica. Voltar atras e
+trocar um parametro, nao migrar dado.
 
-Por isso o evento recente tem o peso REDUZIDO, nunca zerado. Ele continua
-possivel, so fica improvavel. Com os 6 eventos do 8.4, isso da 1,2% de
-repeticao consecutiva contra 16,9% sem nenhum ajuste, e no maximo 1,3 p.p.
-de desvio das probabilidades do documento.
+PENDENTE DE RATIFICACAO do autor da especificacao: o 8.4 define
+probabilidades distintas.
 """
 
 import random
 from decimal import Decimal
 
 from app.models import Evento, EventoRodada, Rodada
-from app.parametros import PENALIDADE_EVENTO_RECENTE
+from app.parametros import (
+    CHANCE_EVENTO_DUPLO,
+    COOLDOWN_EVENTO_RODADAS,
+    MAXIMO_EVENTOS_POR_RODADA,
+)
 
 
 def _filtro_do_jogo(queryset, jogo_id):
@@ -47,33 +50,34 @@ def _pool_estendido(jogo_id):
     return bool(avulsa and avulsa.eventos_estendidos)
 
 
-def _eventos_recentes(rodada, jogo_id):
-    """Evento de cada uma das rodadas anteriores que ainda penalizam."""
-    alcance = max(PENALIDADE_EVENTO_RECENTE) if PENALIDADE_EVENTO_RECENTE else 0
-    if alcance <= 0:
-        return {}
-
-    anteriores = _filtro_do_jogo(
-        EventoRodada.objects.filter(rodada__lt=rodada, rodada__gte=rodada - alcance),
-        jogo_id,
-    )
-    return {er.rodada: er.evento_id for er in anteriores}
-
-
-def _fator_de_repeticao(evento_id, recentes, rodada):
-    """Multiplicador do peso. 1 quando o evento nao saiu recentemente.
+def _em_cooldown(rodada, jogo_id):
+    """Eventos que sairam ha poucas rodadas e estao bloqueados.
 
     A distancia sai da rodada corrente, nao da ultima rodada com evento:
-    se houver lacuna -- rodada sem sorteio -- medir pela ultima registrada
-    encurtaria a distancia e penalizaria um evento que ja e antigo.
+    com lacuna -- rodada sem sorteio -- medir pela ultima registrada
+    bloquearia um evento que ja e antigo.
     """
-    fator = 1.0
-    for rodada_passada, evento_da_rodada in recentes.items():
-        if evento_da_rodada != evento_id:
-            continue
-        distancia = rodada - rodada_passada
-        fator = min(fator, PENALIDADE_EVENTO_RECENTE.get(distancia, 1.0))
-    return fator
+    if COOLDOWN_EVENTO_RODADAS <= 0:
+        return set()
+    anteriores = _filtro_do_jogo(
+        EventoRodada.objects.filter(
+            rodada__lt=rodada, rodada__gte=rodada - COOLDOWN_EVENTO_RODADAS
+        ),
+        jogo_id,
+    )
+    return set(anteriores.values_list("evento_id", flat=True))
+
+
+def _ja_usados_no_jogo(jogo_id):
+    """Eventos marcados como `unico_por_jogo` que ja aconteceram.
+
+    O surto de gripe e o caso: a oferta de imunizacao perde o sentido na
+    segunda vez, porque a equipe ja sabe o preco e o efeito exatos.
+    """
+    usados = _filtro_do_jogo(EventoRodada.objects.all(), jogo_id).filter(
+        evento__unico_por_jogo=True
+    )
+    return set(usados.values_list("evento_id", flat=True))
 
 
 def sortear_evento(rodada, jogo_id=None):
@@ -106,30 +110,61 @@ def sortear_evento(rodada, jogo_id=None):
         _filtro_do_jogo(EventoRodada.objects.filter(rodada=rodada), jogo_id)
         .values_list("evento_id", flat=True)
     )
-    disponiveis = Evento.objects.filter(manual=False)
-    if not _pool_estendido(jogo_id):
-        disponiveis = disponiveis.filter(extensao=False)
-    candidatos = [
-        evento for evento in disponiveis if evento.id not in ja_na_rodada
-    ]
-    if not candidatos:
+    escolhido = _sortear_um(rodada, jogo_id, ja_na_rodada)
+    if escolhido is None:
         return None
-
-    recentes = _eventos_recentes(rodada, jogo_id)
-    pesos = [
-        float(evento.probabilidade or 0) * _fator_de_repeticao(evento.id, recentes, rodada)
-        for evento in candidatos
-    ]
-    if sum(pesos) > 0:
-        escolhido = random.choices(candidatos, weights=pesos, k=1)[0]
-    else:
-        # base sem probabilidade configurada: nao trava o jogo
-        escolhido = random.choice(candidatos)
-
     EventoRodada.objects.create(
         rodada=rodada, jogo_id=jogo_id, evento=escolhido, manual=False
     )
+
+    # RN-10: "ate 2 eventos aleatorios simultaneos". A rodada sai com dois
+    # em 30% das vezes -- e nunca passa de dois no total, contando o que o
+    # professor marcou na abertura.
+    total_na_rodada = len(ja_na_rodada) + 1
+    if (
+        total_na_rodada < MAXIMO_EVENTOS_POR_RODADA
+        and random.random() < CHANCE_EVENTO_DUPLO
+    ):
+        segundo = _sortear_um(
+            rodada, jogo_id, ja_na_rodada | {escolhido.id}
+        )
+        if segundo is not None:
+            EventoRodada.objects.create(
+                rodada=rodada, jogo_id=jogo_id, evento=segundo, manual=False
+            )
     return escolhido
+
+
+def _sortear_um(rodada, jogo_id, excluidos):
+    """Um evento elegivel, com todos tendo a mesma chance.
+
+    Fora do sorteio ficam: o evento manual (acontece porque foi mandado),
+    o que ja esta na rodada, o que saiu ha poucas rodadas (cooldown) e o
+    `unico_por_jogo` que ja aconteceu nesta turma.
+    """
+    disponiveis = Evento.objects.filter(manual=False)
+    if not _pool_estendido(jogo_id):
+        disponiveis = disponiveis.filter(extensao=False)
+
+    bloqueados = (
+        set(excluidos)
+        | _em_cooldown(rodada, jogo_id)
+        | _ja_usados_no_jogo(jogo_id)
+    )
+    candidatos = [e for e in disponiveis if e.id not in bloqueados]
+
+    if not candidatos:
+        # Cooldown apertado demais para o tamanho do pool: solta o cooldown
+        # antes de deixar a rodada sem evento, porque o 8.2 garante que
+        # "sempre haja um evento ativo".
+        candidatos = [
+            e
+            for e in disponiveis
+            if e.id not in set(excluidos) | _ja_usados_no_jogo(jogo_id)
+        ]
+    if not candidatos:
+        return None
+    return random.choice(candidatos)
 
 
 def eventos_da_rodada(rodada, jogo_id=None):

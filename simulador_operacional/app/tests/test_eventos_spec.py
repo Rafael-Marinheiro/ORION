@@ -79,10 +79,18 @@ class SeedDosEventosTest(TestCase):
         self.assertEqual(obtido, esperado)
 
 
-class SorteioPonderadoTest(TestCase):
-    """O sorteio uniforme dava a mesma chance a eventos de 15% e de 20%."""
+class SorteioIgualitarioTest(TestCase):
+    """Decisao de 14/10/2026: todo evento elegivel tem a mesma chance.
 
-    def test_evento_mais_provavel_sai_mais(self):
+    Ate entao o sorteio usava os pesos do 8.4. A tabela continua gravada no
+    banco -- o dado segue fiel ao documento --, mas nao pesa mais no
+    resultado. Pendente de ratificacao do autor da especificacao.
+    """
+
+    def test_a_probabilidade_gravada_nao_decide_mais_o_sorteio(self):
+        from unittest.mock import patch
+
+        Evento.objects.all().delete()
         raro = Evento.objects.create(
             nome="Raro", tipo="demanda", impacto_percentual=1, probabilidade=1
         )
@@ -91,13 +99,14 @@ class SorteioPonderadoTest(TestCase):
         )
 
         contagem = Counter()
-        for rodada in range(1, 121):
-            escolhido = sortear_evento(rodada)
-            contagem[escolhido.nome] += 1
+        with patch("app.services.eventos.COOLDOWN_EVENTO_RODADAS", 0),                 patch("app.services.eventos.CHANCE_EVENTO_DUPLO", 0):
+            for rodada in range(1, 201):
+                EventoRodada.objects.all().delete()
+                contagem[sortear_evento(rodada).nome] += 1
 
-        self.assertGreater(contagem[comum.nome], contagem[raro.nome])
-        # com 99 contra 1, o raro nao deve dominar nem por acaso
-        self.assertLess(contagem[raro.nome], 30)
+        # com peso, "Comum" levaria 99%; com chance igual, perto de 50%
+        self.assertGreater(contagem[raro.nome], 60)
+        self.assertGreater(contagem[comum.nome], 60)
 
     def test_sem_probabilidade_configurada_nao_trava(self):
         Evento.objects.create(
@@ -134,59 +143,68 @@ class BoletimNaTelaTest(TestCase):
 
 
 class VariedadeDeEventosTest(TestCase):
-    """O evento recente fica improvavel, nunca impossivel.
+    """O evento que saiu fica BLOQUEADO por algumas rodadas.
 
-    Bloquear o evento recente achataria os pesos: medido com 3 eventos de
-    pesos 60/30/10, um cooldown duro de 2 rodadas os transforma em 33/33/33.
-    Reduzir o peso preserva a configuracao do professor.
+    Ate 14/10/2026 ele apenas perdia peso, nunca era proibido: cooldown
+    duro achata pesos distintos -- com 60/30/10, bloquear duas rodadas os
+    transforma em 33/33/33. A decisao de igualar as chances tirou o chao
+    dessa objecao, e o bloqueio passou a ser o comportamento pedido.
     """
 
     def setUp(self):
-        self.provavel = Evento.objects.create(
-            nome="Provável", tipo="demanda", impacto_percentual=5, probabilidade=80
+        Evento.objects.all().delete()
+        self.primeiro = Evento.objects.create(
+            nome="Primeiro", tipo="demanda", impacto_percentual=5, probabilidade=80
         )
-        self.raro = Evento.objects.create(
-            nome="Raro", tipo="demanda", impacto_percentual=5, probabilidade=20
+        self.segundo = Evento.objects.create(
+            nome="Segundo", tipo="demanda", impacto_percentual=5, probabilidade=20
         )
 
-    def test_evento_da_rodada_anterior_perde_peso_mas_continua_possivel(self):
-        EventoRodada.objects.create(rodada=1, evento=self.provavel)
+    def test_o_evento_da_rodada_anterior_nao_se_repete(self):
+        from unittest.mock import patch
 
-        saiu_o_provavel = 0
-        for rodada in range(2, 202):
-            EventoRodada.objects.filter(rodada=rodada).delete()
-            # cada sorteio enxerga a rodada 1 como anterior imediata
-            EventoRodada.objects.filter(rodada__gt=1).delete()
-            if sortear_evento(2).id == self.provavel.id:
-                saiu_o_provavel += 1
+        EventoRodada.objects.create(rodada=1, evento=self.primeiro)
 
-        # sem penalidade sairia ~80%; com peso x0,05 cai para perto de 17%
-        self.assertLess(saiu_o_provavel, 80)
-        # mas nao e proibido: continua acontecendo
-        self.assertGreater(saiu_o_provavel, 0)
+        with patch("app.services.eventos.CHANCE_EVENTO_DUPLO", 0):
+            for _ in range(40):
+                EventoRodada.objects.filter(rodada__gt=1).delete()
+                self.assertEqual(sortear_evento(2).id, self.segundo.id)
 
-    def test_evento_antigo_nao_sofre_penalidade(self):
-        from app.services.eventos import _fator_de_repeticao
+    def test_passado_o_cooldown_ele_volta_a_ser_possivel(self):
+        from unittest.mock import patch
 
-        recentes = {1: self.provavel.id}
+        from app.parametros import COOLDOWN_EVENTO_RODADAS
 
-        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 2), 0.05)
-        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 3), 0.30)
-        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 4), 0.65)
-        # fora do alcance, peso cheio
-        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 9), 1.0)
+        EventoRodada.objects.create(rodada=1, evento=self.primeiro)
+        fora_do_alcance = 1 + COOLDOWN_EVENTO_RODADAS + 1
+
+        voltou = 0
+        with patch("app.services.eventos.CHANCE_EVENTO_DUPLO", 0):
+            for _ in range(40):
+                EventoRodada.objects.filter(rodada__gt=1).delete()
+                if sortear_evento(fora_do_alcance).id == self.primeiro.id:
+                    voltou += 1
+
+        self.assertGreater(voltou, 0)
 
     def test_lacuna_de_rodada_nao_encurta_a_distancia(self):
         """Rodada sem evento nao pode fazer um evento antigo parecer recente."""
-        from app.services.eventos import _fator_de_repeticao
+        from unittest.mock import patch
 
-        recentes = {2: self.provavel.id}
+        from app.services.eventos import _em_cooldown
+        from app.parametros import COOLDOWN_EVENTO_RODADAS
 
-        # a rodada 5 esta a 3 de distancia da 2, mesmo sem evento em 3 e 4
-        self.assertEqual(_fator_de_repeticao(self.provavel.id, recentes, 5), 0.65)
+        EventoRodada.objects.create(rodada=2, evento=self.primeiro)
 
-    def test_com_um_unico_evento_ele_sai_mesmo_penalizado(self):
-        self.raro.delete()
-        EventoRodada.objects.create(rodada=1, evento=self.provavel)
+        # a distancia sai da rodada corrente, nao da ultima com evento
+        dentro = 2 + COOLDOWN_EVENTO_RODADAS
+        fora = dentro + 1
+        self.assertIn(self.primeiro.id, _em_cooldown(dentro, None))
+        self.assertNotIn(self.primeiro.id, _em_cooldown(fora, None))
 
-        self.assertEqual(sortear_evento(2).id, self.provavel.id)
+    def test_com_um_unico_evento_ele_sai_mesmo_em_cooldown(self):
+        """8.2: "sempre haja um evento ativo"."""
+        self.segundo.delete()
+        EventoRodada.objects.create(rodada=1, evento=self.primeiro)
+
+        self.assertEqual(sortear_evento(2).id, self.primeiro.id)

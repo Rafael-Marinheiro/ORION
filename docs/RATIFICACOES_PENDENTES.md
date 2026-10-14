@@ -1,6 +1,11 @@
 # Pontos para ratificação do autor da especificação
 
-> **Situação:** 1 de 6 ratificado (item 1, em 14/10/2026). Cinco em aberto.
+> **Situação em 14/10/2026:** itens 1, 3, 4 e 6 resolvidos. Restam o
+> **item 2** (pool estendido, revisão dos enunciados) e o **item 5**
+> (questionário do §15.4), ambos aguardando o Dr. Pio.
+>
+> Entrou um **item 7**: a política de sorteio igualitário, que diverge
+> da tabela de probabilidades do §8.4.
 
 Documento para levar ao Prof. Dr. Pio Marinheiro. Cada item descreve **o que
 o documento diz**, **o que o sistema faz** e **por que divergem**. Nenhum
@@ -107,7 +112,10 @@ junto.
 O sistema seguiu a RN-10 por ser a mais específica, mas a escolha merece
 registro.
 
-**Pergunta:** confirma que a RN-10 prevalece sobre a frase do §8.2?
+**Pergunta (respondida):** confirma que a RN-10 prevalece sobre a frase do
+§8.2? — **Sim.** Decidido em 14/10/2026: a rodada sai com dois eventos em
+**30%** das vezes, nunca mais que dois no total contando o do professor, e a
+seleção manual continua disponível na criação da rodada. ✅ **RESOLVIDO**
 
 ---
 
@@ -122,7 +130,14 @@ equipe de fato registrou operação. O §11.2 faz a submissão vazia repetir a
 rodada anterior; o indicador separa quem decidiu de quem apenas apertou
 "enviar".
 
-**Pergunta:** a definição serve, ou o senhor tem outra em mente?
+**Exemplo que a motiva:** uma equipe submete todas as rodadas no prazo —
+participação 100% — sem registrar compra, produção ou envio. O §11.2 repete
+os valores da rodada anterior, e na planilha ela parece exemplar.
+Participação 100% com consistência 40% é o aluno que aprendeu a clicar no
+botão, não a gerir.
+
+**Pergunta (respondida):** a definição serve? — **Sim**, mantida.
+✅ **RESOLVIDO**
 
 **Como reverter:** é um cálculo isolado num único módulo; trocar a fórmula
 não afeta mais nada.
@@ -145,6 +160,8 @@ abertos.
 de pesquisa? Se os dados forem usados na dissertação, convém que o senhor
 valide o texto de cada item e a escala de cinco pontos.
 
+**Situação:** o Dr. Pio vai submeter o questionário. ⏳ **AGUARDANDO**
+
 ---
 
 ## 6. Decisões tomadas durante o desenvolvimento, nunca apresentadas
@@ -162,8 +179,10 @@ correspondente.
 | D-10 | Momento do débito da matéria-prima (na compra, não na produção) |
 | D-12 | Tratamento de produto perecível retido por evento logístico |
 
-**Pergunta:** o senhor quer revisar as seis, ou ratifica em bloco o que está
-implementado e documentado?
+**Pergunta (respondida):** ratificadas em bloco pelo Rafael em 14/10/2026. A
+documentação foi ajustada: o registro de decisões do
+`GUIA_IMPLEMENTACAO.md` traz a nota de ratificação, e o B4 foi reescrito
+para a regra nova (30% de evento duplo). ✅ **RESOLVIDO**
 
 ---
 
@@ -184,3 +203,34 @@ python manage.py ensaio_de_rede --equipes 12 --repeticoes 5
 Ele mede a resposta do painel sob a carga de uma turma e se o fechamento
 cabe na janela de um minuto. **Precisa rodar no servidor da instituição**,
 não na máquina de desenvolvimento — é a rede deles que está em questão.
+
+---
+
+## 7. Política de sorteio: chances iguais e cooldown — ⏳ AGUARDANDO
+
+**O documento (§8.4):** probabilidades distintas por evento — 15%, 20%, 20%,
+15%, 15%, 15% — que somam 100%.
+
+**O documento (§8.2):** *"cada evento possui uma probabilidade constante de
+ocorrência"*.
+
+**O que o sistema faz:** todo evento elegível tem a **mesma** chance, e o que
+saiu fica bloqueado por três rodadas.
+
+**Por que:** decisão do dono do produto em 14/10/2026 — evitar que o mesmo
+evento se repita, e dar a todas as turmas o mesmo repertório.
+
+Vale notar que as duas mudanças se sustentam. O cooldown duro era recusado
+antes porque achata probabilidades distintas (com pesos 60/30/10, bloquear
+duas rodadas os transforma em 33/33/33). Com as chances iguais, não há peso a
+destruir.
+
+**O que NÃO mudou:** a coluna `probabilidade` continua gravada com os valores
+do §8.4. O banco segue fiel ao documento; o que mudou foi a política de
+sorteio.
+
+**Pergunta:** o senhor aceita que o sorteio ignore a tabela de probabilidades
+do §8.4 e trate todos os eventos por igual?
+
+**Como reverter:** um parâmetro em `app/parametros.py`. Nenhum dado precisa
+ser migrado, porque as probabilidades do documento nunca foram apagadas.

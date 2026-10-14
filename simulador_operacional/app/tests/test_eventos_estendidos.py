@@ -151,13 +151,37 @@ class SeedDoPoolTest(TestCase):
         documento = Evento.objects.filter(manual=False, extensao=False)
         estendidos = Evento.objects.filter(manual=False, extensao=True)
         self.assertEqual(documento.count(), 6)
-        self.assertEqual(estendidos.count(), 10)
+        self.assertEqual(estendidos.count(), 13)
+        # Os seis do 8.4 mantem as probabilidades do documento, que somam
+        # 100% -- mesmo com o sorteio uniforme, o dado continua fiel.
+        self.assertEqual(sum(e.probabilidade for e in documento), 100)
+        # Os estendidos tem a mesma chance entre si, como o sorteio trata.
         self.assertEqual(
-            sum(e.probabilidade for e in documento), 100
+            {e.probabilidade for e in estendidos}, {8}
         )
-        self.assertEqual(
-            sum(e.probabilidade for e in estendidos), 100
+
+    def test_o_surto_e_o_unico_evento_marcado_como_unico_por_jogo(self):
+        from django.core.management import call_command
+
+        call_command("seed_dados_base")
+
+        unicos = list(
+            Evento.objects.filter(unico_por_jogo=True).values_list(
+                "nome", flat=True
+            )
         )
+        self.assertEqual(unicos, ["Surto de gripe"])
+
+    def test_ha_eventos_logisticos_favoraveis_ao_grupo(self):
+        """O 8.4 so tinha greve e enchente: nenhum alivio logistico."""
+        from django.core.management import call_command
+
+        call_command("seed_dados_base")
+
+        favoraveis = Evento.objects.filter(
+            tipo="custo_transporte", impacto_percentual__lt=0
+        )
+        self.assertGreaterEqual(favoraveis.count(), 3)
 
     def test_o_seed_preserva_o_evento_manual_do_professor(self):
         from django.core.management import call_command
@@ -250,3 +274,172 @@ class BloqueioDeProducaoTest(TestCase):
         ordem = Producao.objects.get(grupo=self.grupo, rodada=1)
         self.assertEqual(ordem.quantidade_produzida, 0)
         self.assertEqual(ajustes[0]["limitador"], "produção bloqueada por evento")
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class SorteioUniformeComCooldownTest(TestCase):
+    """Decisao de 14/10/2026: mesma chance para todos, e cooldown de verdade.
+
+    Antes o sorteio usava os pesos do 8.4 e so PENALIZAVA o evento recente,
+    para nao achatar pesos distintos. Com os pesos iguais por decisao, a
+    objecao caiu e o cooldown duro passou a ser a ferramenta certa.
+    """
+
+    def setUp(self):
+        self.jogo = Jogo.objects.create(
+            nome="Turma A", config=GameConfig.objects.create(numero_rodadas=12)
+        )
+        self.eventos = [
+            _evento(f"Evento {letra}", probabilidade=prob)
+            for letra, prob in zip("ABCD", (70, 10, 10, 10))
+        ]
+
+    def _sortear_ate(self, ultima):
+        saidos = []
+        for numero in range(1, ultima + 1):
+            _rodada(self.jogo, numero)
+            evento = sortear_evento(numero, self.jogo.id)
+            if evento:
+                saidos.append(evento.nome)
+        return saidos
+
+    def test_a_probabilidade_gravada_nao_pesa_mais_no_sorteio(self):
+        """O evento de peso 70 nao pode dominar: a chance e igual."""
+        from app.models import EventoRodada
+
+        contagem = {e.nome: 0 for e in self.eventos}
+        for _ in range(40):
+            EventoRodada.objects.all().delete()
+            evento = sortear_evento(1, self.jogo.id)
+            contagem[evento.nome] += 1
+
+        # com peso, "Evento A" levaria ~70%; uniforme, ~25%
+        self.assertLess(contagem["Evento A"], 28)
+
+    def test_o_evento_que_saiu_fica_de_fora_pelas_rodadas_do_cooldown(self):
+        from unittest.mock import patch
+
+        from app.parametros import COOLDOWN_EVENTO_RODADAS
+
+        # o evento duplo e sorteado a parte e consumiria o pool; aqui o que
+        # se mede e o cooldown.
+        with patch("app.services.eventos.CHANCE_EVENTO_DUPLO", 0):
+            saidos = self._sortear_ate(COOLDOWN_EVENTO_RODADAS + 1)
+
+        self.assertEqual(len(set(saidos)), len(saidos))
+
+    def test_pool_menor_que_o_cooldown_nao_deixa_a_rodada_sem_evento(self):
+        """8.2: "sempre haja um evento ativo"."""
+        from unittest.mock import patch
+
+        Evento.objects.exclude(nome="Evento A").delete()
+
+        with patch("app.services.eventos.CHANCE_EVENTO_DUPLO", 0):
+            saidos = self._sortear_ate(4)
+
+        self.assertEqual(saidos, ["Evento A"] * 4)
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class EventoUnicoPorJogoTest(TestCase):
+    """O surto acontece no maximo uma vez por turma.
+
+    Na segunda vez a equipe ja conhece preco e efeito exatos: deixa de ser
+    decisao sob incerteza e vira conta.
+    """
+
+    def setUp(self):
+        self.jogo = Jogo.objects.create(
+            nome="Turma A", config=GameConfig.objects.create(numero_rodadas=12)
+        )
+        self.unico = _evento("Surto de gripe", unico_por_jogo=True)
+        self.comum = _evento("Boom de consumo")
+
+    def test_depois_de_sair_uma_vez_nao_volta(self):
+        from app.models import EventoRodada
+
+        EventoRodada.objects.create(
+            rodada=1, jogo=self.jogo, evento=self.unico, manual=False
+        )
+
+        saidos = set()
+        for numero in range(2, 20):
+            _rodada(self.jogo, numero)
+            evento = sortear_evento(numero, self.jogo.id)
+            if evento:
+                saidos.add(evento.nome)
+
+        self.assertNotIn("Surto de gripe", saidos)
+        self.assertIn("Boom de consumo", saidos)
+
+    def test_a_restricao_e_por_turma_e_nao_global(self):
+        from app.models import EventoRodada
+
+        EventoRodada.objects.create(
+            rodada=1, jogo=self.jogo, evento=self.unico, manual=False
+        )
+        outra = Jogo.objects.create(
+            nome="Turma B", config=GameConfig.objects.create(numero_rodadas=12)
+        )
+        Evento.objects.filter(nome="Boom de consumo").delete()
+
+        _rodada(outra, 1)
+        evento = sortear_evento(1, outra.id)
+
+        self.assertEqual(evento.nome, "Surto de gripe")
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class EventoDuploTest(TestCase):
+    """RN-10: "ate 2 eventos aleatorios simultaneos", em 30% das rodadas."""
+
+    def setUp(self):
+        self.jogo = Jogo.objects.create(
+            nome="Turma A", config=GameConfig.objects.create(numero_rodadas=12)
+        )
+        for letra in "ABCDEFGH":
+            _evento(f"Evento {letra}")
+
+    def _quantidade_na_rodada(self, numero):
+        from app.models import EventoRodada
+
+        return EventoRodada.objects.filter(
+            jogo=self.jogo, rodada=numero
+        ).count()
+
+    def test_as_vezes_a_rodada_sai_com_dois_eventos(self):
+        from app.models import EventoRodada
+
+        duplas = 0
+        for tentativa in range(60):
+            EventoRodada.objects.all().delete()
+            _rodada(self.jogo, 1)
+            sortear_evento(1, self.jogo.id)
+            if self._quantidade_na_rodada(1) == 2:
+                duplas += 1
+
+        self.assertGreater(duplas, 0, "nunca saiu dupla em 60 tentativas")
+        self.assertLess(duplas, 45, "saiu dupla quase sempre")
+
+    def test_nunca_passa_de_dois(self):
+        from app.models import EventoRodada
+
+        for tentativa in range(40):
+            EventoRodada.objects.all().delete()
+            _rodada(self.jogo, 1)
+            sortear_evento(1, self.jogo.id)
+            self.assertLessEqual(self._quantidade_na_rodada(1), 2)
+
+    def test_com_evento_manual_o_sorteio_so_acrescenta_um(self):
+        """RN-10 limita a rodada a dois; o do professor ja conta."""
+        from app.models import EventoRodada
+
+        manual = _evento("Feira regional", manual=True, jogo=self.jogo)
+        for tentativa in range(30):
+            EventoRodada.objects.all().delete()
+            _rodada(self.jogo, 1)
+            EventoRodada.objects.create(
+                rodada=1, jogo=self.jogo, evento=manual, manual=True
+            )
+            sortear_evento(1, self.jogo.id)
+            self.assertLessEqual(self._quantidade_na_rodada(1), 2)

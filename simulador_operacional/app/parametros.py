@@ -63,20 +63,30 @@ DESCONTO_RETORNO_POR_KM = Decimal("0.50")
 
 # --- Variedade de eventos --------------------------------------------------
 #
-# O 8.2 pede probabilidade constante, mas rodar o mesmo evento em sequencia
-# empobrece a aula. A saida nao e bloquear o evento recente -- bloqueio
-# achata os pesos: medido com 3 eventos de pesos 60/30/10, um cooldown duro
-# de 2 rodadas os transforma em 33/33/33, destruindo a configuracao em
-# silencio.
+# Ate 14/10/2026 o sorteio usava os pesos do 8.4 e PENALIZAVA o evento
+# recente em vez de bloquea-lo. O motivo era bom: cooldown duro achata
+# pesos diferentes -- com 3 eventos de pesos 60/30/10, bloquear 2 rodadas
+# os transforma em 33/33/33, destruindo a configuracao em silencio.
 #
-# Aqui o peso do evento recente e REDUZIDO, nunca zerado. Ele continua
-# possivel, so fica improvavel. Com os 6 eventos do 8.4 isso da 1,2% de
-# repeticao consecutiva e no maximo 1,3 p.p. de desvio das probabilidades
-# documentadas -- melhor nos dois criterios que o cooldown duro, que dava
-# 1,5 p.p. de desvio.
+# A decisao de 14/10 tirou o chao dessa objecao: todos os eventos passaram
+# a ter a MESMA chance. Nao ha mais peso a preservar, entao o cooldown duro
+# -- que e o que o professor pediu e o que o aluno percebe -- passa a ser a
+# ferramenta certa. Com 18 eventos no pool e 3 rodadas de bloqueio, sobram
+# ao menos 15 candidatos em qualquer rodada.
 #
-# Chave = ha quantas rodadas o evento saiu. Valor = multiplicador do peso.
-PENALIDADE_EVENTO_RECENTE = {1: 0.05, 2: 0.30, 3: 0.65}
+# PENDENTE DE RATIFICACAO: o 8.4 define probabilidades distintas
+# (15/20/20/15/15/15). A coluna continua gravada no banco, fiel ao
+# documento; o que mudou foi a POLITICA de sorteio. Se o autor recusar,
+# voltar e trocar `uniforme=True` por `uniforme=False` em `sortear_evento`.
+COOLDOWN_EVENTO_RODADAS = 3
+
+# RN-10 preve "ate 2 eventos aleatorios simultaneos". A chance de a rodada
+# sair com dois, em vez de um.
+CHANCE_EVENTO_DUPLO = 0.30
+
+# RN-10: no maximo dois eventos por rodada, somando o do professor e os
+# sorteados.
+MAXIMO_EVENTOS_POR_RODADA = 2
 
 # --- Classificacao multicriterio (12) --------------------------------------
 #

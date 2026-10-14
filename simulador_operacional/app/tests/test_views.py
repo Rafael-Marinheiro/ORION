@@ -1025,27 +1025,37 @@ class MateriaPrimaFlowTest(TestCase):
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
 class EventSelectionPolicyTest(TestCase):
-    """O 8.2 pede probabilidade CONSTANTE por evento.
+    """Politica de sorteio: chances iguais e cooldown (14/10/2026).
 
-    Ate 2026-09-18 havia um cooldown que bloqueava o evento das duas rodadas
-    anteriores. Ele tornava a probabilidade dependente do historico -- o
-    oposto de constante -- e na pratica sobrepunha os pesos do 8.4: com o
-    cooldown ativo, um evento de 15% saia tanto quanto um de 20%, porque a
-    exclusao do concorrente pesava mais que o peso configurado.
+    Historico desta classe, porque ela ja mudou de lado duas vezes:
+
+    - ate 2026-09-18 havia cooldown duro, retirado porque sobrepunha os
+      pesos do 8.4 -- com ele ativo, um evento de 15% saia tanto quanto um
+      de 20%, ja que excluir o concorrente pesava mais que o peso;
+    - de 2026-09-18 a 14/10/2026 o evento recente so perdia peso;
+    - desde 14/10/2026 os pesos sao iguais por decisao do dono do produto,
+      e o cooldown voltou -- agora sem nada para distorcer, porque nao ha
+      mais peso diferente a preservar.
     """
 
-    def test_evento_pode_repetir_em_rodadas_seguidas(self):
-        repetivel = Evento.objects.create(
-            nome="Unico com peso", tipo="demanda", impacto_percentual=5, probabilidade=100
-        )
-        Evento.objects.create(
-            nome="Sem peso", tipo="demanda", impacto_percentual=5, probabilidade=0
-        )
-        EventoRodada.objects.create(rodada=1, evento=repetivel)
-        EventoRodada.objects.create(rodada=2, evento=repetivel)
+    def test_o_evento_recente_nao_se_repete(self):
+        from unittest.mock import patch
 
-        # sem cooldown, o peso manda: quem tem 100% sai de novo
-        self.assertEqual(sortear_evento(3).id, repetivel.id)
+        Evento.objects.all().delete()
+        recente = Evento.objects.create(
+            nome="Recente", tipo="demanda", impacto_percentual=5, probabilidade=100
+        )
+        outro = Evento.objects.create(
+            nome="Outro", tipo="demanda", impacto_percentual=5, probabilidade=0
+        )
+        EventoRodada.objects.create(rodada=1, evento=recente)
+        EventoRodada.objects.create(rodada=2, evento=recente)
+
+        with patch("app.services.eventos.CHANCE_EVENTO_DUPLO", 0):
+            escolhido = sortear_evento(3)
+
+        # a probabilidade gravada nao salva o que esta em cooldown
+        self.assertEqual(escolhido.id, outro.id)
 
     def test_evento_ja_sorteado_na_rodada_nao_e_re_sorteado(self):
         """A rodada tem um evento so, e ele nao muda a cada consulta."""

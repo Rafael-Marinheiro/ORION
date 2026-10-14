@@ -749,6 +749,11 @@ class Evento(models.Model):
     # Fora da tabela do 8.4. So entra no sorteio da turma que ligou o pool
     # estendido em `GameConfig.eventos_estendidos`.
     extensao = models.BooleanField(default=False)
+    # Acontece no maximo uma vez por turma. O surto de gripe e o caso: a
+    # oferta de imunizacao perde o sentido na segunda vez, porque a equipe
+    # ja conhece o preco e o efeito exatos -- deixa de ser decisao sob
+    # incerteza e vira conta.
+    unico_por_jogo = models.BooleanField(default=False)
     # Turma dona do evento manual. Nulo e o catalogo do 8.4, comum a todas.
     jogo = models.ForeignKey(
         "Jogo", on_delete=models.CASCADE, null=True, blank=True,
