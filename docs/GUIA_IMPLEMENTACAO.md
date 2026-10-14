@@ -632,6 +632,28 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### Dois comandos de apoio, e as pendências viraram documento — 14/10/2026
+
+**`seed_turma_demo`** monta uma turma completa do zero: três equipes de três
+alunos, CEO definido, parque de largada materializado e, com
+`--abrir-rodada`, a rodada 1 pronta. Serve para o ensaio antes da aula e
+para ter base limpa depois de auditoria sem apagar o que já existe.
+
+`--limpar` remove **somente** a turma de mesmo nome. Não existe opção de
+limpar o banco inteiro, de propósito: um comando que apaga turma alheia por
+descuido não tem como ser desfeito em sala.
+
+**`ensaio_de_rede`** instrumenta o §11.1. Mede a resposta do painel sob a
+carga de uma turma (mediana, p95, pior caso, consultas SQL) e cronometra o
+fechamento, dizendo se cabe na janela de um minuto do cron. **Não substitui
+o ensaio com alunos reais** — só ele mede a rede da instituição —, mas tira
+a medição do improviso.
+
+**`docs/RATIFICACOES_PENDENTES.md`** reúne os seis pontos que dependem de
+decisão do autor da especificação, cada um com o que o documento diz, o que
+o sistema faz, por que divergem e como reverter. Pendência que mora só no
+diário de implementação não chega a quem decide.
+
 ### §15.4 implementado: o questionário de avaliação — 14/10/2026
 
 Era a maior lacuna de especificação do projeto. O que existia era
