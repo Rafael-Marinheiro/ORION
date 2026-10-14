@@ -1,0 +1,39 @@
+{% comment %}
+    15.4 -- media por item e distribuicao da escala. A media sozinha esconde
+    polarizacao: 1 e 5 em partes iguais dao a mesma media que todo mundo em 3.
+{% endcomment %}
+{% for bloco in blocos %}
+<h3 class="o-subhead">
+    {{ bloco.titulo }}
+    {% if bloco.media %}<span class="o-badge o-badge--bloco">média {{ bloco.media }}</span>{% endif %}
+</h3>
+<div class="o-tablewrap">
+    <table class="o-table o-table--cartoes">
+        <caption class="o-sr">Respostas do bloco {{ bloco.titulo }}</caption>
+        <thead>
+            <tr>
+                <th scope="col">Item</th>
+                <th scope="col" class="num">n</th>
+                <th scope="col" class="num">Média</th>
+                <th scope="col">Distribuição (1 a 5)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for linha in bloco.linhas %}
+            <tr>
+                <th scope="row" data-label="Item">{{ linha.enunciado }}</th>
+                <td class="num" data-label="n">{{ linha.n }}</td>
+                <td class="num" data-label="Média">{{ linha.media|default:"—" }}</td>
+                <td data-label="Distribuição">
+                    <span class="o-dist">
+                    {% for quantidade in linha.distribuicao %}
+                        <span class="o-dist__ponto" title="{{ forloop.counter }}: {{ quantidade }}">{{ quantidade }}</span>
+                    {% endfor %}
+                    </span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}

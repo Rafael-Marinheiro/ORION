@@ -1,0 +1,10 @@
+{% for bloco in blocos %}
+    {% if bloco.textos %}
+    <h3 class="o-subhead">{{ bloco.pergunta }}</h3>
+    <ul class="o-quotes">
+        {% for texto in bloco.textos %}
+        <li class="o-quote">{{ texto }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+{% endfor %}

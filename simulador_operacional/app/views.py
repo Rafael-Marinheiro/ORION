@@ -44,6 +44,13 @@ from .parametros import (
     TAXA_APLICACAO_FINANCEIRA_RODADA,
 )
 from .services.dre import montar_dre, montar_fluxo_de_caixa, resumo_do_fluxo
+from .services.avaliacao import (
+    ESCALA_LIKERT,
+    ciclo_encerrado,
+    comentarios,
+    consolidar_respostas,
+    indicadores_de_uso,
+)
 from .services.eventos import (
     custo_da_oferta,
     evento_de_decisao,
@@ -69,6 +76,7 @@ from .services.pontuacao import (
 )
 from .services.relatorios_dashboard import montar_painel as montar_painel_financeiro
 from .forms import (
+    AvaliacaoSimuladorForm,
     ConfigWizardStep1Form,
     ConfigWizardStep2Form,
     CompraMateriaPrimaForm,
@@ -89,6 +97,7 @@ from .models import (
     default_ranking_pesos,
     AplicacaoFinanceiraGrupo,
     AuditoriaSubmissaoRodada,
+    AvaliacaoSimulador,
     CapacidadeProdutoGrupo,
     DecisaoEventoGrupo,
     CEOGrupoRodada,
@@ -2597,3 +2606,120 @@ def investir_capacidade_api(request):
     linha.save()
     Investimento.objects.create(grupo=linha.grupo, categoria="maquinas", valor=valor)
     return Response({"nova_capacidade": linha.capacidade})
+
+
+class AvaliacaoSimuladorView(LoginRequiredMixin, TemplateView):
+    """15.4.a e 15.4.b -- o questionario de avaliacao do simulador.
+
+    O que existia era `/feedback/`, caixa de sugestao livre: nao e
+    questionario, nao tem escala e nao produz dado comparavel entre turmas.
+    O 15.4 pede instrumento com "itens em escala Likert e campos abertos",
+    aplicado "ao final do ciclo do jogo".
+
+    Aluno responde com o ciclo encerrado -- antes disso nao ha o que
+    avaliar. O docente responde a qualquer momento: ele acompanha o ciclo
+    inteiro e pode registrar observacao enquanto a turma ainda joga.
+    """
+
+    template_name = "avaliacao.html"
+
+    def papel(self):
+        return "docente" if self.request.user.is_staff else "aluno"
+
+    def jogo_do_usuario(self):
+        if self.request.user.is_staff:
+            jogo_id, _sem_jogo, _opcoes = turma_em_foco(self.request)
+            return Jogo.objects.filter(id=jogo_id).first() if jogo_id else None
+        grupo = obter_grupo_do_usuario(self.request.user)
+        return grupo.jogo if grupo else None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        papel = self.papel()
+        jogo = self.jogo_do_usuario()
+        enviada = AvaliacaoSimulador.objects.filter(
+            usuario=self.request.user, jogo=jogo
+        ).first()
+        liberado = papel == "docente" or ciclo_encerrado(jogo)
+
+        context.update({
+            "nav": "avaliacao",
+            "papel": papel,
+            "jogo": jogo,
+            "liberado": liberado,
+            "avaliacao_enviada": enviada,
+            "form": kwargs.get("form") or AvaliacaoSimuladorForm(papel=papel),
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        papel = self.papel()
+        jogo = self.jogo_do_usuario()
+        if papel == "aluno" and not ciclo_encerrado(jogo):
+            messages.error(
+                request,
+                "O questionário abre quando a última rodada do ciclo fechar.",
+            )
+            return redirect("avaliacao")
+
+        form = AvaliacaoSimuladorForm(request.POST, papel=papel)
+        if not form.is_valid():
+            return self.render_to_response(self.get_context_data(form=form))
+
+        AvaliacaoSimulador.objects.update_or_create(
+            usuario=request.user, jogo=jogo,
+            defaults={
+                "papel": papel,
+                "respostas": form.respostas(),
+                "comentarios": form.comentarios(),
+            },
+        )
+        messages.success(request, "Avaliação registrada. Obrigado.")
+        return redirect("avaliacao")
+
+
+class RelatorioAvaliacaoView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """15.4 consolidado: respostas dos dois questionarios e indicadores de uso.
+
+    O 15.4 fecha dizendo que as informacoes "serao consolidadas
+    periodicamente para ajuste de regras". Consolidar a mao um JSON por
+    usuario nao e consolidacao; esta tela e o instrumento.
+    """
+
+    template_name = "avaliacao_relatorio.html"
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        jogo_id, _sem_jogo, opcoes = turma_em_foco(self.request)
+        jogo = Jogo.objects.filter(id=jogo_id).first() if jogo_id else None
+
+        avaliacoes = list(
+            AvaliacaoSimulador.objects.filter(jogo=jogo).select_related("usuario")
+        )
+        alunos = [a for a in avaliacoes if a.papel == "aluno"]
+        docentes = [a for a in avaliacoes if a.papel == "docente"]
+
+        context.update({
+            "nav": "avaliacao",
+            "turmas": opcoes,
+            "turma_em_foco": next(
+                (opcao["nome"] for opcao in opcoes if opcao["selecionada"]), None
+            ),
+            "jogo": jogo,
+            "total_alunos": len(alunos),
+            "total_docentes": len(docentes),
+            "blocos_aluno": consolidar_respostas(alunos, "aluno") if alunos else [],
+            "blocos_docente": (
+                consolidar_respostas(docentes, "docente") if docentes else []
+            ),
+            "comentarios_aluno": comentarios(alunos, "aluno") if alunos else [],
+            "comentarios_docente": (
+                comentarios(docentes, "docente") if docentes else []
+            ),
+            "indicadores": indicadores_de_uso(jogo),
+            "escala": ESCALA_LIKERT,
+        })
+        return context

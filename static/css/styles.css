@@ -1501,3 +1501,83 @@ ul.errorlist {
    a linha inteira passa a ter 44 px de altura -- o minimo para o dedo. */
 .o-campo input[type="checkbox"], .o-campo input[type="radio"] { width: 20px; height: 20px; }
 .o-campo ul label, .o-campo:has(> input[type="checkbox"]) { min-height: 44px; }
+
+/* --- 34. Avaliacao do simulador (15.4) ----------------------------------- */
+
+.o-likert { display: grid; gap: var(--o-4); }
+.o-likert__item { display: grid; gap: var(--o-2); }
+.o-likert__item--erro {
+    border-left: 3px solid var(--o-bad);
+    padding-left: var(--o-3);
+}
+.o-likert__enunciado { margin: 0; font-weight: 500; }
+
+/* A escala vira coluna no celular: cinco rotulos lado a lado nao cabem em
+   375 px sem encolher o alvo de toque abaixo dos 44 px. */
+.o-likert__escala {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--o-2);
+}
+.o-likert__opcao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--o-1);
+    min-height: 44px;
+    padding: var(--o-2);
+    border: 1px solid var(--o-line);
+    border-radius: var(--o-radius);
+    background: var(--o-panel-2);
+    cursor: pointer;
+    text-align: center;
+}
+.o-likert__opcao:has(input:checked) {
+    border-color: var(--o-star);
+    background: var(--o-star-bg);
+}
+.o-likert__opcao:focus-within { outline: 2px solid var(--o-star); outline-offset: 2px; }
+.o-likert__valor { font-size: 0.75rem; color: var(--o-ink-dim); }
+
+@media (max-width: 640px) {
+    .o-likert__escala { grid-template-columns: 1fr; }
+    .o-likert__opcao { flex-direction: row; justify-content: flex-start; }
+    .o-likert__valor { font-size: 0.875rem; }
+}
+
+.o-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--o-3);
+    margin-bottom: var(--o-4);
+}
+.o-kpi {
+    display: grid;
+    gap: var(--o-1);
+    padding: var(--o-3);
+    border: 1px solid var(--o-line);
+    border-radius: var(--o-radius);
+    background: var(--o-panel-2);
+}
+.o-kpi__valor { font-size: 1.75rem; font-weight: 700; color: var(--o-star); }
+.o-kpi__de { font-size: 1rem; font-weight: 400; color: var(--o-ink-dim); }
+.o-kpi__rotulo { font-size: 0.8125rem; color: var(--o-ink-dim); }
+
+.o-dist { display: inline-flex; gap: 2px; }
+.o-dist__ponto {
+    min-width: 28px;
+    padding: 2px 4px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--o-line);
+    border-radius: 4px;
+    background: var(--o-panel-2);
+}
+
+.o-quotes { display: grid; gap: var(--o-2); padding: 0; list-style: none; }
+.o-quote {
+    padding: var(--o-3);
+    border-left: 3px solid var(--o-star);
+    border-radius: 0 var(--o-radius) var(--o-radius) 0;
+    background: var(--o-panel-2);
+}

@@ -1,5 +1,6 @@
 from django.contrib.auth.views import LogoutView
 from django.urls import include, path
+from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -55,7 +56,9 @@ from .views import (
     RegisterView,
     RelatoriosComparativosView,
     RelatoriosView,
+    AvaliacaoSimuladorView,
     FeedbackView,
+    RelatorioAvaliacaoView,
     ResultadoFinanceiroViewSet,
     RodadaCreateView,
     RodadaViewSet,
@@ -130,6 +133,27 @@ urlpatterns = [
     path("jobs/", JobsView.as_view(), name="jobs"),
     path("ajuda/", AjudaView.as_view(), name="ajuda"),
     path("feedback/", FeedbackView.as_view(), name="feedback"),
+    # 2.1: o service worker precisa ser servido na raiz -- em
+    # /static/js/ o escopo dele cobriria so /static/js/.
+    path(
+        "sw.js",
+        TemplateView.as_view(
+            template_name="sw.js", content_type="application/javascript"
+        ),
+        name="service_worker",
+    ),
+    path(
+        "offline/",
+        TemplateView.as_view(template_name="offline.html"),
+        name="offline",
+    ),
+    # 15.4: o questionario de avaliacao do ciclo e o consolidado dele.
+    path("avaliacao/", AvaliacaoSimuladorView.as_view(), name="avaliacao"),
+    path(
+        "avaliacao/relatorio/",
+        RelatorioAvaliacaoView.as_view(),
+        name="avaliacao_relatorio",
+    ),
     path("export/pdf/", export_resultados_pdf, name="export_resultados_pdf"),
     path("export/excel/", export_resultados_excel, name="export_resultados_excel"),
     path("export/csv/", export_resultados_csv, name="export_resultados_csv"),

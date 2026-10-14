@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliação consolidada — ORION{% endblock %}
+
+{% block content %}
+<div class="o-head">
+    <h1>Avaliação do simulador{% if turma_em_foco %} — {{ turma_em_foco }}{% endif %}</h1>
+    <p class="o-head__sub">
+        §15.4 consolidado: respostas dos questionários e indicadores de uso do ciclo.
+    </p>
+</div>
+
+{% include 'partials/seletor_turma.html' %}
+
+<section class="o-panel">
+    <h2 class="o-panel__title">Indicadores de uso</h2>
+    <p class="o-panel__hint">§15.4.c — rodadas realizadas, participação dos grupos,
+    submissões em tempo, consistência nas decisões e variação entre desempenhos.</p>
+
+    <div class="o-kpis">
+        <div class="o-kpi">
+            <span class="o-kpi__valor">{{ indicadores.rodadas_realizadas }}<span class="o-kpi__de">/{{ indicadores.rodadas_previstas }}</span></span>
+            <span class="o-kpi__rotulo">rodadas realizadas</span>
+        </div>
+        <div class="o-kpi">
+            <span class="o-kpi__valor">{{ indicadores.grupos }}</span>
+            <span class="o-kpi__rotulo">equipes</span>
+        </div>
+        <div class="o-kpi">
+            <span class="o-kpi__valor">{{ indicadores.submissoes_em_tempo }}<span class="o-kpi__de">/{{ indicadores.submissoes_possiveis }}</span></span>
+            <span class="o-kpi__rotulo">submissões em tempo</span>
+        </div>
+        <div class="o-kpi">
+            <span class="o-kpi__valor">{{ indicadores.desempenho_desvio }}</span>
+            <span class="o-kpi__rotulo">desvio entre desempenhos</span>
+        </div>
+    </div>
+
+    {% if indicadores.participacao %}
+    <div class="o-tablewrap">
+        <table class="o-table o-table--cartoes">
+            <caption class="o-sr">Participação e consistência por equipe</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Equipe</th>
+                    <th scope="col" class="num">Submissões</th>
+                    <th scope="col" class="num">Participação</th>
+                    <th scope="col" class="num">Consistência</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for linha in indicadores.participacao %}
+                <tr>
+                    <th scope="row" data-label="Equipe">{{ linha.grupo.nome }}</th>
+                    <td class="num" data-label="Submissões">{{ linha.submissoes }}/{{ linha.rodadas }}</td>
+                    <td class="num" data-label="Participação">{{ linha.participacao_percent }}%</td>
+                    <td class="num" data-label="Consistência">{{ linha.consistencia_percent }}%</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="o-muted">
+        <strong>Consistência</strong> é a parcela das rodadas submetidas em que a
+        equipe de fato registrou operação. Submeter sem decidir faz o §11.2
+        repetir a rodada anterior, e é isso que esta coluna expõe.
+    </p>
+    {% endif %}
+
+    {% if indicadores.desempenho_medio is not None %}
+    <p class="o-muted">
+        Pontuação média {{ indicadores.desempenho_medio }}, de
+        {{ indicadores.desempenho_menor }} a {{ indicadores.desempenho_maior }}.
+    </p>
+    {% endif %}
+</section>
+
+<section class="o-panel">
+    <h2 class="o-panel__title">Questionário dos alunos</h2>
+    <p class="o-panel__hint">{{ total_alunos }} resposta{{ total_alunos|pluralize }}.</p>
+
+    {% if blocos_aluno %}
+        {% include 'partials/likert_resultado.html' with blocos=blocos_aluno %}
+        {% include 'partials/likert_comentarios.html' with blocos=comentarios_aluno %}
+    {% else %}
+        <p class="o-muted">Nenhuma resposta de aluno nesta turma.</p>
+    {% endif %}
+</section>
+
+<section class="o-panel">
+    <h2 class="o-panel__title">Questionário dos docentes</h2>
+    <p class="o-panel__hint">{{ total_docentes }} resposta{{ total_docentes|pluralize }}.</p>
+
+    {% if blocos_docente %}
+        {% include 'partials/likert_resultado.html' with blocos=blocos_docente %}
+        {% include 'partials/likert_comentarios.html' with blocos=comentarios_docente %}
+    {% else %}
+        <p class="o-muted">Nenhuma resposta de docente nesta turma.</p>
+    {% endif %}
+</section>
+{% endblock %}

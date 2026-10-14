@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliação do simulador — ORION{% endblock %}
+
+{% block content %}
+<div class="o-head">
+    <h1>Avaliação do simulador</h1>
+    <p class="o-head__sub">
+        {% if papel == 'docente' %}
+            Questionário do docente/moderador{% if jogo %} — {{ jogo.nome }}{% endif %}.
+            As respostas orientam o ajuste de regras e da interface.
+        {% else %}
+            Suas respostas são usadas para melhorar o simulador e não afetam a
+            nota da sua equipe.
+        {% endif %}
+    </p>
+</div>
+
+{% if avaliacao_enviada %}
+<div class="o-note o-note--success" role="status">
+    Avaliação registrada em {{ avaliacao_enviada.data|date:"d/m/Y H:i" }}.
+    Enviar de novo substitui a resposta anterior.
+</div>
+{% endif %}
+
+{% if not liberado %}
+<div class="o-panel o-prose">
+    <p class="o-note o-note--info">
+        O questionário abre quando a última rodada do ciclo fechar. É a
+        avaliação do ciclo inteiro, não de uma rodada.
+    </p>
+</div>
+{% else %}
+
+<div class="o-form-panel o-panel">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="o-note o-note--error" role="alert" tabindex="-1">
+            <p><strong>Faltou responder algum item.</strong> Os itens em escala
+            são obrigatórios; os campos de texto, não.</p>
+        </div>
+        {% endif %}
+
+        {% for bloco in form.blocos %}
+        <fieldset class="o-panel o-likert">
+            <legend class="o-panel__title">{{ bloco.titulo }}</legend>
+            {% for campo in form %}
+                {% if campo.name in bloco.campos %}
+                <div class="o-likert__item {% if campo.errors %}o-likert__item--erro{% endif %}">
+                    <p class="o-likert__enunciado" id="rot-{{ campo.name }}">{{ campo.label }}</p>
+                    <div class="o-likert__escala" role="radiogroup" aria-labelledby="rot-{{ campo.name }}">
+                        {% for radio in campo %}
+                        <label class="o-likert__opcao">
+                            {{ radio.tag }}
+                            <span class="o-likert__valor">{{ radio.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </fieldset>
+        {% endfor %}
+
+        <fieldset class="o-panel">
+            <legend class="o-panel__title">Em suas palavras</legend>
+            {% for campo in form %}
+                {% if campo.name in form.abertas %}
+                    {% include 'partials/campo.html' with campo=campo %}
+                {% endif %}
+            {% endfor %}
+        </fieldset>
+
+        <div class="o-btnrow">
+            <button type="submit" class="o-btn o-btn--primary">
+                {% if avaliacao_enviada %}Atualizar avaliação{% else %}Enviar avaliação{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

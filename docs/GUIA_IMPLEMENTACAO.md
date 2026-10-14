@@ -632,6 +632,83 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### §15.4 implementado: o questionário de avaliação — 14/10/2026
+
+Era a maior lacuna de especificação do projeto. O que existia era
+`/feedback/`, caixa de sugestão livre: não é questionário, não tem escala e
+não produz dado comparável entre turmas — justamente o que o §15.4 pede
+para embasar o ajuste de regras.
+
+As três partes do documento, implementadas:
+
+- **§15.4.a — questionário do aluno.** Nove itens em escala Likert de cinco
+  pontos, nos quatro temas que o documento lista (clareza e usabilidade,
+  relevância do conteúdo, aprendizados percebidos e engajamento, sugestões),
+  mais dois campos abertos. Abre quando a última rodada do ciclo fecha —
+  "ao final do ciclo do jogo".
+- **§15.4.b — questionário do docente.** Seis itens nos três temas do
+  documento (ementa, competências, facilidade de gestão) e observações
+  abertas sobre os grupos. O docente responde a qualquer momento: ele
+  acompanha o ciclo inteiro.
+- **§15.4.c — relatórios de uso.** Rodadas realizadas, participação por
+  grupo, submissões em tempo, consistência nas decisões e variação entre
+  desempenhos, por turma.
+
+Os enunciados moram em `app/services/avaliacao.py`, não no template: item
+que exista só no HTML não entra na consolidação, e a resposta vira dado
+órfão.
+
+O consolidado mostra média **e distribuição** por item. Média sozinha
+esconde polarização — 1 e 5 em partes iguais dão a mesma média que todo
+mundo em 3, e numa amostra de turma essa diferença é a informação.
+
+**"Consistência nas decisões"** foi interpretada como a parcela das rodadas
+submetidas em que a equipe de fato registrou operação: o §11.2 faz a
+submissão vazia repetir a rodada anterior, e é isso que o indicador expõe.
+O documento não define a métrica; a interpretação está marcada aqui.
+
+### §2.1 implementado: operação offline temporária — 14/10/2026
+
+O §2.1 pede que os grupos "trabalhem em suas análises e decisões sem a
+necessidade de estarem constantemente conectados", com conexão exigida
+"apenas nos momentos de envio". O §2.1.1 fecha o escopo: "o simulador não
+poderá ser operado inteiramente offline".
+
+Dois níveis:
+
+- **Rascunho local.** O que o aluno digita no painel sobrevive a uma queda
+  de rede, por rodada, em `localStorage`, e some depois do envio.
+- **Service worker.** O ORION é renderizado no servidor: sem ele, quem
+  perde a rede e troca de tela recebe a página de erro do navegador. Agora
+  a casca e as telas já visitadas abrem offline, com aviso de que os dados
+  são da última carga.
+
+**Não há fila de sincronização, de propósito.** O §2.1.1 diz que o envio
+exige conexão e o §11.1 fecha a rodada no instante exato do prazo.
+Submissão entregue depois do prazo porque estava enfileirada furaria a
+regra e seria injusta com quem enviou em tempo. Todo POST vai direto à rede.
+
+**Duas dependências externas quebravam o offline, e nenhuma estava
+documentada.** Quatro telas carregavam o Chart.js de `cdn.jsdelivr.net` e o
+`base.html` buscava as fontes no Google Fonts. Sem internet não havia
+gráfico e a tipografia caía no fallback — e com o service worker seria
+pior: a tela abriria com o gráfico faltando, sem explicação. Ambos passaram
+a ser servidos pela aplicação, e um teste varre os templates para impedir
+que um CDN volte.
+
+**Condição de infraestrutura:** service worker só registra em HTTPS. O
+projeto já força SSL em produção, mas se o laboratório servir em HTTP puro
+na rede interna o registro falha em silêncio — a aplicação funciona, sem a
+parte offline. Confirmar com a instituição antes da aula.
+
+### §11.1: a janela do fechamento — 14/10/2026
+
+O §11.1 diz que "o fechamento ocorre automaticamente no momento exato do
+prazo-limite". A submissão já era barrada no instante exato —
+`obter_rodada_ativa` filtra `fim__gt=agora` —, então a janela do cron nunca
+decidiu quem entra. Ela decidia quanto a turma espera pelo resultado: o job
+rodava a cada cinco minutos, e passou a rodar a cada minuto.
+
 ### O bloqueio de produção parava a tela, não a fábrica — 14/10/2026
 
 `bloqueio_producao` é efeito de estado previsto no modelo desde o início.

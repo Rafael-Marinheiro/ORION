@@ -781,6 +781,47 @@ class Evento(models.Model):
         return self.nome
 
 
+class AvaliacaoSimulador(models.Model):
+    """15.4 -- resposta de um participante ao questionario de avaliacao.
+
+    Uma por usuario por turma: o 15.4 aplica o instrumento "ao final do
+    ciclo do jogo", nao a cada rodada. `respostas` guarda item -> ponto da
+    escala Likert; `comentarios`, pergunta aberta -> texto.
+    """
+
+    PAPEL_CHOICES = [
+        ("aluno", "Aluno"),
+        ("docente", "Docente/Moderador"),
+    ]
+
+    usuario = models.ForeignKey(
+        "User", on_delete=models.CASCADE, related_name="avaliacoes"
+    )
+    jogo = models.ForeignKey(
+        "Jogo", on_delete=models.CASCADE, related_name="avaliacoes",
+        null=True, blank=True,
+    )
+    papel = models.CharField(max_length=10, choices=PAPEL_CHOICES)
+    respostas = models.JSONField(default=dict, blank=True)
+    comentarios = models.JSONField(default=dict, blank=True)
+    data = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "AVALIACOES_SIMULADOR"
+        verbose_name = "Avaliacao do Simulador"
+        verbose_name_plural = "Avaliacoes do Simulador"
+        ordering = ["-data"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["usuario", "jogo"],
+                name="avaliacao_unica_por_usuario_e_turma",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.usuario} - {self.get_papel_display()}"
+
+
 class DecisaoEventoGrupo(models.Model):
     """Resposta de uma equipe a oferta de um evento de decisao.
 

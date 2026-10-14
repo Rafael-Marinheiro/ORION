@@ -504,3 +504,66 @@ class FeedbackForm(forms.Form):
         max_length=1000,
     )
     email = forms.EmailField(required=False, label="Email (opcional)")
+
+
+class AvaliacaoSimuladorForm(forms.Form):
+    """15.4 -- questionario montado a partir da lista do servico.
+
+    Os campos nascem de `avaliacao.blocos_do_papel`, nao escritos a mao: um
+    item que exista so aqui nao entra na consolidacao do relatorio, e a
+    resposta vira dado orfao.
+    """
+
+    def __init__(self, *args, papel="aluno", **kwargs):
+        super().__init__(*args, **kwargs)
+        from app.services.avaliacao import (
+            ESCALA_LIKERT,
+            abertas_do_papel,
+            blocos_do_papel,
+        )
+
+        self.papel = papel
+        self.blocos = []
+        for chave_bloco, titulo, itens in blocos_do_papel(papel):
+            nomes = []
+            for chave, enunciado in itens:
+                self.fields[chave] = forms.TypedChoiceField(
+                    label=enunciado,
+                    choices=ESCALA_LIKERT,
+                    coerce=int,
+                    widget=forms.RadioSelect,
+                    required=True,
+                )
+                nomes.append(chave)
+            self.blocos.append({"titulo": titulo, "campos": nomes})
+
+        self.abertas = []
+        for chave, pergunta in abertas_do_papel(papel):
+            nome = f"aberta_{chave}"
+            self.fields[nome] = forms.CharField(
+                label=pergunta,
+                widget=forms.Textarea(attrs={"rows": 3}),
+                required=False,
+                max_length=2000,
+            )
+            self.abertas.append(nome)
+
+    def campos_do_bloco(self, nomes):
+        return [self[nome] for nome in nomes]
+
+    def respostas(self):
+        from app.services.avaliacao import chaves_do_papel
+
+        return {
+            chave: self.cleaned_data[chave]
+            for chave in chaves_do_papel(self.papel)
+            if chave in self.cleaned_data
+        }
+
+    def comentarios(self):
+        from app.services.avaliacao import abertas_do_papel
+
+        return {
+            chave: self.cleaned_data.get(f"aberta_{chave}", "").strip()
+            for chave, _ in abertas_do_papel(self.papel)
+        }

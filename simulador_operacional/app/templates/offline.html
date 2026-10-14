@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Sem conexão — ORION{% endblock %}
+
+{% block content %}
+<div class="o-head">
+    <h1>Sem conexão</h1>
+    <p class="o-head__sub">
+        Esta tela ainda não foi aberta neste dispositivo, então não há cópia
+        guardada dela.
+    </p>
+</div>
+
+<div class="o-panel o-prose">
+    <p>
+        As telas que você já visitou continuam disponíveis offline, com os dados
+        da última vez em que foram carregadas. O que você digitar no painel fica
+        guardado neste navegador.
+    </p>
+    <p class="o-note o-note--info">
+        <strong>O envio da submissão precisa de conexão.</strong> O prazo da
+        rodada não para enquanto você está offline — reconecte antes do
+        horário-limite.
+    </p>
+    <div class="o-btnrow">
+        <button type="button" class="o-btn o-btn--primary" onclick="location.reload()">
+            Tentar de novo
+        </button>
+        <a class="o-btn o-btn--ghost" href="{% url 'painel_grupo' %}">Painel do grupo</a>
+    </div>
+</div>
+{% endblock %}

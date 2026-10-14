@@ -4,6 +4,17 @@
 {% block title %}{% if somente_decisoes %}Decisões por rodada{% else %}Painel do grupo{% endif %} — ORION{% endblock %}
 
 {% block content %}
+{% comment %}
+    2.1 -- "os grupos poderao trabalhar em suas analises e decisoes sem a
+    necessidade de estarem constantemente conectados". O rascunho do que
+    foi digitado sobrevive a uma queda de rede; o envio, que o 2.1.1 diz
+    exigir conexao, continua exigindo.
+{% endcomment %}
+<div data-rascunho="painel-r{{ rodada_ativa.numero|default:'0' }}">
+<p class="o-note o-note--warning" data-conexao role="status" hidden>
+    <strong>Sem conexão.</strong> Pode continuar preenchendo: o que digitar
+    fica guardado neste navegador. O envio precisa de rede.
+</p>
 {% if sem_grupo %}
     <div class="o-head">
         <h1>Painel do grupo</h1>
@@ -494,9 +505,10 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{% static 'js/rascunho.js' %}?v=20261014a" defer></script>
 {% if grafico_desempenho.labels and not somente_decisoes %}
 {{ grafico_desempenho|json_script:"dados-desempenho-painel" }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="{% static 'js/chart.umd.min.js' %}" defer></script>
 <script src="{% static 'js/charts.js' %}?v=20260925a" defer></script>
 <script>
     (function () {
@@ -515,4 +527,6 @@
     }());
 </script>
 {% endif %}
+</div>
 {% endblock %}
+

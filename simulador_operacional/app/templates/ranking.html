@@ -169,7 +169,7 @@
 {% block scripts %}
 {% if grafico_posicoes.labels %}
 {{ grafico_posicoes|json_script:"dados-posicoes-ranking" }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="{% static 'js/chart.umd.min.js' %}" defer></script>
 <script src="{% static 'js/charts.js' %}?v=20260925a" defer></script>
 <script>
     (function () {

@@ -18,10 +18,14 @@
             } catch (e) { /* storage bloqueado: fica no escuro */ }
         })();
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260925j">
+    {% comment %}
+        2.1 -- as fontes sao servidas pela propria aplicacao. Vindas do
+        Google Fonts, uma sala sem internet renderizava o sistema inteiro
+        na fonte de fallback, e com o service worker a tela abriria offline
+        com a tipografia trocada.
+    {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/fontes.css' %}?v=20261014a">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20261014a">
     {% block head_extra %}{% endblock %}
 </head>
 <body{% if user.is_authenticated %} data-app="true"{% endif %}>
@@ -69,6 +73,7 @@
                             <li><a class="o-nav__link" href="{% url 'jobs' %}">Execuções de jobs</a></li>
                         </ul>
                     </li>
+                    <li><a class="o-nav__link" href="{% url 'avaliacao_relatorio' %}" {% if nav == 'avaliacao' %}aria-current="page"{% endif %}>Avaliação</a></li>
                     <li><a class="o-nav__link" href="{% url 'ajuda' %}" {% if nav == 'ajuda' %}aria-current="page"{% endif %}>Ajuda</a></li>
                 {% else %}
                     <li><a class="o-nav__link" href="{% url 'painel_grupo' %}" {% if nav == 'painel' %}aria-current="page"{% endif %}>Painel geral</a></li>
@@ -77,6 +82,7 @@
                     <li><a class="o-nav__link" href="{% url 'relatorios_comparativos' %}" {% if nav == 'comparativos' %}aria-current="page"{% endif %}>Relatórios comparativos</a></li>
                     <li><a class="o-nav__link" href="{% url 'ranking' %}" {% if nav == 'ranking' %}aria-current="page"{% endif %}>Ranking</a></li>
                     <li><a class="o-nav__link" href="{% url 'encerramento_rodada' %}" {% if nav == 'encerramento_rodada' %}aria-current="page"{% endif %}>Encerramento</a></li>
+                    <li><a class="o-nav__link" href="{% url 'avaliacao' %}" {% if nav == 'avaliacao' %}aria-current="page"{% endif %}>Avaliar o simulador</a></li>
                     <li><a class="o-nav__link" href="{% url 'ajuda' %}" {% if nav == 'ajuda' %}aria-current="page"{% endif %}>Ajuda</a></li>
                     <li><a class="o-nav__link" href="{% url 'feedback' %}" {% if nav == 'feedback' %}aria-current="page"{% endif %}>Feedback</a></li>
                 {% endif %}
@@ -197,5 +203,18 @@
 
 <script src="{% static 'js/theme.js' %}?v=20260925b" defer></script>
 {% block scripts %}{% endblock %}
+{% comment %}
+    2.1 -- registro do service worker. So em HTTPS (ou localhost): o
+    navegador recusa o registro em HTTP puro, e a aplicacao segue
+    funcionando normalmente, apenas sem a parte offline.
+{% endcomment %}
+<script>
+    if ('serviceWorker' in navigator && window.isSecureContext) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('{% url "service_worker" %}')
+                .catch(function () { /* sem offline; o resto funciona */ });
+        });
+    }
+</script>
 </body>
 </html>

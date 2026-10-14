@@ -143,7 +143,12 @@ SIMPLE_JWT = {
 }
 
 CRONJOBS = [
-    ('*/5 * * * *', 'django.core.management.call_command', ['fechar_rodadas']),
+    # 11.1: "o fechamento ocorre automaticamente no momento exato do
+    # prazo-limite". A submissao ja e barrada no instante exato --
+    # `obter_rodada_ativa` filtra `fim__gt=agora` --, entao a janela do
+    # cron nao decide quem entra. Ela decide quanto a turma espera pelo
+    # resultado: cinco minutos de sala de aula parada viravam um minuto.
+    ('*/1 * * * *', 'django.core.management.call_command', ['fechar_rodadas']),
     ('0 * * * *', 'django.core.management.call_command', ['enviar_lembretes']),
     ('*/1 * * * *', 'django.core.management.call_command', ['sortear_eventos_rodada']),
 ]
