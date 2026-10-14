@@ -167,3 +167,48 @@ class EnsaioDeRedeTest(TestCase):
         relatorio = self._rodar(turma="Turma Demo", repeticoes=1)
 
         self.assertIn("nenhuma rodada aberta", relatorio)
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class LimparTurmaComRodadaAbertaTest(TestCase):
+    """`--limpar` falhava justamente no caso que o README recomenda.
+
+    `CEOGrupoRodada.usuario` e PROTECT. Apagar o aluno antes da turma
+    levantava ProtectedError em toda turma criada com `--abrir-rodada`.
+    """
+
+    def test_recria_turma_que_tinha_rodada_aberta(self):
+        from app.models import CEOGrupoRodada
+
+        call_command(
+            "seed_turma_demo", senha="demo-orion-2026", abrir_rodada=True,
+            stdout=StringIO(),
+        )
+        self.assertTrue(CEOGrupoRodada.objects.exists())
+
+        call_command(
+            "seed_turma_demo", senha="demo-orion-2026", abrir_rodada=True,
+            limpar=True, stdout=StringIO(),
+        )
+
+        self.assertEqual(Jogo.objects.filter(nome="Turma Demo").count(), 1)
+        self.assertEqual(
+            Jogo.objects.get(nome="Turma Demo").grupos.count(), 3
+        )
+
+    def test_nao_deixa_aluno_orfao_para_tras(self):
+        call_command(
+            "seed_turma_demo", senha="demo-orion-2026", abrir_rodada=True,
+            stdout=StringIO(),
+        )
+        antes = User.objects.filter(email_usuario__endswith="@demo.orion").count()
+
+        call_command(
+            "seed_turma_demo", senha="demo-orion-2026", abrir_rodada=True,
+            limpar=True, stdout=StringIO(),
+        )
+
+        self.assertEqual(
+            User.objects.filter(email_usuario__endswith="@demo.orion").count(),
+            antes,
+        )

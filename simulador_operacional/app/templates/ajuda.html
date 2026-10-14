@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Ajuda — ORION{% endblock %}
 
@@ -9,10 +10,17 @@
 </div>
 
 {% comment %}
-    A pagina cresceu com as tabelas de referencia do 7.1, 9.1 e 9.2. Sem
-    indice, achar a distancia de uma praca no meio da rodada vira rolagem.
+    Layout de manual: sumario fixo a esquerda, conteudo em coluna unica.
+
+    Antes era o `o-grid` de duas colunas do resto do sistema, e nao servia
+    aqui: quatro das sete secoes carregam tabela e ocupam a linha inteira,
+    entao as tres curtas nunca encontravam par e deixavam meia linha vazia
+    cada uma. O ritmo ficava quebrado e a leitura, aos solavancos.
+
+    Coluna unica tambem evita medir a tabela de pracas em 433 px.
 {% endcomment %}
-<nav class="o-sumario" aria-label="Seções da ajuda">
+<div class="o-ajuda">
+<nav class="o-sumario" aria-label="Seções da ajuda" data-sumario>
     <a href="#primeiros-passos">Primeiros passos</a>
     <a href="#produtos">Produtos</a>
     <a href="#materias-primas">Matérias-primas</a>
@@ -22,7 +30,7 @@
     <a href="#faq">Dúvidas</a>
 </nav>
 
-<div class="o-grid">
+<div class="o-ajuda__corpo">
     <section class="o-panel o-prose">
         <h2 class="o-panel__title" id="primeiros-passos">Primeiros passos</h2>
         <ul class="o-list">
@@ -38,7 +46,7 @@
         manual, iguais para todos e disponiveis antes da decisao. Nao em
         aviso durante a jogada: conhecer o produto e parte do que se avalia.
     {% endcomment %}
-    <section class="o-panel o-prose o-panel--wide">
+    <section class="o-panel o-prose">
         <h2 class="o-panel__title" id="produtos">Os produtos</h2>
         <p class="o-muted">
             Cada produto tem composição, peso, tempo de máquina e regra de validade
@@ -108,7 +116,7 @@
         </p>
     </section>
 
-    <section class="o-panel o-prose o-panel--wide">
+    <section class="o-panel o-prose">
         <h2 class="o-panel__title" id="materias-primas">As matérias-primas e seus fornecedores</h2>
         <p class="o-muted">
             Cada matéria-prima é vendida por praças determinadas. A escolha do
@@ -148,7 +156,7 @@
         </p>
     </section>
 
-    <section class="o-panel o-prose o-panel--wide">
+    <section class="o-panel o-prose">
         <h2 class="o-panel__title" id="pracas">As praças</h2>
         <p class="o-muted">
             A fábrica fica em {{ cidade_sede }}, e todo envio parte de lá. A
@@ -168,13 +176,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for praca in pracas %}
+                {% for linha in pracas %}
                     <tr>
-                        <th scope="row" data-label="Praça">{{ praca.nome }}</th>
-                        <td class="num" data-label="Distância">{{ praca.distancia_km }} km</td>
-                        <td class="num" data-label="Demanda máxima">{{ praca.demanda }} un</td>
+                        <th scope="row" data-label="Praça">{{ linha.cidade.nome }}</th>
+                        <td class="num o-dist-km" data-label="Distância">
+                            <span class="o-dist-km__barra" style="--o-barra-largura: {{ linha.barra|stringformat:'s' }}%" aria-hidden="true"></span>
+                            <span class="o-dist-km__valor">{{ linha.cidade.distancia_km }} km</span>
+                        </td>
+                        <td class="num" data-label="Demanda máxima">{{ linha.cidade.demanda }} un</td>
                         <td data-label="Fornece">
-                            {% for mp in praca.materias_fornecidas.all %}{{ mp.codigo }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+                            {% for mp in linha.cidade.materias_fornecidas.all %}{{ mp.codigo }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
                         </td>
                     </tr>
                 {% endfor %}
@@ -216,7 +227,7 @@
         Os pesos saem da configuracao da turma, nao de tabela fixa -- o 12.2
         permite ajusta-los por rodada.
     {% endcomment %}
-    <section class="o-panel o-prose o-panel--wide">
+    <section class="o-panel o-prose">
         <h2 class="o-panel__title" id="classificacao">Como a classificação é calculada</h2>
         <p class="o-muted">
             A nota final não é o lucro. Ela combina cinco eixos, cada um com um
@@ -275,4 +286,9 @@
         <p class="o-muted">Use <a href="{% url 'password_reset' %}">Esqueceu a senha?</a> na tela de login.</p>
     </section>
 </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/ajuda.js' %}?v=20261014a" defer></script>
 {% endblock %}

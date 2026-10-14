@@ -27,6 +27,9 @@
     --o-warn-bg:   rgba(245, 183, 78, 0.12);
     --o-bad-bg:    rgba(255, 138, 138, 0.12);
     --o-star-bg:   rgba(143, 208, 255, 0.10);
+    /* Preenchimento da barra de distancia: precisa de mais corpo que o
+       --o-star-bg, que e fundo de destaque e nao elemento de leitura. */
+    --o-barra:     rgba(143, 208, 255, 0.22);
     /* Parede da placa do mapa: mais escura que a terra nos dois temas, para
        ler como espessura e nao como mancha. */
     --o-mapa-parede: #070c17;
@@ -64,6 +67,7 @@
 }
 
 [data-theme="light"] {
+    --o-barra:     rgba(28, 95, 168, 0.20);
     --o-void:      #F6F7FB;
     --o-panel:     #FFFFFF;
     --o-panel-2:   #EEF1F8;
@@ -959,6 +963,10 @@ ul.errorlist {
     animation: o-pulse 1.6s ease-in-out infinite;
 }
 
+/* Ancora que salta sem transicao faz perder o lugar na pagina. A guarda
+   de `prefers-reduced-motion` abaixo ja desliga isto para quem pediu. */
+html { scroll-behavior: smooth; }
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.001ms !important;
@@ -1582,13 +1590,24 @@ ul.errorlist {
     background: var(--o-panel-2);
 }
 
-/* --- 35. Sumario da ajuda ------------------------------------------------ */
+/* --- 35. Ajuda: layout de manual ----------------------------------------- */
+/*
+   O `o-grid` de duas colunas do resto do sistema nao servia aqui: quatro
+   das sete secoes carregam tabela e ocupam a linha inteira, entao as tres
+   curtas nunca encontravam par e deixavam meia linha vazia cada uma.
+
+   Aqui o sumario vira coluna fixa e o conteudo desce em coluna unica, que
+   e o que uma pagina de referencia pede -- e a tabela de pracas tem a
+   largura inteira em vez de 433 px.
+*/
+
+.o-ajuda { display: grid; gap: var(--o-4); align-items: start; }
+.o-ajuda__corpo { display: grid; gap: var(--o-4); min-width: 0; }
 
 .o-sumario {
     display: flex;
     flex-wrap: wrap;
     gap: var(--o-2);
-    margin-bottom: var(--o-4);
 }
 .o-sumario a {
     padding: 10px var(--o-3);
@@ -1607,6 +1626,61 @@ ul.errorlist {
     border-color: var(--o-star);
     color: var(--o-ink);
 }
+.o-sumario a[aria-current="true"] {
+    border-color: var(--o-star);
+    background: var(--o-star-bg);
+    color: var(--o-ink);
+}
 
-/* O cabecalho fixo cobriria o titulo alvo da ancora. */
-.o-panel__title[id] { scroll-margin-top: var(--o-5); }
+@media (min-width: 60rem) {
+    .o-ajuda {
+        grid-template-columns: 13rem minmax(0, 1fr);
+        gap: var(--o-5);
+    }
+    /* Acompanha a rolagem: conferir a distancia de uma praca no meio da
+       rodada nao pode exigir voltar ao topo. */
+    .o-sumario {
+        position: sticky;
+        top: var(--o-4);
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 2px;
+    }
+    .o-sumario a {
+        border-color: transparent;
+        background: transparent;
+        border-radius: var(--o-radius);
+        border-left: 2px solid var(--o-line);
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .o-sumario a:hover,
+    .o-sumario a:focus-visible,
+    .o-sumario a[aria-current="true"] {
+        border-left-color: var(--o-star);
+        background: var(--o-star-bg);
+    }
+}
+
+/* O titulo alvo da ancora nao pode encostar no topo da janela. */
+.o-panel__title[id] { scroll-margin-top: var(--o-4); }
+
+/* Barra proporcional da distancia.
+ *
+ * A distancia e a espinha do jogo -- define o frete na compra e na venda.
+ * Como numero solto, le-se uma linha de cada vez; com a barra, a tabela
+ * inteira se le de relance. O numero continua escrito: a barra e
+ * redundancia, e nao o unico portador da informacao.
+ */
+.o-dist-km { position: relative; }
+.o-dist-km__barra {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--o-barra-largura, 0%);
+    height: 1.5em;
+    border-radius: 3px;
+    background: var(--o-barra);
+}
+.o-dist-km__valor { position: relative; }

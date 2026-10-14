@@ -331,11 +331,25 @@ class AjudaView(TemplateView):
         # apareciam em tela nenhuma. O aluno decidia para onde enviar sem
         # saber a distancia, que define o frete, nem quanto a praca
         # absorve, que limita a venda.
-        context["pracas"] = (
+        # A distancia e a espinha do jogo: define o frete na compra e na
+        # venda. Como numero solto numa coluna ela se le uma de cada vez;
+        # com a barra proporcional, a tabela inteira se le de relance --
+        # Porto Alegre a 4.034 km contra Joao Pessoa a 181 km deixa de ser
+        # comparacao de digitos. O numero continua escrito: a barra e
+        # redundancia, nao o unico portador da informacao.
+        pracas = list(
             Cidade.objects.filter(demanda__gt=0)
-            .prefetch_related("demandas_produto__produto", "materias_fornecidas")
+            .prefetch_related("materias_fornecidas")
             .order_by("distancia_km")
         )
+        mais_distante = max((p.distancia_km for p in pracas), default=0) or 1
+        context["pracas"] = [
+            {
+                "cidade": praca,
+                "barra": round(100 * praca.distancia_km / mais_distante, 1),
+            }
+            for praca in pracas
+        ]
         context["cidade_sede"] = CIDADE_SEDE
         context["materias_primas"] = (
             MateriaPrima.objects.filter(ativa=True)

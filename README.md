@@ -36,11 +36,11 @@ praças e eventos é populado automaticamente na subida.
 Depois que o contêiner subir, em outro terminal:
 
 ```bash
-docker compose exec web python simulador_operacional/manage.py createsuperuser
+docker compose exec web python manage.py createsuperuser
 ```
 
 ```bash
-docker compose exec web python simulador_operacional/manage.py seed_turma_demo --abrir-rodada
+docker compose exec web python manage.py seed_turma_demo --abrir-rodada
 ```
 
 O primeiro cria a conta do professor/moderador. O segundo monta uma turma de

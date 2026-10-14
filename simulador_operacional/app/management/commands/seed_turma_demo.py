@@ -168,9 +168,14 @@ class Command(BaseCommand):
             .values_list("pk", flat=True)
         )
         total_usuarios = len(ids)
-        User.objects.filter(pk__in=ids).delete()
         config = jogo.config
+        # A turma sai PRIMEIRO. `CEOGrupoRodada.usuario` e PROTECT, entao
+        # apagar o aluno antes da turma falhava em toda turma que tivesse
+        # rodada aberta -- exatamente o caso de `--abrir-rodada`, que e o
+        # que o README recomenda. Apagar o jogo cascateia grupos e CEOs, e
+        # so entao os alunos ficam soltos.
         jogo.delete()
+        User.objects.filter(pk__in=ids).delete()
         # A config so some se nao sobrou turma usando ela.
         if config and not config.jogos.exists() and config.id != 1:
             config.delete()

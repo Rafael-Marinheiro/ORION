@@ -665,6 +665,37 @@ a alternativa travaria o aluno no meio da rodada. Matéria-prima sem vínculo
 cadastrado continua aceitando qualquer praça, para base antiga não bloquear
 a turma.
 
+### Layout da Ajuda: de kit de cards a superfície de consulta — 14/10/2026
+
+A primeira versão reaproveitou o `o-grid` de duas colunas do resto do
+sistema, e ficou ruim. O motivo é mecânico: quatro das sete seções carregam
+tabela e ocupam a linha inteira, então as três curtas — Primeiros passos,
+Frete, Dúvidas — **nunca encontravam par** e deixavam meia linha vazia cada
+uma. Três buracos e um ritmo aos solavancos.
+
+O erro de fundo era outro: sete painéis idênticos, mesma borda e mesmo
+raio, para conteúdos de natureza diferente. A moldura se repetia sem
+informar nada.
+
+Refeito a partir de quem usa a página: **aluno no meio da rodada, com prazo
+correndo, procurando um dado.** Não é leitura, é consulta. O que decorre
+disso:
+
+- **Sumário fixo à esquerda**, acompanhando a rolagem, com a seção corrente
+  destacada por `IntersectionObserver`. Conferir a distância de uma praça
+  não pode exigir voltar ao topo.
+- **Conteúdo em coluna única**, que é o que uma página de referência pede —
+  e a tabela de praças ganha a largura inteira em vez de 433 px.
+- **Rolagem suave** nas âncoras. A guarda de `prefers-reduced-motion` já
+  existia no CSS; o que faltava era a propriedade que ela desliga.
+
+**A barra de distância.** A distância é a espinha do jogo: define o frete na
+compra e na venda. Como número solto numa coluna, lê-se uma linha de cada
+vez. Com uma barra proporcional atrás do número, a tabela inteira se lê de
+relance — João Pessoa a 181 km contra Porto Alegre a 4.034 km deixa de ser
+comparação de dígitos. O número continua escrito: a barra é redundância, e
+não o único portador da informação.
+
 ### A Ajuda não tinha os dados para decidir — 14/10/2026
 
 `distancia_km` e `demanda_maxima` **não apareciam em template nenhum do
