@@ -27,6 +27,7 @@ from app.services.eventos import (
     fracao_de_operadores,
     resolver_decisao,
 )
+from app.services.penalidade_service import registrou_decisao
 from app.services.suprimentos import processar_recebimentos_materia_prima
 from app.services.distribuicao_service import executar_expedicao
 from app.services.producao import executar_producao, garantir_capacidades_grupo
@@ -605,11 +606,23 @@ class Command(BaseCommand):
                         if receita_financeira > 0:
                             motivos.append("rendimento de aplicacoes financeiras")
 
-                        if not grupo.decisoes.filter(rodada=rodada.numero).exists():
+                        # 11.2: a multa e por DECISAO nao informada, nao
+                        # por formulario nao enviado. Submeter vazio dava o
+                        # tratamento do 11.2 -- repeticao dos valores da
+                        # rodada anterior -- sem a multa que vem junto.
+                        submeteu = grupo.decisoes.filter(
+                            rodada=rodada.numero
+                        ).exists()
+                        decidiu = registrou_decisao(grupo, rodada.numero)
+                        if not submeteu or not decidiu:
                             caixa_base = self.caixa_base_para_penalidade(grupo, rodada.numero)
                             penalidade_sem_submissao = caixa_base * Decimal("0.10")
                             custos_extras += penalidade_sem_submissao
-                            motivos.append("penalidade por falta de submissao")
+                            motivos.append(
+                                "penalidade por falta de submissao"
+                                if not submeteu
+                                else "penalidade por submissao sem decisoes"
+                            )
 
                         perda_pereciveis = self.processar_perecibilidade(grupo, rodada.numero)
                         if perda_pereciveis > 0:

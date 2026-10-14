@@ -637,6 +637,42 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### O botão anulava a multa do §11.2 — 14/10/2026
+
+O §11.2 impõe 10% sobre o caixa à equipe que não submete. A multa olhava
+apenas a existência da linha de submissão, criada pelo botão "Enviar
+submissão". Faltava verificar se havia decisão dentro dela.
+
+O resultado eram três casos, e o terceiro era brecha:
+
+| | Multa 10% | Valores repetidos |
+|---|---|---|
+| Não submeteu | sim | sim |
+| Submeteu com decisões | não | não |
+| **Submeteu vazio** | **não** | **sim** |
+
+A equipe que clicava sem registrar nada recebia o tratamento do §11.2 — a
+repetição automática dos valores da rodada anterior — **sem a multa que o
+§11.2 impõe junto**. Era a estratégia dominante para quem não quisesse
+jogar: um clique por rodada.
+
+A leitura que corrige é a do próprio título da seção: *"Tratamento de
+Decisões Não Informadas"*, e o gatilho é *"caso o grupo não tenha submetido
+**suas decisões**"*. O objeto da frase são as decisões, não o formulário.
+Quem envia vazio não informou decisão nenhuma.
+
+As variáveis decisórias são as quatro que o §11.2 lista — compras,
+produção, vendas (o envio, que carrega o preço) e investimentos. Decidir
+sem submeter continua sendo multado: o §11.2 exige as duas coisas.
+
+**O indicador do §15.4.c passou a usar a mesma função.** Ele tinha critério
+próprio (`total_ofertado > 0`, só distribuição). Duas definições de
+"decidir" divergem na primeira mudança, e o professor veria o relatório de
+consistência contradizer a penalidade aplicada no extrato.
+
+A Ajuda passou a publicar a regra inteira: antes dizia só "a equipe recebe
+penalidade", sem o percentual e sem o caso da submissão vazia.
+
 ### Sorteio igualitário, cooldown e evento único — 14/10/2026
 
 Quatro decisões do dono do produto, tomadas juntas porque se sustentam:

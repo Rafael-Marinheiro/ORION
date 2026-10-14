@@ -156,7 +156,15 @@ class PrimeiraTurmaTest(TestCase):
                 self.assertTrue(rodada.fechada)
                 for grupo in equipes:
                     resumo = ConsolidadoRodadaGrupo.objects.get(grupo=grupo, rodada=numero)
-                    self.assertEqual(resumo.penalidade_sem_submissao, 0)
+                    if numero in (1, 2):
+                        self.assertEqual(resumo.penalidade_sem_submissao, 0)
+                    else:
+                        # 11.2 (14/10/2026): nas rodadas 3 a 5 a equipe so
+                        # clica em enviar, sem registrar compra, producao,
+                        # envio ou investimento. E multada como quem nao
+                        # submeteu, porque o efeito e o mesmo -- repetir a
+                        # rodada anterior.
+                        self.assertGreater(resumo.penalidade_sem_submissao, 0)
                     self.assertEqual(resumo.score_multicriterio, resumo.eo_percent)
                     if numero == 2:
                         self.assertEqual(resumo.total_vendido, 1)

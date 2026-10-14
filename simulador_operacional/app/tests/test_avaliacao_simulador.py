@@ -22,6 +22,8 @@ from app.models import (
     GameConfig,
     Grupo,
     Jogo,
+    Producao,
+    Produto,
     Rodada,
     User,
 )
@@ -234,9 +236,18 @@ class IndicadoresDeUsoTest(TestCase):
         self.assidua = Grupo.objects.create(nome="Equipe Assídua", jogo=self.jogo)
         self.ausente = Grupo.objects.create(nome="Equipe Ausente", jogo=self.jogo)
 
+        produto = Produto.objects.create(
+            codigo="A", nome="Produto A", tempo_producao_min=2
+        )
         for numero in (1, 2):
             Decisao.objects.create(
                 grupo=self.assidua, rodada=numero, descricao=f"Rodada {numero}"
+            )
+            # O indicador usa `registrou_decisao`, o mesmo criterio da multa
+            # do 11.2: precisa haver decisao de verdade, nao so consolidado.
+            Producao.objects.create(
+                grupo=self.assidua, produto=produto, rodada=numero,
+                quantidade_planejada=10,
             )
             ConsolidadoRodadaGrupo.objects.create(
                 grupo=self.assidua, rodada=numero, total_ofertado=100,

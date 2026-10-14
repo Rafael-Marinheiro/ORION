@@ -178,6 +178,7 @@ def indicadores_de_uso(jogo):
         Grupo,
         Rodada,
     )
+    from app.services.penalidade_service import registrou_decisao
 
     if jogo:
         grupos = list(Grupo.objects.filter(jogo=jogo).order_by("nome"))
@@ -201,14 +202,12 @@ def indicadores_de_uso(jogo):
             .values_list("rodada", flat=True)
         )
         # "Consistencia nas decisoes": rodada submetida em que a equipe de
-        # fato registrou operacao. Submeter sem decidir deixa o 11.2 repetir
-        # a rodada anterior, e e o que este numero expoe.
+        # fato registrou decisao. Usa o MESMO criterio da multa do 11.2 --
+        # `registrou_decisao` --, e nao um proprio: duas definicoes do que
+        # e "decidir" divergem na primeira mudanca, e o professor veria o
+        # indicador discordar da penalidade aplicada.
         com_operacao = {
-            numero
-            for numero in submetidas
-            if ConsolidadoRodadaGrupo.objects.filter(
-                grupo=grupo, rodada=numero, total_ofertado__gt=0
-            ).exists()
+            numero for numero in submetidas if registrou_decisao(grupo, numero)
         }
         participacao.append({
             "grupo": grupo,

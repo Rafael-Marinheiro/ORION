@@ -690,20 +690,28 @@ class MateriaPrimaFlowTest(TestCase):
         rodada.refresh_from_db()
         self.assertTrue(rodada.fechada)
         folha = self.folha(self.grupo)
-        self.assertEqual(self.grupo.capital, Decimal("934.00") - folha)
+        # 11.2 (14/10/2026): a submissao da rodada 2 nao traz decisao --
+        # o estoque foi semeado no setUp, nao decidido pela equipe --,
+        # entao entra a multa de 10% sobre o caixa de 1.000.
+        multa = Decimal("100.00")
+        self.assertEqual(self.grupo.capital, Decimal("934.00") - folha - multa)
         rf = ResultadoFinanceiro.objects.get(grupo=self.grupo, rodada=2)
-        self.assertEqual(rf.custos, Decimal("66.00") + folha)
+        self.assertEqual(rf.custos, Decimal("66.00") + folha + multa)
         consolidado = ConsolidadoRodadaGrupo.objects.get(grupo=self.grupo, rodada=2)
         self.assertEqual(consolidado.receita_vendas, Decimal("0.00"))
         self.assertEqual(consolidado.custos_operacionais, Decimal("0.00"))
-        self.assertEqual(consolidado.penalidade_sem_submissao, Decimal("0.00"))
+        self.assertEqual(consolidado.penalidade_sem_submissao, multa)
         self.assertEqual(consolidado.perda_pereciveis, Decimal("60.00"))
         self.assertEqual(consolidado.custo_armazenagem_mp, Decimal("6.00"))
         # A folha entra na mesma linha da armazenagem de produtos -- o DRE a
         # rotula "Armazenagem de produtos e mao de obra".
         self.assertEqual(consolidado.custo_armazenagem_produtos, folha)
-        self.assertEqual(consolidado.custos_totais, Decimal("66.00") + folha)
-        self.assertEqual(consolidado.lucro_rodada, Decimal("-66.00") - folha)
+        self.assertEqual(
+            consolidado.custos_totais, Decimal("66.00") + folha + multa
+        )
+        self.assertEqual(
+            consolidado.lucro_rodada, Decimal("-66.00") - folha - multa
+        )
 
     def test_fechamento_distribui_demanda_por_preco(self):
         grupo2 = Grupo.objects.create(nome="Equipe MP 2", capital=0, estoque=0)
