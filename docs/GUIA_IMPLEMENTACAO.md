@@ -637,6 +637,59 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### A compra aceitava qualquer praça como fornecedora — 14/10/2026
+
+Encontrado ao melhorar a Ajuda, não procurando por ele.
+
+O §7.1 lista os fornecedores de cada matéria-prima e diz que "a escolha do
+fornecedor será realizada no momento da compra, **influenciando diretamente
+o custo logístico** da operação":
+
+| MP | Preço/kg | Fornecedores |
+|---|---|---|
+| MP1 | R$ 3,00 | Fortaleza (527 km), Maceió (542 km) |
+| MP2 | R$ 5,50 | Recife (290 km), Porto Alegre (4.034 km) |
+| MP3 | R$ 8,00 | Rio (2.588 km), Aracaju (782 km), Belém (1.952 km) |
+| MP4 | R$ 15,00 | São Paulo (2.896 km), João Pessoa (181 km), Goiânia (1.949 km) |
+
+`CompraMateriaPrimaForm.cidade_fornecedora` aceitava **qualquer** praça com
+demanda. O efeito não é cosmético: como o frete de MP é R$ 1,50 por km por
+kg, a compra ótima passava a ser trazer **as quatro matérias-primas de João
+Pessoa**, a praça mais próxima a 181 km. Ninguém compraria MP1 em Fortaleza
+nem MP3 em Aracaju, e a decisão de suprimento que o §7.1 desenhou
+simplesmente não existia.
+
+`MateriaPrima.fornecedores` passou a existir, o seed popula pelo §7.1 e o
+formulário recusa o par inválido dizendo onde comprar — recusar sem indicar
+a alternativa travaria o aluno no meio da rodada. Matéria-prima sem vínculo
+cadastrado continua aceitando qualquer praça, para base antiga não bloquear
+a turma.
+
+### A Ajuda não tinha os dados para decidir — 14/10/2026
+
+`distancia_km` e `demanda_maxima` **não apareciam em template nenhum do
+sistema**. O aluno escolhia para onde enviar sem saber a distância, que
+define o frete, nem quanto a praça absorve, que limita a venda — e sem ver
+de quais praças cada matéria-prima vem.
+
+Entraram três seções, todas lidas do banco e não escritas à mão:
+
+- **Matérias-primas**, com preço por kg e as praças fornecedoras do §7.1,
+  cada uma com a distância ao lado.
+- **Praças**, ordenadas por distância, com o teto de demanda por produto e
+  quais matérias-primas cada uma fornece.
+- **Frete e capacidade**: R$/km de MP e de produto, carga e descarga,
+  capacidade do caminhão, desconto de frete de retorno, minutos por máquina
+  e operadores por máquina.
+
+A página ganhou um sumário com âncoras: com as tabelas novas, achar a
+distância de uma praça no meio da rodada viraria rolagem.
+
+Isto não contraria a regra de não antecipar ao aluno o efeito das escolhas
+dele. São parâmetros públicos do mercado, iguais para todas as equipes e
+necessários **antes** da decisão — o mesmo motivo pelo qual a tabela de
+produtos já estava ali.
+
 ### O botão anulava a multa do §11.2 — 14/10/2026
 
 O §11.2 impõe 10% sobre o caixa à equipe que não submete. A multa olhava

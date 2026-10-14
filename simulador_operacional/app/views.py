@@ -35,7 +35,13 @@ from rest_framework import status
 
 from .geografia import CIDADE_SEDE, montar_mapa, ponto_da_praca
 from .parametros import (
+    CAPACIDADE_CAMINHAO_KG,
     CUSTO_ARMAZENAGEM_PERCENT,
+    CUSTO_CARGA_DESCARGA_PRODUTO,
+    CUSTO_VIAGEM_MP_POR_KM,
+    CUSTO_VIAGEM_PRODUTO_POR_KM,
+    DESCONTO_RETORNO_POR_KM,
+    MINUTOS_POR_MAQUINA_RODADA,
     PERCENTUAL_PENALIDADE_SEM_SUBMISSAO,
     CUSTO_MAQUINA,
     CUSTO_OPERADOR_POR_RODADA,
@@ -320,6 +326,33 @@ class AjudaView(TemplateView):
         )
         context["custo_armazenagem_percent"] = CUSTO_ARMAZENAGEM_PERCENT
         context["eixos_da_nota"] = self.eixos_da_nota()
+
+        # 9.1 e 7.1 -- distancia, teto de demanda e fornecedores nao
+        # apareciam em tela nenhuma. O aluno decidia para onde enviar sem
+        # saber a distancia, que define o frete, nem quanto a praca
+        # absorve, que limita a venda.
+        context["pracas"] = (
+            Cidade.objects.filter(demanda__gt=0)
+            .prefetch_related("demandas_produto__produto", "materias_fornecidas")
+            .order_by("distancia_km")
+        )
+        context["cidade_sede"] = CIDADE_SEDE
+        context["materias_primas"] = (
+            MateriaPrima.objects.filter(ativa=True)
+            .prefetch_related("fornecedores")
+            .order_by("codigo")
+        )
+        context["logistica"] = {
+            "capacidade_caminhao": CAPACIDADE_CAMINHAO_KG,
+            "km_mp": CUSTO_VIAGEM_MP_POR_KM,
+            "km_produto": CUSTO_VIAGEM_PRODUTO_POR_KM,
+            "carga_descarga": CUSTO_CARGA_DESCARGA_PRODUTO,
+            "desconto_retorno": DESCONTO_RETORNO_POR_KM,
+        }
+        context["producao"] = {
+            "minutos_por_maquina": MINUTOS_POR_MAQUINA_RODADA,
+            "operadores_por_maquina": OPERADORES_POR_MAQUINA,
+        }
         return context
 
     def eixos_da_nota(self):

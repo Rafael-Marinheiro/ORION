@@ -8,9 +8,23 @@
     <p class="o-head__sub">Como percorrer uma rodada e onde encontrar cada coisa.</p>
 </div>
 
+{% comment %}
+    A pagina cresceu com as tabelas de referencia do 7.1, 9.1 e 9.2. Sem
+    indice, achar a distancia de uma praca no meio da rodada vira rolagem.
+{% endcomment %}
+<nav class="o-sumario" aria-label="Seções da ajuda">
+    <a href="#primeiros-passos">Primeiros passos</a>
+    <a href="#produtos">Produtos</a>
+    <a href="#materias-primas">Matérias-primas</a>
+    <a href="#pracas">Praças</a>
+    <a href="#logistica">Frete</a>
+    <a href="#classificacao">Classificação</a>
+    <a href="#faq">Dúvidas</a>
+</nav>
+
 <div class="o-grid">
     <section class="o-panel o-prose">
-        <h2 class="o-panel__title">Primeiros passos</h2>
+        <h2 class="o-panel__title" id="primeiros-passos">Primeiros passos</h2>
         <ul class="o-list">
             <li>Entre com o e-mail cadastrado pelo professor da turma.</li>
             <li>Abra <strong>Painel</strong> para registrar compra, produção, distribuição e investimentos.</li>
@@ -25,7 +39,7 @@
         aviso durante a jogada: conhecer o produto e parte do que se avalia.
     {% endcomment %}
     <section class="o-panel o-prose o-panel--wide">
-        <h2 class="o-panel__title">Os produtos</h2>
+        <h2 class="o-panel__title" id="produtos">Os produtos</h2>
         <p class="o-muted">
             Cada produto tem composição, peso, tempo de máquina e regra de validade
             próprios. As linhas de produção são exclusivas: máquina de A não produz B.
@@ -94,6 +108,105 @@
         </p>
     </section>
 
+    <section class="o-panel o-prose o-panel--wide">
+        <h2 class="o-panel__title" id="materias-primas">As matérias-primas e seus fornecedores</h2>
+        <p class="o-muted">
+            Cada matéria-prima é vendida por praças determinadas. A escolha do
+            fornecedor muda o frete, porque o custo acompanha a distância até a
+            fábrica em {{ cidade_sede }}.
+        </p>
+
+        <div class="o-tablewrap">
+            <table class="o-table o-table--cartoes">
+                <caption class="o-sr">Matérias-primas, preço e praças fornecedoras</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Matéria-prima</th>
+                        <th scope="col" class="num">Preço por kg</th>
+                        <th scope="col">Compra em</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for mp in materias_primas %}
+                    <tr>
+                        <th scope="row" data-label="Matéria-prima">{{ mp.codigo }}</th>
+                        <td class="num" data-label="Preço por kg">R$ {{ mp.preco_unitario|floatformat:2 }}</td>
+                        <td data-label="Compra em">
+                            {% for cidade in mp.fornecedores.all %}{{ cidade.nome }} ({{ cidade.distancia_km }} km){% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3">Nenhuma matéria-prima cadastrada.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="o-muted">
+            O pedido chega na rodada seguinte. O valor sai do caixa na rodada da
+            compra, não na da entrega.
+        </p>
+    </section>
+
+    <section class="o-panel o-prose o-panel--wide">
+        <h2 class="o-panel__title" id="pracas">As praças</h2>
+        <p class="o-muted">
+            A fábrica fica em {{ cidade_sede }}, e todo envio parte de lá. A
+            demanda máxima é o teto de cada produto por rodada naquela praça:
+            enviar além disso deixa estoque parado no destino.
+        </p>
+
+        <div class="o-tablewrap">
+            <table class="o-table o-table--cartoes">
+                <caption class="o-sr">Praças, distância e demanda máxima</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Praça</th>
+                        <th scope="col" class="num">Distância</th>
+                        <th scope="col" class="num">Demanda máx. por produto</th>
+                        <th scope="col">Fornece</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for praca in pracas %}
+                    <tr>
+                        <th scope="row" data-label="Praça">{{ praca.nome }}</th>
+                        <td class="num" data-label="Distância">{{ praca.distancia_km }} km</td>
+                        <td class="num" data-label="Demanda máxima">{{ praca.demanda }} un</td>
+                        <td data-label="Fornece">
+                            {% for mp in praca.materias_fornecidas.all %}{{ mp.codigo }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="o-muted">
+            A venda numa praça é limitada ao que a equipe enviou previamente para
+            ela. Quem não enviou não vende, mesmo com demanda sobrando.
+        </p>
+    </section>
+
+    <section class="o-panel o-prose">
+        <h2 class="o-panel__title" id="logistica">Frete e capacidade</h2>
+
+        <h3>Transporte</h3>
+        <ul class="o-list">
+            <li>Matéria-prima: <strong>R$ {{ logistica.km_mp|floatformat:2 }} por km</strong>, multiplicado pela quantidade em kg.</li>
+            <li>Produto acabado: <strong>R$ {{ logistica.km_produto|floatformat:2 }} por km</strong> por viagem, mais R$ {{ logistica.carga_descarga|floatformat:2 }} de carga e descarga.</li>
+            <li>Cada caminhão leva {{ logistica.capacidade_caminhao }} kg. Acima disso, parte outro.</li>
+            <li>Comprar matéria-prima numa praça para onde a equipe enviou produto rende desconto de R$ {{ logistica.desconto_retorno|floatformat:2 }} por km — é o frete de retorno, o caminhão que volta carregado em vez de vazio.</li>
+        </ul>
+
+        <h3>Capacidade de produção</h3>
+        <ul class="o-list">
+            <li>Cada máquina rende {{ producao.minutos_por_maquina }} minutos por rodada.</li>
+            <li>Cada máquina exige {{ producao.operadores_por_maquina }} operadores. Máquina sem operador não produz.</li>
+            <li>As linhas são exclusivas: capacidade de A não produz B nem C.</li>
+        </ul>
+    </section>
+
     {% comment %}
         12.2 e 12.4 -- a tela dizia apenas onde ver a posicao, nunca como a
         nota e formada. Sustentabilidade, que o 12.1 e o 12.7 apontam como o
@@ -104,7 +217,7 @@
         permite ajusta-los por rodada.
     {% endcomment %}
     <section class="o-panel o-prose o-panel--wide">
-        <h2 class="o-panel__title">Como a classificação é calculada</h2>
+        <h2 class="o-panel__title" id="classificacao">Como a classificação é calculada</h2>
         <p class="o-muted">
             A nota final não é o lucro. Ela combina cinco eixos, cada um com um
             peso definido pelo professor da turma — que pode mudar de uma rodada
@@ -141,7 +254,7 @@
     </section>
 
     <section class="o-panel o-prose">
-        <h2 class="o-panel__title">Perguntas frequentes</h2>
+        <h2 class="o-panel__title" id="faq">Perguntas frequentes</h2>
 
         <h3>Por que não consigo enviar a submissão?</h3>
         <p class="o-muted">Só o CEO da rodada envia a submissão oficial. Os outros integrantes veem o painel em modo leitura.</p>

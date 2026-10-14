@@ -1581,3 +1581,32 @@ ul.errorlist {
     border-radius: 0 var(--o-radius) var(--o-radius) 0;
     background: var(--o-panel-2);
 }
+
+/* --- 35. Sumario da ajuda ------------------------------------------------ */
+
+.o-sumario {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--o-2);
+    margin-bottom: var(--o-4);
+}
+.o-sumario a {
+    padding: 10px var(--o-3);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--o-line);
+    border-radius: 999px;
+    background: var(--o-panel-2);
+    color: var(--o-ink-dim);
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+.o-sumario a:hover,
+.o-sumario a:focus-visible {
+    border-color: var(--o-star);
+    color: var(--o-ink);
+}
+
+/* O cabecalho fixo cobriria o titulo alvo da ancora. */
+.o-panel__title[id] { scroll-margin-top: var(--o-5); }

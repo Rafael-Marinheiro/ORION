@@ -176,6 +176,25 @@ class Command(BaseCommand):
         # distancia e Currais Novos a 0 km -- frete zero, que anula o 9.2a.
         self.aposentar_pracas_legadas()
 
+        # 7.1: cada MP tem fornecedores determinados. Precisa vir depois das
+        # cidades, que so existem acima.
+        #
+        # Sem isto a compra aceitava qualquer praca, e a estrategia otima
+        # virava trazer as quatro MPs da cidade mais proxima -- Joao Pessoa,
+        # a 181 km --, anulando o 7.1: ninguem compraria MP1 em Fortaleza
+        # (527 km) nem MP3 em Aracaju (782 km).
+        fornecedores_por_mp = {
+            "MP1": ["Fortaleza", "Maceió"],
+            "MP2": ["Recife", "Porto Alegre"],
+            "MP3": ["Rio de Janeiro", "Aracaju", "Belém"],
+            "MP4": ["São Paulo", "João Pessoa", "Goiânia"],
+        }
+        for codigo, nomes in fornecedores_por_mp.items():
+            materia = MateriaPrima.objects.filter(codigo=codigo).first()
+            if not materia:
+                continue
+            materia.fornecedores.set(Cidade.objects.filter(nome__in=nomes))
+
         # 9.1: o mesmo teto para cada produto ativo.
         for nome, _, demanda in cidades:
             cidade = Cidade.objects.get(nome=nome)

@@ -253,6 +253,17 @@ class MateriaPrima(models.Model):
     nome = models.CharField(max_length=100)
     preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     ativa = models.BooleanField(default=True)
+    # 7.1: cada MP tem fornecedores em cidades determinadas, e "a escolha do
+    # fornecedor sera realizada no momento da compra, influenciando
+    # diretamente o custo logistico".
+    #
+    # Sem esta restricao a compra aceitava QUALQUER praca, e a estrategia
+    # otima virava trazer as quatro MPs da cidade mais proxima -- Joao
+    # Pessoa, a 181 km. O 7.1 deixava de existir: ninguem compraria MP1 em
+    # Fortaleza (527 km) nem MP3 em Aracaju (782 km).
+    fornecedores = models.ManyToManyField(
+        "Cidade", blank=True, related_name="materias_fornecidas"
+    )
 
     class Meta:
         db_table = "MATERIAS_PRIMAS"

@@ -177,6 +177,30 @@ class CompraMateriaPrimaForm(RotuloSemDoisPontos, forms.ModelForm):
             "cidade_fornecedora": "A distância até a sede define o frete.",
         }
 
+    def clean(self):
+        """7.1: so as cidades fornecedoras daquela materia-prima.
+
+        O campo lista todas as pracas porque o formulario nao cascateia no
+        servidor; quem recusa o par invalido e esta validacao. Sem ela, a
+        compra mais barata era trazer as quatro MPs da praca mais proxima,
+        e a escolha de fornecedor do 7.1 deixava de existir.
+        """
+        dados = super().clean()
+        materia = dados.get("materia_prima")
+        cidade = dados.get("cidade_fornecedora")
+        if not materia or not cidade:
+            return dados
+
+        validas = list(materia.fornecedores.all())
+        if validas and cidade not in validas:
+            nomes = ", ".join(sorted(c.nome for c in validas))
+            self.add_error(
+                "cidade_fornecedora",
+                f"{materia.codigo} não tem fornecedor em {cidade.nome}. "
+                f"Fornecedores de {materia.codigo}: {nomes}.",
+            )
+        return dados
+
 
 class InvestimentoForm(RotuloSemDoisPontos, forms.ModelForm):
     cidade = forms.ModelChoiceField(queryset=Cidade.objects.all(), required=False)
