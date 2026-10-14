@@ -407,9 +407,9 @@ class Command(BaseCommand):
                 "modo_aplicacao": "decisao",
                 "efeito_estado": "afastamento_equipe",
                 "duracao_rodadas": 1,
-                # faixa do afastamento de quem nao imunizar
-                "impacto_percentual_minimo": 15,
-                "impacto_percentual": 35,
+                # afastamento de quem nao imunizar: igual para todas as
+                # equipes que recusarem (8.2, "de maneira igual")
+                "impacto_percentual": 25,
                 "custo_unitario_decisao": Decimal("180.00"),
                 "retencao_entregas_percent": 0,
                 "probabilidade": 8,

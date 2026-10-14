@@ -296,10 +296,16 @@ def resolver_decisao(grupo, rodada, evento):
         decisao.custo = custo_da_oferta(evento, grupo)
         decisao.afetados_percent = 0
     else:
-        piso = int(evento.impacto_percentual_minimo or 0)
-        teto = max(int(evento.impacto_percentual or 0), piso)
+        # Valor unico, igual para todas as equipes que recusarem.
+        #
+        # A primeira versao sorteava numa faixa, para que recusar fosse
+        # aposta. O Product Owner decidiu o contrario, e com razao: o jogo
+        # precisa ser simetrico, e duas equipes que tomam a MESMA decisao
+        # nao podem terminar a rodada com perdas diferentes por sorte. Isso
+        # tambem aproxima o evento da letra do 8.2 -- "afeta todos os grupos
+        # de maneira igual" --, que a faixa esticava.
         decisao.custo = Decimal("0")
-        decisao.afetados_percent = random.randint(piso, teto) if teto else 0
+        decisao.afetados_percent = int(evento.impacto_percentual or 0)
     decisao.save(update_fields=["custo", "afetados_percent"])
     return decisao.custo, decisao.afetados_percent
 

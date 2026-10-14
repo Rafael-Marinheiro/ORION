@@ -1,5 +1,7 @@
 # Pontos para ratificação do autor da especificação
 
+> **Situação:** 1 de 6 ratificado (item 1, em 14/10/2026). Cinco em aberto.
+
 Documento para levar ao Prof. Dr. Pio Marinheiro. Cada item descreve **o que
 o documento diz**, **o que o sistema faz** e **por que divergem**. Nenhum
 deles é escolha de implementação: todos alteram ou interpretam a regra, e a
@@ -13,7 +15,25 @@ Atualizado em 14/10/2026.
 
 ---
 
-## 1. Evento com decisão da equipe — "Surto de gripe"
+## 1. Evento com decisão da equipe — "Surto de gripe" — ✅ RATIFICADO (14/10/2026)
+
+**Decisão:** aceito, **com uma emenda**: o afastamento deixa de ser sorteado
+numa faixa e passa a ser **valor único**. Todas as equipes que recusarem a
+imunização perdem a mesma parcela da força de trabalho — 25%.
+
+**Razão da emenda:** o jogo precisa ser simétrico. Duas equipes que tomam a
+mesma decisão não podem terminar a rodada com perdas diferentes por sorte;
+todas têm que ter a mesma chance de ganhar.
+
+Vale registrar que a emenda aproxima o evento do §8.2 em vez de afastá-lo: a
+faixa esticava o "afeta todos os grupos de maneira igual", e o valor único
+cumpre a frase ao pé da letra. A proposta original privilegiava gestão de
+risco; o critério adotado é competitivo, e é o do dono do produto.
+
+Implementado e testado. O texto abaixo é o registro da proposta original.
+
+---
+
 
 **O documento (§8.2):** *"Aplicação uniforme: o evento sorteado afeta todos
 os grupos de maneira igual, independentemente de sua praça/cidade."*
@@ -25,8 +45,8 @@ trabalho nem caixa.
 **O que o sistema faz:** na rodada em que o evento sai, todas as equipes
 recebem a mesma oferta — imunizar a força de trabalho por um valor por
 trabalhador. Quem aceita paga no fechamento e atravessa a rodada. Quem
-recusa, ou não responde, tem uma parcela da equipe afastada, sorteada entre
-15% e 35%, e produz menos pela própria RN-06 ("cada máquina exige 2
+recusa, ou não responde, tem 25% da equipe afastada — o mesmo para todas —
+e produz menos pela própria RN-06 ("cada máquina exige 2
 trabalhadores; máquinas sem operadores não produzem").
 
 **Por que divergem:** a *oferta* é uniforme, mas o *resultado* passa a
@@ -34,9 +54,10 @@ depender da decisão de cada equipe. É uma leitura defensável do §8.2 — e,
 pedagogicamente, transforma o evento em gestão de risco, que é o que o §8.6
 diz querer ensinar. Mas é leitura, não o texto.
 
-**Pergunta:** o senhor aceita que um evento faça oferta uniforme com
-resultado dependente da decisão da equipe, e que o §8.3 passe a admitir
-força de trabalho e caixa entre as variáveis afetadas?
+**Pergunta (respondida):** o senhor aceita que um evento faça oferta
+uniforme com resultado dependente da decisão da equipe, e que o §8.3 passe a
+admitir força de trabalho e caixa entre as variáveis afetadas? — **Sim, com
+a emenda do valor único.**
 
 **Como reverter:** desligar o pool estendido na configuração da turma. Ela
 volta a sortear exatamente os seis eventos do §8.4, sem alteração de código.

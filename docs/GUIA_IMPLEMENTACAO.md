@@ -632,6 +632,27 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### O surto foi ratificado, com emenda: afastamento único — 14/10/2026
+
+O Dr. Pio aceitou o evento de decisão, **com uma emenda**: o afastamento
+deixa de ser sorteado numa faixa e passa a ser valor único. Todas as
+equipes que recusarem a imunização perdem 25% da força de trabalho.
+
+A razão é competitiva, e é boa: duas equipes que tomam a mesma decisão não
+podem terminar a rodada com perdas diferentes por sorte — todas precisam ter
+a mesma chance de ganhar.
+
+Minha proposta original sorteava entre 15% e 35%, para que recusar fosse
+aposta e não aritmética. O argumento não some, mas perde para a simetria num
+jogo que também avalia. E vale registrar o que eu não tinha percebido: **a
+emenda aproxima o evento do §8.2 em vez de afastá-lo.** A faixa esticava o
+"afeta todos os grupos de maneira igual"; o valor único cumpre a frase ao pé
+da letra. A divergência que eu havia levantado contra o §8.2 fica menor do
+que era.
+
+O campo `impacto_percentual_minimo` foi removido — existia só para o piso da
+faixa, e campo que nada lê é dívida.
+
 ### Dois comandos de apoio, e as pendências viraram documento — 14/10/2026
 
 **`seed_turma_demo`** monta uma turma completa do zero: três equipes de três

@@ -45,7 +45,6 @@ def _surto(**extra):
         "tipo": "greve",
         "modo_aplicacao": "decisao",
         "efeito_estado": "afastamento_equipe",
-        "impacto_percentual_minimo": 20,
         "impacto_percentual": 20,
         "custo_unitario_decisao": Decimal("180.00"),
         "probabilidade": 9,
@@ -112,36 +111,54 @@ class OfertaDoSurtoTest(TestCase):
             ).exists()
         )
 
-    def test_o_afastamento_e_sorteado_uma_vez_so(self):
+    def test_a_decisao_e_resolvida_uma_vez_so(self):
         """O numero nao pode mudar a cada consulta do relatorio."""
-        evento = Evento.objects.create(
-            nome="Surto largo", tipo="greve", modo_aplicacao="decisao",
-            efeito_estado="afastamento_equipe", impacto_percentual_minimo=10,
-            impacto_percentual=60, custo_unitario_decisao=Decimal("10"),
-            probabilidade=0, extensao=True,
-        )
-        EventoRodada.objects.create(
-            rodada=1, jogo=self.jogo, evento=evento, manual=True
-        )
-
-        primeiro = resolver_decisao(self.grupo, 1, evento)
+        primeiro = resolver_decisao(self.grupo, 1, self.evento)
         for _ in range(8):
-            self.assertEqual(resolver_decisao(self.grupo, 1, evento), primeiro)
+            self.assertEqual(
+                resolver_decisao(self.grupo, 1, self.evento), primeiro
+            )
 
-    def test_a_faixa_respeita_o_piso_e_o_teto(self):
-        evento = Evento.objects.create(
-            nome="Surto faixa", tipo="greve", modo_aplicacao="decisao",
-            efeito_estado="afastamento_equipe", impacto_percentual_minimo=15,
-            impacto_percentual=35, custo_unitario_decisao=Decimal("10"),
-            probabilidade=0, extensao=True,
-        )
+    def test_todas_as_equipes_que_recusam_perdem_o_mesmo(self):
+        """Decisao do Product Owner: o jogo tem que ser simetrico.
+
+        A primeira versao sorteava o afastamento numa faixa, para que
+        recusar fosse aposta. Duas equipes que tomam a MESMA decisao nao
+        podem terminar a rodada com perdas diferentes por sorte -- e o 8.2
+        ja dizia "afeta todos os grupos de maneira igual".
+        """
+        afetados_por_equipe = set()
         for indice in range(30):
             grupo = Grupo.objects.create(
                 nome=f"Equipe {indice}", jogo=self.jogo, trabalhadores=80
             )
-            _, afetados = resolver_decisao(grupo, 1, evento)
-            self.assertGreaterEqual(afetados, 15)
-            self.assertLessEqual(afetados, 35)
+            _, afetados = resolver_decisao(grupo, 1, self.evento)
+            afetados_por_equipe.add(afetados)
+
+        self.assertEqual(afetados_por_equipe, {20})
+
+    def test_quem_aceita_e_quem_recusa_continuam_diferentes(self):
+        """Simetria e entre quem decide igual, nao entre decisoes."""
+        aceitou = Grupo.objects.create(
+            nome="Equipe que aceitou", jogo=self.jogo, trabalhadores=80
+        )
+        recusou = Grupo.objects.create(
+            nome="Equipe que recusou", jogo=self.jogo, trabalhadores=80
+        )
+        registrar_decisao(aceitou, 1, self.evento, True)
+        registrar_decisao(recusou, 1, self.evento, False)
+
+        custo_aceitou, afetados_aceitou = resolver_decisao(
+            aceitou, 1, self.evento
+        )
+        custo_recusou, afetados_recusou = resolver_decisao(
+            recusou, 1, self.evento
+        )
+
+        self.assertGreater(custo_aceitou, 0)
+        self.assertEqual(afetados_aceitou, 0)
+        self.assertEqual(custo_recusou, Decimal("0"))
+        self.assertEqual(afetados_recusou, 20)
 
 
 @override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)

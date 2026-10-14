@@ -757,11 +757,6 @@ class Evento(models.Model):
     valor_absoluto = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True
     )
-    # Piso da faixa de impacto. `impacto_percentual` e o teto: o efeito do
-    # evento de decisao e sorteado entre os dois. Faixa, e nao numero fixo,
-    # para que recusar seja risco e nao aritmetica -- com valor conhecido o
-    # aluno calcula o lado barato uma vez e nunca mais pensa no assunto.
-    impacto_percentual_minimo = models.PositiveIntegerField(default=0)
     # Preco por trabalhador da oferta do evento de decisao.
     custo_unitario_decisao = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
