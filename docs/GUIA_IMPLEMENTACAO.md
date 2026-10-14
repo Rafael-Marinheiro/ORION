@@ -673,6 +673,22 @@ consistência contradizer a penalidade aplicada no extrato.
 A Ajuda passou a publicar a regra inteira: antes dizia só "a equipe recebe
 penalidade", sem o percentual e sem o caso da submissão vazia.
 
+**"Decidir não operar" não é exceção — questão levantada e fechada em
+14/10/2026.** Ao implementar, perguntei se a regra deveria distinguir
+"esqueci de decidir" de "decidi segurar caixa nesta rodada", e se a segunda
+mereceria confirmação explícita em vez de multa.
+
+A resposta do dono do produto encerra o assunto, e o argumento é melhor que
+a pergunta: **numa empresa real, o gerente que paga funcionários e custos
+fixos não tem a opção de não operar.** A inatividade não é uma jogada
+disponível; é omissão.
+
+O modelo já era coerente com isso antes mesmo da multa — o §11.2 manda
+assumir "todos os custos da rodada normalmente", e a equipe inativa termina
+pagando folha, armazenagem e perda de perecível. Ela não economiza por não
+operar: só perde mais. A multa fecha o único caminho que ainda restava para
+atravessar a rodada sem custo de atenção.
+
 ### Sorteio igualitário, cooldown e evento único — 14/10/2026
 
 Quatro decisões do dono do produto, tomadas juntas porque se sustentam:
