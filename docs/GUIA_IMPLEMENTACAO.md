@@ -632,6 +632,40 @@ da rodada** (pendente de implementação, ver backlog). O campo saiu da
 configuração, do assistente e do serializer; a coluna fica no banco marcada
 como legada até a próxima limpeza de esquema.
 
+### O bloqueio de produção parava a tela, não a fábrica — 14/10/2026
+
+`bloqueio_producao` é efeito de estado previsto no modelo desde o início.
+Era verificado só no registro da ordem, pelo painel: a ordem registrada
+antes de o evento entrar era produzida no fechamento assim mesmo.
+
+Efeito pela metade é pior que efeito nenhum — a tela dizia "produção
+bloqueada por evento nesta rodada" e o relatório da rodada mostrava
+produção. `executar_producao` passou a zerar o teto quando há evento de
+bloqueio vigente, e o ajuste informa o motivo ao CEO, como a RN-05 exige.
+
+Com o efeito agora completo, entrou o décimo evento do pool estendido,
+**Apagão na região**, e as probabilidades foram redistribuídas para
+continuar somando 100%.
+
+### A Ajuda não dizia como a nota é formada — 14/10/2026
+
+A tela listava os primeiros passos e as características dos produtos, mas
+sobre a classificação dizia apenas onde ver a posição. **Sustentabilidade
+não aparecia em tela nenhuma do sistema** — o §12.1 e o §12.7 a apontam
+como o diferencial pedagógico do modelo, ela pesa 0,10 na nota, e o aluno
+não podia perseguir um critério cuja existência desconhecia.
+
+A seção nova traz os cinco eixos do §12.2 com o que cada um mede, e o
+desempate do §12.5. Os pesos saem da configuração da turma de quem está
+vendo, não de tabela fixa: o §12.2 permite ajustá-los por rodada, e uma
+tabela escrita à mão mentiria na primeira alteração do professor. Visitante
+anônimo vê os padrões do §12.4.
+
+Isto não contraria a regra de não antecipar ao aluno o efeito das escolhas
+dele: o modelo de avaliação é público por definição do §12, e conhecê-lo
+antes é condição para decidir — diferente de avisar, durante a jogada, o
+que vai acontecer por causa de uma decisão específica.
+
 ### Surto de gripe: o primeiro evento com decisão da equipe — 07/10/2026
 
 **PENDENTE DE RATIFICAÇÃO DO DR. PIO.** Está implementado e funcionando, mas

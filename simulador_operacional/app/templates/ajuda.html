@@ -94,6 +94,52 @@
         </p>
     </section>
 
+    {% comment %}
+        12.2 e 12.4 -- a tela dizia apenas onde ver a posicao, nunca como a
+        nota e formada. Sustentabilidade, que o 12.1 e o 12.7 apontam como o
+        diferencial pedagogico do modelo, nao aparecia em tela nenhuma: o
+        aluno nao podia perseguir um criterio que nao sabia existir.
+
+        Os pesos saem da configuracao da turma, nao de tabela fixa -- o 12.2
+        permite ajusta-los por rodada.
+    {% endcomment %}
+    <section class="o-panel o-prose o-panel--wide">
+        <h2 class="o-panel__title">Como a classificação é calculada</h2>
+        <p class="o-muted">
+            A nota final não é o lucro. Ela combina cinco eixos, cada um com um
+            peso definido pelo professor da turma — que pode mudar de uma rodada
+            para outra, conforme o foco da aula.
+        </p>
+
+        <div class="o-tablewrap">
+            <table class="o-table o-table--cartoes">
+                <caption class="o-sr">Eixos da classificação e seus pesos</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Eixo</th>
+                        <th scope="col">O que mede</th>
+                        <th scope="col" class="num">Peso</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for eixo in eixos_da_nota %}
+                    <tr>
+                        <th scope="row" data-label="Eixo">{{ eixo.nome }} ({{ eixo.sigla }})</th>
+                        <td data-label="O que mede">{{ eixo.descricao }}</td>
+                        <td class="num" data-label="Peso">{{ eixo.peso|floatformat:2 }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="o-muted">
+            Em caso de empate, decidem nesta ordem: eficiência operacional,
+            satisfação da demanda, sustentabilidade, receita bruta e, por último,
+            ordem alfabética do nome da equipe.
+        </p>
+    </section>
+
     <section class="o-panel o-prose">
         <h2 class="o-panel__title">Perguntas frequentes</h2>
 

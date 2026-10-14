@@ -151,7 +151,7 @@ class SeedDoPoolTest(TestCase):
         documento = Evento.objects.filter(manual=False, extensao=False)
         estendidos = Evento.objects.filter(manual=False, extensao=True)
         self.assertEqual(documento.count(), 6)
-        self.assertEqual(estendidos.count(), 9)
+        self.assertEqual(estendidos.count(), 10)
         self.assertEqual(
             sum(e.probabilidade for e in documento), 100
         )
@@ -171,3 +171,82 @@ class SeedDoPoolTest(TestCase):
         call_command("seed_dados_base")
 
         self.assertTrue(Evento.objects.filter(id=proprio.id).exists())
+
+
+@override_settings(MIGRATION_MODULES={"app": None}, SECURE_SSL_REDIRECT=False)
+class BloqueioDeProducaoTest(TestCase):
+    """O fechamento tambem para a fabrica, nao so a tela.
+
+    `bloqueio_producao` era verificado apenas no registro da ordem pelo
+    painel. A ordem registrada antes do evento entrar era produzida no
+    fechamento assim mesmo: a tela dizia que a producao estava bloqueada e
+    o resultado mostrava producao.
+    """
+
+    def setUp(self):
+        from app.models import (
+            CapacidadeProdutoGrupo,
+            EstoqueMateriaPrima,
+            MateriaPrima,
+            Producao,
+            Produto,
+            ComposicaoProduto,
+        )
+
+        self.jogo = Jogo.objects.create(
+            nome="Turma A", config=GameConfig.objects.create(numero_rodadas=4)
+        )
+        from app.models import Grupo
+        self.grupo = Grupo.objects.create(
+            nome="Equipe Vega", jogo=self.jogo, capital=Decimal("1000000")
+        )
+        self.produto = Produto.objects.create(
+            codigo="A", nome="Produto A", tempo_producao_min=10
+        )
+        mp = MateriaPrima.objects.create(
+            codigo="MP1", nome="MP1", preco_unitario=Decimal("1")
+        )
+        ComposicaoProduto.objects.create(
+            produto=self.produto, materia_prima=mp,
+            quantidade_por_unidade=Decimal("1"),
+        )
+        EstoqueMateriaPrima.objects.create(
+            grupo=self.grupo, materia_prima=mp, quantidade_kg=Decimal("10000")
+        )
+        CapacidadeProdutoGrupo.objects.create(
+            grupo=self.grupo, produto=self.produto, maquinas=15,
+            operadores=30, minutos_por_maquina=400,
+        )
+        Producao.objects.create(
+            grupo=self.grupo, produto=self.produto, rodada=1,
+            quantidade_planejada=100,
+        )
+        _rodada(self.jogo, 1)
+
+    def _executar(self, eventos):
+        from app.services.producao import executar_producao
+
+        return executar_producao(grupo=self.grupo, rodada=1, eventos=eventos)
+
+    def test_sem_evento_a_ordem_e_produzida(self):
+        from app.models import Producao
+
+        self._executar([])
+
+        ordem = Producao.objects.get(grupo=self.grupo, rodada=1)
+        self.assertEqual(ordem.quantidade_produzida, 100)
+
+    def test_o_apagao_zera_a_producao_da_rodada(self):
+        from app.models import Producao
+
+        apagao = _evento(
+            "Apagao na regiao", tipo="greve", modo_aplicacao="estado",
+            efeito_estado="bloqueio_producao", impacto_percentual=0,
+            extensao=True,
+        )
+
+        _, ajustes = self._executar([apagao])
+
+        ordem = Producao.objects.get(grupo=self.grupo, rodada=1)
+        self.assertEqual(ordem.quantidade_produzida, 0)
+        self.assertEqual(ajustes[0]["limitador"], "produção bloqueada por evento")

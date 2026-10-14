@@ -285,7 +285,7 @@ class Command(BaseCommand):
                 3,
                 15,
                 0,
-                14,
+                13,
                 "Barreira tarifaria encarece o insumo importado por tres rodadas. "
                 "Choque moderado e persistente, ao contrario da crise de "
                 "abastecimento, que e aguda e passa.",
@@ -299,7 +299,7 @@ class Command(BaseCommand):
                 1,
                 -15,
                 0,
-                14,
+                13,
                 "Queda generalizada da demanda. O 8.4 traz o boom de +15% e nada "
                 "simetrico: sem isto o eixo economico so empurra para cima.",
             ),
@@ -312,7 +312,7 @@ class Command(BaseCommand):
                 2,
                 -10,
                 0,
-                11,
+                10,
                 "Perda de participacao por duas rodadas.",
             ),
             (
@@ -324,7 +324,7 @@ class Command(BaseCommand):
                 1,
                 15,
                 0,
-                12,
+                11,
                 "Custo logistico sobe sem reter entregas: versao branda da greve.",
             ),
             (
@@ -336,7 +336,7 @@ class Command(BaseCommand):
                 1,
                 0,
                 0,
-                11,
+                10,
                 "A materia-prima pedida chega uma rodada depois do previsto. "
                 "Atinge o planejamento de compra, que nenhum evento do 8.4 toca.",
             ),
@@ -349,7 +349,7 @@ class Command(BaseCommand):
                 1,
                 -10,
                 0,
-                11,
+                10,
                 "Alivio moderado no custo de insumo: versao branda da superoferta.",
             ),
             (
@@ -366,6 +366,19 @@ class Command(BaseCommand):
                 "financeira correspondente.",
             ),
             (
+                "Apagao na regiao",
+                "Uma falha prolongada no fornecimento de energia parou o parque fabril.",
+                "greve",
+                "estado",
+                "bloqueio_producao",
+                1,
+                0,
+                0,
+                8,
+                "Sem energia nao ha producao na rodada. O estoque e as entregas "
+                "seguem normalmente -- o que para e a fabrica.",
+            ),
+            (
                 "Baixa sazonal no frete",
                 "A baixa temporada reduziu o preco do frete rodoviario.",
                 "custo_transporte",
@@ -374,7 +387,7 @@ class Command(BaseCommand):
                 1,
                 -10,
                 0,
-                9,
+                8,
                 "Unico evento logistico favoravel: o 8.4 so tem greve e enchente, "
                 "ambos contra o grupo.",
             ),
@@ -399,7 +412,7 @@ class Command(BaseCommand):
                 "impacto_percentual": 35,
                 "custo_unitario_decisao": Decimal("180.00"),
                 "retencao_entregas_percent": 0,
-                "probabilidade": 9,
+                "probabilidade": 8,
                 "descricao": (
                     "A imunizacao custa um valor por trabalhador e protege a "
                     "equipe pela rodada. Sem ela, parte da forca de trabalho "

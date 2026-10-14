@@ -86,6 +86,7 @@ from .forms import (
     RodadaForm,
 )
 from .models import (
+    default_ranking_pesos,
     AplicacaoFinanceiraGrupo,
     AuditoriaSubmissaoRodada,
     CapacidadeProdutoGrupo,
@@ -309,7 +310,58 @@ class AjudaView(TemplateView):
             .order_by("codigo")
         )
         context["custo_armazenagem_percent"] = CUSTO_ARMAZENAGEM_PERCENT
+        context["eixos_da_nota"] = self.eixos_da_nota()
         return context
+
+    def eixos_da_nota(self):
+        """Os cinco eixos do 12.2, com o peso que vale para quem esta vendo.
+
+        A tela so dizia onde ver a posicao, nunca como a nota e formada --
+        e Sustentabilidade, que o 12.1 e o 12.7 apontam como o diferencial
+        pedagogico, nao aparecia em tela nenhuma. Os pesos sao lidos da
+        configuracao da turma, nao escritos a mao: o 12.2 permite ajusta-los
+        por rodada, e uma tabela fixa mentiria na primeira alteracao.
+        """
+        rotulos = {
+            "EO": ("Eficiência operacional",
+                   "produção, comercialização e perdas operacionais"),
+            "DF": ("Desempenho financeiro",
+                   "lucratividade, retorno sobre ativos e giro"),
+            "EE": ("Eficiência de estoques",
+                   "giro sobre o estoque médio da rodada"),
+            "SD": ("Satisfação da demanda",
+                   "quanto da demanda de cada praça foi atendida"),
+            "DS": ("Sustentabilidade",
+                   "redução de perdas, proximidade logística das compras e "
+                   "otimização das entregas"),
+        }
+        config = None
+        # A Ajuda e publica: visitante anonimo nao tem grupo nem turma, e
+        # ve os pesos padrao do 12.4.
+        usuario = self.request.user
+        grupo = (
+            obter_grupo_do_usuario(usuario)
+            if usuario.is_authenticated and not usuario.is_staff
+            else None
+        )
+        if grupo and grupo.jogo_id:
+            config = grupo.jogo.config
+        if config is None:
+            config = GameConfig.objects.filter(id=1).first()
+
+        pesos = default_ranking_pesos()
+        if config and config.ranking_pesos:
+            pesos = {**pesos, **config.ranking_pesos}
+
+        return [
+            {
+                "sigla": sigla,
+                "nome": rotulos[sigla][0],
+                "descricao": rotulos[sigla][1],
+                "peso": pesos.get(sigla, padrao),
+            }
+            for sigla, padrao in default_ranking_pesos().items()
+        ]
 
 
 

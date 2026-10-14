@@ -89,6 +89,16 @@ def executar_producao(*, grupo, rodada, evento=None, eventos=None,
     custo_total = Decimal("0")
     ajustes = []
 
+    # `bloqueio_producao` era verificado so no registro da ordem, pela tela.
+    # O fechamento produzia assim mesmo o que tivesse sido registrado antes
+    # do evento entrar -- efeito pela metade, que e pior que efeito nenhum:
+    # a tela diz que a producao esta bloqueada e o resultado mostra producao.
+    bloqueada = any(
+        evento_ativo.modo_aplicacao == "estado"
+        and evento_ativo.efeito_estado == "bloqueio_producao"
+        for evento_ativo in ativos
+    )
+
     capacidades = {
         linha.produto_id: linha
         for linha in CapacidadeProdutoGrupo.objects.filter(grupo=grupo)
@@ -102,7 +112,9 @@ def executar_producao(*, grupo, rodada, evento=None, eventos=None,
 
         # 2 e 3: teto por tempo da linha e teto por insumo em estoque.
         linha = capacidades.get(produto.id)
-        if linha is None or produto.tempo_producao_min <= 0:
+        if bloqueada:
+            teto_tempo = 0
+        elif linha is None or produto.tempo_producao_min <= 0:
             teto_tempo = 0
         else:
             # Afastamento de pessoal na rodada derruba o teto da linha:
@@ -117,6 +129,8 @@ def executar_producao(*, grupo, rodada, evento=None, eventos=None,
             limitador = "tempo de linha" if teto_tempo <= teto_insumo else "matéria-prima"
             if fracao_operadores < 1 and teto_tempo <= teto_insumo:
                 limitador = "equipe afastada"
+            if bloqueada:
+                limitador = "produção bloqueada por evento"
             ajustes.append(
                 {
                     "produto": produto,
